@@ -1,0 +1,144 @@
+{
+  "id": "demo-hello-service-v1",
+  "name": "Demo Hello Service v1",
+  "mode": "deploy",
+  "stages": {
+    "A": {
+      "checks": [
+        {
+          "id": "a.system_info",
+          "kind": "system_info",
+          "enabled": true
+        },
+        {
+          "id": "a.mount_check",
+          "kind": "mount_check",
+          "params": {
+            "required_mounts": ["/", "/opt"]
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.port_conflict",
+          "kind": "port_conflict",
+          "params": {
+            "reserved_ports": ["${SERVICE_PORT}"]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "B": {
+      "actions": [
+        {
+          "id": "b.ensure_paths",
+          "kind": "ensure_paths",
+          "params": {
+            "paths": ["${INSTALL_ROOT}/${SERVICE_NAME}", "${CONF_DIR}/${SERVICE_NAME}"],
+            "perm": "755"
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "C": {
+      "actions": [
+        {
+          "id": "c.ensure_paths",
+          "kind": "ensure_paths",
+          "params": {
+            "install_root": "${INSTALL_ROOT}/${SERVICE_NAME}",
+            "conf_dir": "${CONF_DIR}/${SERVICE_NAME}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.render_demo_env",
+          "kind": "render_templates",
+          "params": {
+            "template": "SERVICE_NAME=${SERVICE_NAME}\\nSERVICE_PORT=${SERVICE_PORT}\\n",
+            "output": "${CONF_DIR}/${SERVICE_NAME}/hello-demo.env",
+            "perm": "644"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.capture_inventory",
+          "kind": "capture_inventory",
+          "params": {
+            "units": [],
+            "ports": ["${SERVICE_PORT}"],
+            "paths": ["${INSTALL_ROOT}/${SERVICE_NAME}", "${CONF_DIR}/${SERVICE_NAME}"],
+            "output": "${INVENTORY_FILE}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.declare_stack",
+          "kind": "declare_stack",
+          "params": {
+            "output": "${STACK_DECLARATION}",
+            "stack_id": "${SERVICE_NAME}",
+            "mode": "deploy",
+            "components": ["hello-demo"]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "D": {
+      "checks": [
+        {
+          "id": "d.port_listening_placeholder",
+          "kind": "port_listening",
+          "params": {
+            "port": "${SERVICE_PORT}",
+            "severity": "warn"
+          },
+          "enabled": false
+        },
+        {
+          "id": "d.systemd_unit_placeholder",
+          "kind": "systemd_unit_active",
+          "params": {
+            "unit": "${SERVICE_UNIT}",
+            "severity": "warn"
+          },
+          "enabled": false
+        }
+      ]
+    },
+    "F": {
+      "evidence": [
+        {
+          "id": "f.demo_env_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${CONF_DIR}/${SERVICE_NAME}/hello-demo.env",
+            "output": "${EVIDENCE_DIR}/${SERVICE_NAME}-env-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.demo_conf_dir_hash",
+          "kind": "dir_hash",
+          "params": {
+            "dir": "${CONF_DIR}/${SERVICE_NAME}",
+            "output": "${EVIDENCE_DIR}/${SERVICE_NAME}-conf-dir-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.process_args_snapshot",
+          "kind": "process_args",
+          "params": {
+            "match": "${PROCESS_MATCH}",
+            "output": "${EVIDENCE_DIR}/${SERVICE_NAME}-process-args.json",
+            "redact_keys": ["password", "token", "secret"]
+          },
+          "enabled": true
+        }
+      ]
+    }
+  }
+}

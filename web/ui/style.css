@@ -1,0 +1,151 @@
+:root {
+  --bg: #f3f5ef;
+  --card: #ffffff;
+  --text: #1f2722;
+  --muted: #5e6961;
+  --ok: #2f855a;
+  --warn: #b7791f;
+  --bad: #c53030;
+  --border: #d6ddd7;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans", "Noto Sans", sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at top right, #e5edd8, var(--bg));
+}
+
+main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 18px 12px 28px;
+}
+
+.hero { margin-bottom: 14px; }
+.hero h1 { margin: 0 0 6px; }
+
+.muted { color: var(--muted); }
+
+.alert {
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin-bottom: 10px;
+  border: 1px solid transparent;
+}
+
+.alert.warn {
+  background: #fff5e6;
+  border-color: #f0d6a8;
+  color: #6b4b12;
+}
+
+.alert.info {
+  background: #eaf4fa;
+  border-color: #c3deef;
+  color: #13405f;
+}
+
+h2 {
+  margin: 20px 0 8px;
+  font-size: 18px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .04);
+}
+
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.status {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.HEALTHY, .PASSED { color: var(--ok); }
+.DEGRADED, .WARN { color: var(--warn); }
+.UNHEALTHY, .FAILED { color: var(--bad); }
+
+.list {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.list ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.list li {
+  margin: 6px 0;
+  line-height: 1.35;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+
+.filter-btn.active {
+  border-color: #0f5a88;
+  color: #0f5a88;
+  font-weight: 700;
+}
+
+.stage-action {
+  margin-top: 8px;
+}
+
+.stage-action .sep {
+  margin: 0 6px;
+  color: var(--muted);
+}
+
+.list h3 {
+  margin: 8px 0 4px;
+  font-size: 14px;
+}
+
+.list h3:first-child {
+  margin-top: 0;
+}
+
+.artifact-link {
+  line-height: 1.35;
+}
+
+a {
+  color: #0f5a88;
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }

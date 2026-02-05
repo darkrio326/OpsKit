@@ -1,0 +1,244 @@
+{
+  "id": "generic-manage-v1",
+  "name": "Generic Manage v1",
+  "mode": "manage",
+  "stages": {
+    "A": {
+      "checks": [
+        {
+          "id": "a.system_info",
+          "kind": "system_info",
+          "enabled": true
+        },
+        {
+          "id": "a.time_sync_status",
+          "kind": "time_sync_status",
+          "params": {
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.time_drift",
+          "kind": "time_drift",
+          "params": {
+            "max_offset_ms": 500,
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.default_route",
+          "kind": "default_route",
+          "params": {
+            "severity": "fail"
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.dns_config",
+          "kind": "dns_config",
+          "params": {
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.systemd_available",
+          "kind": "systemd_available",
+          "params": {
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.firewall_status",
+          "kind": "firewall_status",
+          "params": {
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.selinux_status",
+          "kind": "selinux_status",
+          "params": {
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.mount_check",
+          "kind": "mount_check",
+          "params": {
+            "required_mounts": ["/", "/data", "/opt", "/logs"]
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.port_conflict",
+          "kind": "port_conflict",
+          "params": {
+            "reserved_ports": [80, 443, 9200, 5601]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "B": {
+      "actions": [
+        {
+          "id": "b.ensure_paths",
+          "kind": "ensure_paths",
+          "params": {
+            "paths": ["${INSTALL_ROOT}/runtime", "${CONF_DIR}"],
+            "perm": "755"
+          },
+          "enabled": true
+        },
+        {
+          "id": "b.baseline_snapshot",
+          "kind": "baseline_snapshot",
+          "params": {
+            "paths": ["${INSTALL_ROOT}/state", "${INSTALL_ROOT}/reports", "${INSTALL_ROOT}/evidence", "/opt", "/data", "/logs"],
+            "output": "${BASELINE_SNAPSHOT}"
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "C": {
+      "actions": [
+        {
+          "id": "c.capture_inventory",
+          "kind": "capture_inventory",
+          "params": {
+            "units": [
+              "sshd.service",
+              "ssh.service",
+              "systemd-timesyncd.service",
+              "chronyd.service",
+              "network-online.target"
+            ],
+            "ports": [22, 80, 443],
+            "paths": [
+              "${INSTALL_ROOT}/state",
+              "${INSTALL_ROOT}/reports",
+              "${INSTALL_ROOT}/evidence",
+              "/opt",
+              "/data",
+              "/logs"
+            ],
+            "output": "${INVENTORY_FILE}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.declare_stack",
+          "kind": "declare_stack",
+          "params": {
+            "output": "${STACK_DECLARATION}",
+            "stack_id": "generic-manage-v1",
+            "mode": "manage",
+            "components": ["host"]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "D": {
+      "checks": [
+        {
+          "id": "d.disk_usage_root",
+          "kind": "disk_usage",
+          "params": {
+            "mount": "/",
+            "max_used_percent": 90,
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.memory_available",
+          "kind": "memory_available",
+          "params": {
+            "min_available_mb": 512,
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.load_average",
+          "kind": "load_average",
+          "params": {
+            "max_load1": 4,
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.systemd_basics",
+          "kind": "systemd_basics",
+          "params": {
+            "severity": "warn",
+            "require_any": false,
+            "candidate_units": [
+              "sshd.service",
+              "ssh.service",
+              "systemd-timesyncd.service",
+              "chronyd.service",
+              "network-online.target"
+            ]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "E": {
+      "actions": [
+        {
+          "id": "e.recover_host",
+          "kind": "recover_sequence",
+          "params": {
+            "units": [],
+            "allow_empty_units": true,
+            "max_attempts": 1,
+            "cooldown_seconds": 600,
+            "readiness_network": true,
+            "readiness_mounts": ["/", "/opt"],
+            "trigger_source": "${RECOVER_TRIGGER}",
+            "stage": "E",
+            "circuit_file": "${RECOVER_CIRCUIT_FILE}",
+            "collect_file": "${RECOVER_COLLECT_FILE}",
+            "collect_bundle_dir": "${COLLECT_BUNDLE_DIR}",
+            "collect_paths": ["${INSTALL_ROOT}/state", "${INSTALL_ROOT}/reports", "/opt", "/data", "/logs"],
+            "redact_keys": ["password", "token", "secret"]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "F": {
+      "evidence": [
+        {
+          "id": "f.state_dir_hash",
+          "kind": "dir_hash",
+          "params": {
+            "dir": "${INSTALL_ROOT}/state",
+            "output": "${EVIDENCE_DIR}/state-dir-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.overall_json_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${INSTALL_ROOT}/state/overall.json",
+            "output": "${EVIDENCE_DIR}/overall-json-hash.json"
+          },
+          "enabled": true
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,227 @@
+{
+  "id": "single-service-deploy-v1",
+  "name": "Single Service Deploy v1",
+  "mode": "deploy",
+  "stages": {
+    "A": {
+      "checks": [
+        {
+          "id": "a.system_info",
+          "kind": "system_info",
+          "enabled": true
+        },
+        {
+          "id": "a.mount_check",
+          "kind": "mount_check",
+          "params": {
+            "required_mounts": ["/", "/opt"]
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.port_conflict",
+          "kind": "port_conflict",
+          "params": {
+            "reserved_ports": ["${SERVICE_PORT}"]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "B": {
+      "actions": [
+        {
+          "id": "b.ensure_paths",
+          "kind": "ensure_paths",
+          "params": {
+            "paths": ["${INSTALL_ROOT}/${SERVICE_NAME}", "${CONF_DIR}/${SERVICE_NAME}"],
+            "perm": "755"
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "C": {
+      "actions": [
+        {
+          "id": "c.ensure_paths",
+          "kind": "ensure_paths",
+          "params": {
+            "install_root": "${INSTALL_ROOT}/${SERVICE_NAME}",
+            "conf_dir": "${CONF_DIR}/${SERVICE_NAME}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.sha256_verify",
+          "kind": "sha256_verify",
+          "params": {
+            "file": "${PACKAGE_FILE}",
+            "expected_sha256": "${PACKAGE_SHA256}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.untar",
+          "kind": "untar",
+          "params": {
+            "src": "${PACKAGE_FILE}",
+            "dest": "${INSTALL_ROOT}/${SERVICE_NAME}/release"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.render_unit",
+          "kind": "render_templates",
+          "params": {
+            "template": "[Unit]\\nDescription=${SERVICE_NAME}\\nAfter=network.target\\n\\n[Service]\\nType=simple\\nEnvironment=SERVICE_PORT=${SERVICE_PORT}\\nExecStart=${SERVICE_EXEC}\\nRestart=always\\n\\n[Install]\\nWantedBy=multi-user.target\\n",
+            "output": "${CONF_DIR}/${SERVICE_NAME}/${SERVICE_UNIT}",
+            "perm": "644"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.systemd_install_unit",
+          "kind": "systemd_install_unit",
+          "params": {
+            "unit_name": "${SERVICE_UNIT}",
+            "unit_content": "[Unit]\\nDescription=${SERVICE_NAME}\\nAfter=network.target\\n\\n[Service]\\nType=simple\\nEnvironment=SERVICE_PORT=${SERVICE_PORT}\\nExecStart=${SERVICE_EXEC}\\nRestart=always\\n\\n[Install]\\nWantedBy=multi-user.target\\n",
+            "unit_dir": "${SYSTEMD_UNIT_DIR}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.systemd_daemon_reload",
+          "kind": "systemd_daemon_reload",
+          "enabled": true
+        },
+        {
+          "id": "c.systemd_enable_start",
+          "kind": "systemd_enable_start",
+          "params": {
+            "unit": "${SERVICE_UNIT}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.capture_inventory",
+          "kind": "capture_inventory",
+          "params": {
+            "units": ["${SERVICE_UNIT}"],
+            "ports": ["${SERVICE_PORT}"],
+            "paths": ["${INSTALL_ROOT}/${SERVICE_NAME}", "${CONF_DIR}/${SERVICE_NAME}"],
+            "output": "${INVENTORY_FILE}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.declare_stack",
+          "kind": "declare_stack",
+          "params": {
+            "output": "${STACK_DECLARATION}",
+            "stack_id": "${SERVICE_NAME}",
+            "mode": "deploy",
+            "components": ["${SERVICE_UNIT}"]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "D": {
+      "checks": [
+        {
+          "id": "d.unit_exists",
+          "kind": "systemd_unit_exists",
+          "params": {
+            "unit": "${SERVICE_UNIT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.unit_active",
+          "kind": "systemd_unit_active",
+          "params": {
+            "unit": "${SERVICE_UNIT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.port_listening",
+          "kind": "port_listening",
+          "params": {
+            "port": "${SERVICE_PORT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "E": {
+      "actions": [
+        {
+          "id": "e.recover_sequence",
+          "kind": "recover_sequence",
+          "params": {
+            "units": ["${SERVICE_UNIT}"],
+            "max_attempts": 2,
+            "cooldown_seconds": 600,
+            "readiness_network": true,
+            "readiness_mounts": ["/", "${INSTALL_ROOT}"],
+            "trigger_source": "${RECOVER_TRIGGER}",
+            "stage": "E",
+            "circuit_file": "${RECOVER_CIRCUIT_FILE}",
+            "collect_file": "${RECOVER_COLLECT_FILE}",
+            "collect_bundle_dir": "${COLLECT_BUNDLE_DIR}",
+            "collect_paths": ["${INSTALL_ROOT}/${SERVICE_NAME}", "${CONF_DIR}/${SERVICE_NAME}"],
+            "redact_keys": ["password", "token", "secret"]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "F": {
+      "evidence": [
+        {
+          "id": "f.service_script_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${INSTALL_ROOT}/${SERVICE_NAME}/release/hello-service.sh",
+            "output": "${EVIDENCE_DIR}/${SERVICE_NAME}-script-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.service_conf_dir_hash",
+          "kind": "dir_hash",
+          "params": {
+            "dir": "${CONF_DIR}/${SERVICE_NAME}",
+            "output": "${EVIDENCE_DIR}/${SERVICE_NAME}-conf-dir-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.port_snapshot",
+          "kind": "command_output",
+          "params": {
+            "name": "ss",
+            "args": ["-ltn"],
+            "output": "${EVIDENCE_DIR}/${SERVICE_NAME}-ss-ltn.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.process_args",
+          "kind": "process_args",
+          "params": {
+            "match": "${PROCESS_MATCH}",
+            "output": "${EVIDENCE_DIR}/${SERVICE_NAME}-process-args.json",
+            "redact_keys": ["password", "token", "secret"]
+          },
+          "enabled": true
+        }
+      ]
+    }
+  }
+}

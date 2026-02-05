@@ -1,0 +1,121 @@
+{
+  "id": "demo-server-audit-v1",
+  "name": "Demo Server Audit v1",
+  "mode": "manage",
+  "stages": {
+    "A": {
+      "checks": [
+        {
+          "id": "a.system_info",
+          "kind": "system_info",
+          "enabled": true
+        },
+        {
+          "id": "a.time_sync_status",
+          "kind": "time_sync_status",
+          "params": {
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.mount_check",
+          "kind": "mount_check",
+          "params": {
+            "required_mounts": ["/"]
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.port_conflict",
+          "kind": "port_conflict",
+          "params": {
+            "reserved_ports": [22, 80, 443]
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.systemd_available_placeholder",
+          "kind": "systemd_available",
+          "params": {
+            "severity": "warn"
+          },
+          "enabled": false
+        }
+      ]
+    },
+    "D": {
+      "checks": [
+        {
+          "id": "d.disk_usage_root",
+          "kind": "disk_usage",
+          "params": {
+            "mount": "/",
+            "max_used_percent": 90,
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.memory_available",
+          "kind": "memory_available",
+          "params": {
+            "min_available_mb": 512,
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.load_average",
+          "kind": "load_average",
+          "params": {
+            "max_load1": 4,
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.service_check_placeholder",
+          "kind": "systemd_unit_active",
+          "params": {
+            "unit": "demo-placeholder.service",
+            "severity": "warn"
+          },
+          "enabled": false
+        }
+      ]
+    },
+    "F": {
+      "evidence": [
+        {
+          "id": "f.overall_json_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${INSTALL_ROOT}/state/overall.json",
+            "output": "${EVIDENCE_DIR}/overall-json-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.state_dir_hash",
+          "kind": "dir_hash",
+          "params": {
+            "dir": "${INSTALL_ROOT}/state",
+            "output": "${EVIDENCE_DIR}/state-dir-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.uname_snapshot",
+          "kind": "command_output",
+          "params": {
+            "name": "uname",
+            "args": ["-a"],
+            "output": "${EVIDENCE_DIR}/uname-a.json"
+          },
+          "enabled": true
+        }
+      ]
+    }
+  }
+}

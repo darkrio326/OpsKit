@@ -1,0 +1,12 @@
+# Build outputs
+dist/
+opskit
+opskit-*
+
+# Local caches and temporary artifacts
+.tmp/
+.gocache/
+
+# OS/editor noise
+.DS_Store
+.vscode/
