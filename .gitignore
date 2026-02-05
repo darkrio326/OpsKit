@@ -1,7 +1,11 @@
 # Build outputs
-dist/
-opskit
-opskit-*
+/dist/
+/build/
+/bin/
+/opskit
+/opskit-*
+*.test
+*.out
 
 # Local caches and temporary artifacts
 .tmp/
