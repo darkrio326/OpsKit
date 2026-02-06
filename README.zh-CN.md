@@ -46,6 +46,13 @@ go build -o opskit ./cmd/opskit
   --output ./.tmp/opskit-hello
 ```
 
+```bash
+./opskit run A \
+  --template assets/templates/demo-server-audit.json \
+  --vars-file examples/vars/demo-server-audit.env \
+  --output ./.tmp/opskit-demo
+```
+
 ## 退出码
 
 - `0`：成功

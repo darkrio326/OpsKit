@@ -1,0 +1,4 @@
+{
+  "INSTALL_ROOT": ".tmp/opskit-audit-demo",
+  "EVIDENCE_DIR": ".tmp/opskit-audit-demo/evidence"
+}

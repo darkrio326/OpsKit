@@ -32,14 +32,15 @@
 
 ### Fixed
 
-- （待补充）
+- 修复发布任务单中的 vars-file 示例路径（指向仓库内真实示例文件）
+- 修复 Recover collect 在大输出场景下可能导致 JSON 过大的问题（默认限流 + 截断标记）
 
 ## 验证命令（发布前）
 
 ```bash
 GOCACHE=$PWD/.gocache go test ./...
-go run ./cmd/opskit template validate assets/templates/demo-server-audit.json
-go run ./cmd/opskit template validate assets/templates/demo-hello-service.json
+go run ./cmd/opskit template validate assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json
+go run ./cmd/opskit template validate assets/templates/demo-hello-service.json --vars-file ./examples/vars/demo-hello-service.env
 scripts/release.sh --version v0.3.2-preview.1 --clean
 ```
 

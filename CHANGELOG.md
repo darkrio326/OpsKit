@@ -12,6 +12,7 @@
 - 变量类型扩展：`array/object`（JSON 形式）
 - 新增 vars-file 解析与回归测试
 - 新增 vars-file 示例（`examples/vars/demo-hello-service.*`）
+- 新增 vars-file 示例（`examples/vars/demo-server-audit.*`）
 - Recover collect 新增输出限流（`collect_output_limit`）与截断标记
 
 ### Changed
@@ -24,7 +25,7 @@
 
 ### Fixed
 
-- 待补充
+- 修复 `docs/RELEASE_PLAN_v0.3.2-preview.1.md` 中失效的 vars-file 示例路径
 
 ## [v0.3.1-preview.2] - 2026-02-06
 
