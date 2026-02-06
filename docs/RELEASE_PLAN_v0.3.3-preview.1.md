@@ -44,7 +44,7 @@ GOCACHE=$PWD/.gocache go test ./internal/recover ./internal/plugins/actions
 - 新增 2~3 个通用检查（优先：`ntp_sync`、`dns_resolve`、`service_restart_count`）
 - 检查结果统一 severity 映射（fail/warn/info）
 - 新增对应模板示例与 README 说明
-- 当前进度：部分完成（已落地 `dns_resolve`、`systemd_restart_count`）
+- 当前进度：已完成（已落地 `ntp_sync`、`dns_resolve`、`systemd_restart_count`）
 
 验收：
 

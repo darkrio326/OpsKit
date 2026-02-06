@@ -9,6 +9,7 @@ func RegisterBuiltins(r *Registry) {
 	r.Register(func() Plugin { return &firewallStatusCheck{} })
 	r.Register(func() Plugin { return &selinuxStatusCheck{} })
 	r.Register(func() Plugin { return &timeSyncStatusCheck{} })
+	r.Register(func() Plugin { return &ntpSyncCheck{} })
 	r.Register(func() Plugin { return &timeDriftCheck{} })
 	r.Register(func() Plugin { return &dnsResolveCheck{} })
 	r.Register(func() Plugin { return &mountCheck{} })

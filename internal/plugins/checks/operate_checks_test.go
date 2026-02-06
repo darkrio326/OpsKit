@@ -34,6 +34,74 @@ func TestDNSResolvePass(t *testing.T) {
 	}
 }
 
+func TestNTPSyncPass(t *testing.T) {
+	plugin := &ntpSyncCheck{}
+	res, err := plugin.Run(context.Background(), Request{
+		ID: "d.ntp_sync",
+		Exec: fakeRunner{run: func(_ context.Context, spec executil.Spec) (executil.Result, error) {
+			if spec.Name != "timedatectl" {
+				t.Fatalf("unexpected command: %s", spec.Name)
+			}
+			return executil.Result{ExitCode: 0, Stdout: "yes\n"}, nil
+		}},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.Status != schema.StatusPassed {
+		t.Fatalf("expected passed, got %s", res.Status)
+	}
+	if !hasMetric(res.Metrics, "ntp_sync", "synced") {
+		t.Fatalf("expected ntp_sync metric")
+	}
+}
+
+func TestNTPSyncFailWithSeverity(t *testing.T) {
+	plugin := &ntpSyncCheck{}
+	res, err := plugin.Run(context.Background(), Request{
+		ID: "d.ntp_sync",
+		Params: map[string]any{
+			"severity": "fail",
+		},
+		Exec: fakeRunner{run: func(_ context.Context, spec executil.Spec) (executil.Result, error) {
+			switch spec.Name {
+			case "timedatectl":
+				return executil.Result{ExitCode: 0, Stdout: "no\n"}, nil
+			case "chronyc":
+				return executil.Result{ExitCode: 0, Stdout: "Leap status     : Not synchronised\n"}, nil
+			default:
+				t.Fatalf("unexpected command: %s", spec.Name)
+				return executil.Result{}, nil
+			}
+		}},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.Status != schema.StatusFailed {
+		t.Fatalf("expected failed, got %s", res.Status)
+	}
+	if res.Issue == nil {
+		t.Fatalf("expected issue")
+	}
+}
+
+func TestNTPSyncDegradedWhenToolingUnavailable(t *testing.T) {
+	plugin := &ntpSyncCheck{}
+	res, err := plugin.Run(context.Background(), Request{
+		ID: "d.ntp_sync",
+		Exec: fakeRunner{run: func(_ context.Context, _ executil.Spec) (executil.Result, error) {
+			return executil.Result{}, errors.New("tool unavailable")
+		}},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.Status != schema.StatusWarn {
+		t.Fatalf("expected warn, got %s", res.Status)
+	}
+}
+
 func TestDNSResolveFailWithSeverity(t *testing.T) {
 	plugin := &dnsResolveCheck{}
 	res, err := plugin.Run(context.Background(), Request{

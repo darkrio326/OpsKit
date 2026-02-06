@@ -87,6 +87,14 @@
           "enabled": true
         },
         {
+          "id": "d.ntp_sync",
+          "kind": "ntp_sync",
+          "params": {
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
           "id": "d.dns_resolve_localhost",
           "kind": "dns_resolve",
           "params": {

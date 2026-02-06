@@ -17,7 +17,7 @@
 - Recover 结果新增统一 `recover_reason_code` 指标
 - Recover collect 产物新增来源标识（`source: command/journal/file`）
 - Recover collect 产物新增截断元数据（`originalLength`/`truncatedLength`）
-- 新增通用检查：`dns_resolve`、`systemd_restart_count`
+- 新增通用检查：`ntp_sync`、`dns_resolve`、`systemd_restart_count`
 - Accept 阶段新增一致性校验记录：`acceptance-consistency-*.json`
 
 ### Changed
@@ -25,6 +25,7 @@
 - Recover circuit 状态新增 `lastErrorCode`，用于状态汇总与追踪
 - Recover summary 新增 `lastReasonCode`
 - demo 审计模板 D 阶段新增 `dns_resolve` 检查
+- demo 审计模板 D 阶段新增 `ntp_sync` 检查
 - `lifecycle.json` 阶段新增 `summary(total/pass/warn/fail/skip)` 计数结构
 - accept 新增 `manifest <-> hashes <-> state` 一致性校验流程与指标
 - （待补）accept 产物一致性校验策略
