@@ -13,6 +13,7 @@
 - Recover collect 新增 `source` 字段（command/journal/file）
 - Recover collect 新增截断元数据（`originalLength`/`truncatedLength`）
 - 新增检查插件：`dns_resolve`、`systemd_restart_count`
+- `lifecycle.json` 阶段新增 `summary(total/pass/warn/fail/skip)` 结构
 
 ### Changed
 
@@ -22,6 +23,7 @@
 - Recover circuit 状态新增 `lastErrorCode`
 - recover summary 新增 `lastReasonCode`
 - demo 审计模板 D 阶段新增 `dns_resolve` 检查
+- 引擎在阶段执行后统一写入 stage summary 计数
 
 ### Fixed
 

@@ -263,6 +263,15 @@ func ValidateLifecycleState(l LifecycleState) error {
 		if !IsValidStatus(s.Status) {
 			return fmt.Errorf("invalid stage status: %s for %s", s.Status, s.StageID)
 		}
+		if s.Summary != nil {
+			if s.Summary.Total < 0 || s.Summary.Pass < 0 || s.Summary.Warn < 0 || s.Summary.Fail < 0 || s.Summary.Skip < 0 {
+				return fmt.Errorf("invalid stage summary count for %s", s.StageID)
+			}
+			sum := s.Summary.Pass + s.Summary.Warn + s.Summary.Fail + s.Summary.Skip
+			if s.Summary.Total != sum {
+				return fmt.Errorf("invalid stage summary totals for %s: total=%d sum=%d", s.StageID, s.Summary.Total, sum)
+			}
+		}
 		for _, i := range s.Issues {
 			if !IsValidSeverity(i.Severity) {
 				return fmt.Errorf("invalid issue severity: %s in stage %s", i.Severity, s.StageID)

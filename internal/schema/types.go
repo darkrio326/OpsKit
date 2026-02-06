@@ -60,14 +60,23 @@ type Issue struct {
 	Advice   string   `json:"advice,omitempty"`
 }
 
+type StageSummary struct {
+	Total int `json:"total"`
+	Pass  int `json:"pass"`
+	Warn  int `json:"warn"`
+	Fail  int `json:"fail"`
+	Skip  int `json:"skip"`
+}
+
 type StageState struct {
-	StageID     string   `json:"stageId"`
-	Name        string   `json:"name"`
-	Status      Status   `json:"status"`
-	LastRunTime string   `json:"lastRunTime,omitempty"`
-	Metrics     []Metric `json:"metrics,omitempty"`
-	Issues      []Issue  `json:"issues,omitempty"`
-	ReportRef   string   `json:"reportRef,omitempty"`
+	StageID     string        `json:"stageId"`
+	Name        string        `json:"name"`
+	Status      Status        `json:"status"`
+	LastRunTime string        `json:"lastRunTime,omitempty"`
+	Summary     *StageSummary `json:"summary,omitempty"`
+	Metrics     []Metric      `json:"metrics,omitempty"`
+	Issues      []Issue       `json:"issues,omitempty"`
+	ReportRef   string        `json:"reportRef,omitempty"`
 }
 
 type LifecycleState struct {

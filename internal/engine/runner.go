@@ -61,6 +61,7 @@ func (r *Runner) Execute(ctx context.Context, rt *Runtime) ([]StageResult, error
 			}
 			lifecycle.Stages[i].Status = res.Status
 			lifecycle.Stages[i].LastRunTime = timeutil.NowISO8601()
+			lifecycle.Stages[i].Summary = summarizeStageSteps(res.StepStatuses)
 			lifecycle.Stages[i].Metrics = res.Metrics
 			lifecycle.Stages[i].Issues = res.Issues
 			lifecycle.Stages[i].ReportRef = res.Report
@@ -143,6 +144,25 @@ func serviceHealthFromStatus(s schema.Status) string {
 	default:
 		return "unknown"
 	}
+}
+
+func summarizeStageSteps(stepStatuses []schema.Status) *schema.StageSummary {
+	summary := &schema.StageSummary{Total: len(stepStatuses)}
+	for _, status := range stepStatuses {
+		switch status {
+		case schema.StatusPassed:
+			summary.Pass++
+		case schema.StatusWarn:
+			summary.Warn++
+		case schema.StatusFailed:
+			summary.Fail++
+		case schema.StatusSkipped, schema.StatusNotStarted:
+			summary.Skip++
+		default:
+			summary.Skip++
+		}
+	}
+	return summary
 }
 
 func SelectStages(arg string) ([]string, error) {

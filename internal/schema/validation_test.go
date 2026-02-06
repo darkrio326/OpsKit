@@ -70,3 +70,29 @@ func TestValidateVars_RequiredAndEnum(t *testing.T) {
 		t.Fatalf("expected array validation error")
 	}
 }
+
+func TestValidateLifecycleState_Summary(t *testing.T) {
+	lifecycle := LifecycleState{
+		Stages: []StageState{
+			{
+				StageID: "A",
+				Status:  StatusPassed,
+				Summary: &StageSummary{
+					Total: 3,
+					Pass:  1,
+					Warn:  1,
+					Fail:  0,
+					Skip:  1,
+				},
+			},
+		},
+	}
+	if err := ValidateLifecycleState(lifecycle); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	lifecycle.Stages[0].Summary.Total = 2
+	if err := ValidateLifecycleState(lifecycle); err == nil {
+		t.Fatalf("expected summary total mismatch error")
+	}
+}

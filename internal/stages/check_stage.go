@@ -15,6 +15,7 @@ func executeCheckStage(ctx context.Context, rt *engine.Runtime, stageID string, 
 	allMetrics := []schema.Metric{}
 	issues := []schema.Issue{}
 	checks := []schema.CheckState{}
+	stepStatuses := []schema.Status{}
 
 	for _, step := range stage.Checks {
 		plugin, err := rt.CheckRegistry.MustPlugin(step.Kind)
@@ -25,6 +26,7 @@ func executeCheckStage(ctx context.Context, rt *engine.Runtime, stageID string, 
 		if err != nil {
 			return engine.StageResult{}, err
 		}
+		stepStatuses = append(stepStatuses, res.Status)
 		allMetrics = append(allMetrics, res.Metrics...)
 		checks = append(checks, schema.CheckState{
 			CheckID:  res.CheckID,
@@ -46,6 +48,7 @@ func executeCheckStage(ctx context.Context, rt *engine.Runtime, stageID string, 
 	result.Metrics = allMetrics
 	result.Issues = issues
 	result.Checks = checks
+	result.StepStatuses = stepStatuses
 
 	body, _ := json.MarshalIndent(map[string]any{"stage": stageID, "status": result.Status, "issues": issues, "checks": checks}, "", "  ")
 	reportName := engine.ReportName(stageID)

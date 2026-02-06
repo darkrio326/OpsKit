@@ -24,6 +24,7 @@
 - Recover circuit 状态新增 `lastErrorCode`，用于状态汇总与追踪
 - Recover summary 新增 `lastReasonCode`
 - demo 审计模板 D 阶段新增 `dns_resolve` 检查
+- `lifecycle.json` 阶段新增 `summary(total/pass/warn/fail/skip)` 计数结构
 - （待补）accept 产物一致性校验策略
 
 ### Fixed

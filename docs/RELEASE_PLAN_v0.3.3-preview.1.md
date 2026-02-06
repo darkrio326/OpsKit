@@ -57,6 +57,7 @@ go run ./cmd/opskit run D --template assets/templates/demo-server-audit.json --o
 - `lifecycle.json` 为每个阶段增加 `summary`（total/pass/warn/fail/skip）
 - `accept` 产物新增一致性校验记录（manifest <-> hashes <-> state）
 - 引入回归测试覆盖跨文件一致性
+- 当前进度：部分完成（已落地 lifecycle stage summary 结构）
 
 验收：
 

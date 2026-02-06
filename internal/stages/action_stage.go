@@ -27,6 +27,7 @@ func executeActionStage(ctx context.Context, rt *engine.Runtime, stageID string,
 	issues := []schema.Issue{}
 	metrics := []schema.Metric{}
 	actionRows := []map[string]any{}
+	stepStatuses := []schema.Status{}
 
 	for _, step := range stage.Actions {
 		plugin, err := rt.ActionRegistry.MustPlugin(step.Kind)
@@ -37,6 +38,7 @@ func executeActionStage(ctx context.Context, rt *engine.Runtime, stageID string,
 		if err != nil {
 			return engine.StageResult{}, err
 		}
+		stepStatuses = append(stepStatuses, res.Status)
 		if len(res.Metrics) > 0 {
 			metrics = append(metrics, res.Metrics...)
 		}
@@ -62,6 +64,7 @@ func executeActionStage(ctx context.Context, rt *engine.Runtime, stageID string,
 
 	result.Metrics = append(metrics, schema.Metric{Label: "actions", Value: fmt.Sprintf("%d", len(stage.Actions))})
 	result.Issues = issues
+	result.StepStatuses = stepStatuses
 
 	payload, _ := json.MarshalIndent(map[string]any{"stage": stageID, "status": result.Status, "actions": actionRows, "issues": issues}, "", "  ")
 	report := engine.ReportName(stageID)

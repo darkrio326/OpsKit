@@ -21,6 +21,7 @@ func executeEvidenceStage(ctx context.Context, rt *engine.Runtime, stageID strin
 	metrics := []schema.Metric{}
 	evidenceRows := []map[string]any{}
 	bundleFiles := map[string]string{}
+	stepStatuses := []schema.Status{}
 
 	for _, step := range stage.Evidence {
 		plugin, err := rt.EvidenceRegistry.MustPlugin(step.Kind)
@@ -31,6 +32,7 @@ func executeEvidenceStage(ctx context.Context, rt *engine.Runtime, stageID strin
 		if err != nil {
 			return engine.StageResult{}, err
 		}
+		stepStatuses = append(stepStatuses, res.Status)
 		if res.Issue != nil {
 			issues = append(issues, *res.Issue)
 		}
@@ -114,6 +116,7 @@ func executeEvidenceStage(ctx context.Context, rt *engine.Runtime, stageID strin
 		schema.Metric{Label: "bundle", Value: bundleName},
 	)
 	result.Issues = issues
+	result.StepStatuses = stepStatuses
 	result.Report = reportName
 	return result, nil
 }

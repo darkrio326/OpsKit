@@ -30,13 +30,14 @@ type Runtime struct {
 }
 
 type StageResult struct {
-	StageID string
-	Status  schema.Status
-	Metrics []schema.Metric
-	Issues  []schema.Issue
-	Checks  []schema.CheckState
-	Report  string
-	Bundles []schema.ArtifactRef
+	StageID      string
+	Status       schema.Status
+	Metrics      []schema.Metric
+	Issues       []schema.Issue
+	Checks       []schema.CheckState
+	StepStatuses []schema.Status
+	Report       string
+	Bundles      []schema.ArtifactRef
 }
 
 type StageExecutor interface {
