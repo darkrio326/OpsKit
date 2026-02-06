@@ -81,7 +81,7 @@ web/ui/                    # 开发态 UI 资源
 - 规格与安全：`docs/specs/README.md`
 - 产品设计（整理版）：`docs/product-design/README.md`
 - GitHub 发布说明：`docs/GITHUB_RELEASE.md`
-- 下一版发布计划：`docs/RELEASE_PLAN_v0.3.1-preview.2.md`
+- 下一版发布计划：`docs/RELEASE_PLAN_v0.3.2-preview.1.md`
 - 版本变更记录：`CHANGELOG.md`
 - 安全边界：`SECURITY.md`
 - 开源许可证：`LICENSE`（Apache-2.0）

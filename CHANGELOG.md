@@ -6,11 +6,13 @@
 
 ### Added
 
-- 待补充
+- 新增 `docs/RELEASE_PLAN_v0.3.2-preview.1.md`（下一版可执行任务清单）
+- 新增 `docs/RELEASE_NOTES_v0.3.2-preview.1.md`（下一版发布文案草稿）
 
 ### Changed
 
-- 待补充
+- `README.md` 更新下一版发布计划入口
+- `docs/GITHUB_RELEASE.md` 更新 preview.2 → preview.1 文案链接
 
 ### Fixed
 

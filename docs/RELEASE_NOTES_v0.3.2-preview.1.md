@@ -1,0 +1,50 @@
+# OpsKit v0.3.2-preview.1
+
+> 预览版本（Preview）。主线聚焦“模板变量系统与校验可用性”。
+
+## 本次发布重点
+
+- 新增 `--vars-file` 支持（文件式变量输入）
+- 变量类型与枚举校验增强（包含数组/对象最小支持）
+- 模板校验报错更友好（路径化提示）
+- demo 模板与文档示例统一
+
+## 兼容说明
+
+- 仍为 Preview 版本，不承诺生产 SLA
+- 不包含生产级 deploy 模板
+
+## 主要变更
+
+### Added
+
+- （待补充）
+
+### Changed
+
+- （待补充）
+
+### Fixed
+
+- （待补充）
+
+## 验证命令（发布前）
+
+```bash
+GOCACHE=$PWD/.gocache go test ./...
+go run ./cmd/opskit template validate assets/templates/demo-server-audit.json
+go run ./cmd/opskit template validate assets/templates/demo-hello-service.json
+scripts/release.sh --version v0.3.2-preview.1 --clean
+```
+
+## Release 资产
+
+- `opskit-v0.3.2-preview.1-linux-arm64`
+- `opskit-v0.3.2-preview.1-linux-amd64`
+- `checksums.txt`
+
+## 安全提示
+
+- 仅发布框架、通用能力与 demo 模板
+- 不发布生产 deploy 模板与客户环境信息
+- UI 默认建议监听 `127.0.0.1`
