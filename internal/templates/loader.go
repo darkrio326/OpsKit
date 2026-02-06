@@ -50,10 +50,10 @@ func decodeTemplateStrict(b []byte) (schema.Template, error) {
 	dec.DisallowUnknownFields()
 	var t schema.Template
 	if err := dec.Decode(&t); err != nil {
-		return schema.Template{}, err
+		return schema.Template{}, fmt.Errorf("template: %w", err)
 	}
 	if err := dec.Decode(&struct{}{}); err != nil && !errors.Is(err, io.EOF) {
-		return schema.Template{}, fmt.Errorf("unexpected extra JSON content in template")
+		return schema.Template{}, fmt.Errorf("template: unexpected extra JSON content")
 	}
 	return t, nil
 }

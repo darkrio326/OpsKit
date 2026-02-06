@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	coreerr "opskit/internal/core/errors"
@@ -103,6 +105,41 @@ func TestCmdTemplate_InvalidFile(t *testing.T) {
 	got := cmdTemplate([]string{"validate", "/no/such/template.json"})
 	if got != exitcode.Precondition {
 		t.Fatalf("expected precondition exit code, got %d", got)
+	}
+}
+
+func TestCmdTemplate_VarsFile(t *testing.T) {
+	tmp := t.TempDir()
+	tplPath := filepath.Join(tmp, "t.json")
+	varsPath := filepath.Join(tmp, "vars.json")
+
+	tpl := `{
+  "id": "t",
+  "name": "t",
+  "mode": "manage",
+  "vars": {
+    "ENV": { "type": "string", "required": true },
+    "PORTS": { "type": "array", "required": true }
+  },
+  "stages": {
+    "A": {
+      "checks": [
+        { "id": "a.system_info", "kind": "system_info", "params": { "ports": "${PORTS}", "env": "${ENV}" } }
+      ]
+    }
+  }
+}`
+	vars := `{"ENV":"dev","PORTS":[80,443]}`
+	if err := os.WriteFile(tplPath, []byte(tpl), 0o644); err != nil {
+		t.Fatalf("write template: %v", err)
+	}
+	if err := os.WriteFile(varsPath, []byte(vars), 0o644); err != nil {
+		t.Fatalf("write vars: %v", err)
+	}
+
+	got := cmdTemplate([]string{"validate", "--vars-file", varsPath, tplPath})
+	if got != exitcode.Success {
+		t.Fatalf("expected success, got %d", got)
 	}
 }
 

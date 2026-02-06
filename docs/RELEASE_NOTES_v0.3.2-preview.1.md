@@ -21,6 +21,7 @@
 - `--vars-file` 支持（JSON 或 key=value 文件）
 - 变量类型扩展：`array/object`（JSON 形式）
 - 变量文件解析与回归测试
+- 新增 vars-file 示例（JSON/ENV）
 
 ### Changed
 

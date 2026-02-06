@@ -28,29 +28,38 @@ func ValidateTemplate(t Template) error {
 	}
 	for stageID, stage := range t.Stages {
 		if !isStageID(stageID) {
-			return fmt.Errorf("invalid stage id: %s (expect A-F)", stageID)
+			return fmt.Errorf("template.stages.%s: invalid stage id (expect A-F)", stageID)
 		}
-		for _, c := range stage.Checks {
-			if c.ID == "" || c.Kind == "" {
-				return fmt.Errorf("stage %s check id/kind is required", stageID)
+		for i, c := range stage.Checks {
+			if c.ID == "" {
+				return fmt.Errorf("template.stages.%s.checks[%d].id is required", stageID, i)
 			}
-			if err := validateStepParams(stageID, "check", c); err != nil {
+			if c.Kind == "" {
+				return fmt.Errorf("template.stages.%s.checks[%d].kind is required", stageID, i)
+			}
+			if err := validateStepParams(stageID, "checks", i, c); err != nil {
 				return err
 			}
 		}
-		for _, a := range stage.Actions {
-			if a.ID == "" || a.Kind == "" {
-				return fmt.Errorf("stage %s action id/kind is required", stageID)
+		for i, a := range stage.Actions {
+			if a.ID == "" {
+				return fmt.Errorf("template.stages.%s.actions[%d].id is required", stageID, i)
 			}
-			if err := validateStepParams(stageID, "action", a); err != nil {
+			if a.Kind == "" {
+				return fmt.Errorf("template.stages.%s.actions[%d].kind is required", stageID, i)
+			}
+			if err := validateStepParams(stageID, "actions", i, a); err != nil {
 				return err
 			}
 		}
-		for _, e := range stage.Evidence {
-			if e.ID == "" || e.Kind == "" {
-				return fmt.Errorf("stage %s evidence id/kind is required", stageID)
+		for i, e := range stage.Evidence {
+			if e.ID == "" {
+				return fmt.Errorf("template.stages.%s.evidence[%d].id is required", stageID, i)
 			}
-			if err := validateStepParams(stageID, "evidence", e); err != nil {
+			if e.Kind == "" {
+				return fmt.Errorf("template.stages.%s.evidence[%d].kind is required", stageID, i)
+			}
+			if err := validateStepParams(stageID, "evidence", i, e); err != nil {
 				return err
 			}
 		}
@@ -178,21 +187,21 @@ func containsString(xs []string, v string) bool {
 	return false
 }
 
-func validateStepParams(stageID, stepType string, step TemplateStep) error {
+func validateStepParams(stageID, stepType string, index int, step TemplateStep) error {
 	if step.Params == nil {
 		return nil
 	}
 	if raw, ok := step.Params["severity"]; ok {
 		s, ok := raw.(string)
 		if !ok {
-			return fmt.Errorf("stage %s %s %s severity must be string", stageID, stepType, step.ID)
+			return fmt.Errorf("template.stages.%s.%s[%d].params.severity must be string", stageID, stepType, index)
 		}
 		if !IsValidSeverity(Severity(s)) {
-			return fmt.Errorf("stage %s %s %s invalid severity: %s", stageID, stepType, step.ID, s)
+			return fmt.Errorf("template.stages.%s.%s[%d].params.severity invalid value: %s", stageID, stepType, index, s)
 		}
 	}
-	if path, token, ok := findUnresolvedVar(step.Params, "params"); ok {
-		return fmt.Errorf("stage %s %s %s unresolved var %s at %s", stageID, stepType, step.ID, token, path)
+	if path, token, ok := findUnresolvedVar(step.Params, fmt.Sprintf("template.stages.%s.%s[%d].params", stageID, stepType, index)); ok {
+		return fmt.Errorf("%s: unresolved var %s", path, token)
 	}
 	return nil
 }

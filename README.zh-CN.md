@@ -37,6 +37,15 @@ go build -o opskit ./cmd/opskit
 ./opskit template validate <file>
 ```
 
+## vars-file 示例
+
+```bash
+./opskit run C \
+  --template assets/templates/demo-hello-service.json \
+  --vars-file examples/vars/demo-hello-service.json \
+  --output ./.tmp/opskit-hello
+```
+
 ## 退出码
 
 - `0`：成功

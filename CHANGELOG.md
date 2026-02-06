@@ -11,12 +11,14 @@
 - 新增 `--vars-file`（支持 JSON 或 key=value 文件）
 - 变量类型扩展：`array/object`（JSON 形式）
 - 新增 vars-file 解析与回归测试
+- 新增 vars-file 示例（`examples/vars/demo-hello-service.*`）
 
 ### Changed
 
 - `README.md` 更新下一版发布计划入口
 - `docs/GITHUB_RELEASE.md` 更新 preview.2 → preview.1 文案链接
 - demo 模板变量说明更新
+- 模板校验错误提示路径化
 
 ### Fixed
 
