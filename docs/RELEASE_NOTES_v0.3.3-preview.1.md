@@ -17,12 +17,13 @@
 - Recover 结果新增统一 `recover_reason_code` 指标
 - Recover collect 产物新增来源标识（`source: command/journal/file`）
 - Recover collect 产物新增截断元数据（`originalLength`/`truncatedLength`）
-- （待补）Operate 新增通用检查项
+- 新增通用检查：`dns_resolve`、`systemd_restart_count`
 
 ### Changed
 
 - Recover circuit 状态新增 `lastErrorCode`，用于状态汇总与追踪
 - Recover summary 新增 `lastReasonCode`
+- demo 审计模板 D 阶段新增 `dns_resolve` 检查
 - （待补）accept 产物一致性校验策略
 
 ### Fixed

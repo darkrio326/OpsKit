@@ -87,6 +87,26 @@
           "enabled": true
         },
         {
+          "id": "d.dns_resolve_localhost",
+          "kind": "dns_resolve",
+          "params": {
+            "host": "localhost",
+            "min_records": 1,
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.restart_count_placeholder",
+          "kind": "systemd_restart_count",
+          "params": {
+            "unit": "demo-placeholder.service",
+            "max_restarts": 3,
+            "severity": "warn"
+          },
+          "enabled": false
+        },
+        {
           "id": "d.service_check_placeholder",
           "kind": "systemd_unit_active",
           "params": {

@@ -12,6 +12,7 @@
 - Recover 结果新增 `recover_reason_code` 指标
 - Recover collect 新增 `source` 字段（command/journal/file）
 - Recover collect 新增截断元数据（`originalLength`/`truncatedLength`）
+- 新增检查插件：`dns_resolve`、`systemd_restart_count`
 
 ### Changed
 
@@ -20,6 +21,7 @@
 - `docs/GITHUB_RELEASE.md` 更新下一版文案链接
 - Recover circuit 状态新增 `lastErrorCode`
 - recover summary 新增 `lastReasonCode`
+- demo 审计模板 D 阶段新增 `dns_resolve` 检查
 
 ### Fixed
 
