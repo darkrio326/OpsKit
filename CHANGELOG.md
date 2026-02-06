@@ -8,15 +8,21 @@
 
 - 新增 `docs/RELEASE_PLAN_v0.3.1-preview.2.md`（下一版可执行任务清单）
 - 新增 `docs/RELEASE_NOTES_v0.3.1-preview.2.md`（下一版发布文案草稿）
+- 证据包新增 `manifest.json`（与 `hashes.txt` 一致）
+- 新增回归测试：CLI 退出码、模板校验、证据包一致性、脱敏
+- 新增截图占位目录：`docs/assets/screenshots/`
 
 ### Changed
 
 - `README.md` 增加“下一版发布计划”入口
 - `docs/GITHUB_RELEASE.md` 增加 preview.2 任务单与 release notes 链接
+- 模板 JSON 严格解析与校验增强（未知字段/未解析变量/非法 severity）
+- 麒麟 V10 Docker e2e 文档与示例说明统一
+- `README.zh-CN.md` 增加界面预览占位
 
 ### Fixed
 
-- 待补充
+- 暂无
 
 ## [v0.3.0-preview.1] - 2026-02-05
 

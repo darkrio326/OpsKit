@@ -19,15 +19,19 @@
 
 ### Added
 
-- （待补充）
+- 证据包新增 `manifest.json`（与 `hashes.txt` 一致，可复核）
+- Accept/Handover/Recover bundle 写入基础元信息（stage/template/bundle）
+- 新增回归测试：CLI 退出码、模板校验、证据包一致性、脱敏
 
 ### Changed
 
-- （待补充）
+- 模板校验增强：未解析变量与 severity 枚举直接报错
+- 模板 JSON 严格解析：未知字段直接失败
+- 麒麟 V10 Docker e2e 文档与示例说明统一
 
 ### Fixed
 
-- （待补充）
+- 暂无
 
 ## 验证命令（发布前）
 

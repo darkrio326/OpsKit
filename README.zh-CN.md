@@ -60,6 +60,12 @@ go build -o opskit ./cmd/opskit
 - 阶段详情页（某一阶段的 checks/actions/evidence）
 - 证据包列表页（reports/bundles 入口）
 
+截图占位（稍后补图即可自动生效）：
+
+![OpsKit UI 总览](docs/assets/screenshots/overview.png)
+![OpsKit 阶段详情](docs/assets/screenshots/stage-detail.png)
+![OpsKit 证据包列表](docs/assets/screenshots/artifacts.png)
+
 ## 目录说明（核心）
 
 - `cmd/opskit`：CLI 入口
