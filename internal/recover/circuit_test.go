@@ -9,7 +9,7 @@ import (
 func TestCircuitOpenAndClose(t *testing.T) {
 	p := filepath.Join(t.TempDir(), "recover_circuit.json")
 	now := time.Now().UTC()
-	if err := Open(p, now, 10*time.Second, "boom"); err != nil {
+	if err := OpenWithTriggerCode(p, now, 10*time.Second, "boom", "readiness_failed", "onboot"); err != nil {
 		t.Fatalf("open circuit: %v", err)
 	}
 	state, err := Load(p)
@@ -22,6 +22,9 @@ func TestCircuitOpenAndClose(t *testing.T) {
 	}
 	if state.FailureCount != 1 {
 		t.Fatalf("expected failure count 1, got %d", state.FailureCount)
+	}
+	if state.LastErrorCode != "readiness_failed" {
+		t.Fatalf("expected last error code readiness_failed, got %q", state.LastErrorCode)
 	}
 	if err := Close(p); err != nil {
 		t.Fatalf("close circuit: %v", err)
@@ -37,12 +40,15 @@ func TestCircuitOpenAndClose(t *testing.T) {
 	if state.SuccessCount != 1 {
 		t.Fatalf("expected success count 1, got %d", state.SuccessCount)
 	}
+	if state.LastErrorCode != "" {
+		t.Fatalf("expected last error code cleared, got %q", state.LastErrorCode)
+	}
 }
 
 func TestCircuitWarn(t *testing.T) {
 	p := filepath.Join(t.TempDir(), "recover_circuit.json")
 	now := time.Now().UTC()
-	if err := MarkWarn(p, now, "cooldown", "timer"); err != nil {
+	if err := MarkWarnWithCode(p, now, "cooldown", "circuit_open", "timer"); err != nil {
 		t.Fatalf("mark warn: %v", err)
 	}
 	state, err := Load(p)
@@ -54,5 +60,8 @@ func TestCircuitWarn(t *testing.T) {
 	}
 	if state.LastStatus != "WARN" {
 		t.Fatalf("expected WARN status, got %s", state.LastStatus)
+	}
+	if state.LastErrorCode != "circuit_open" {
+		t.Fatalf("expected WARN reason code circuit_open, got %q", state.LastErrorCode)
 	}
 }

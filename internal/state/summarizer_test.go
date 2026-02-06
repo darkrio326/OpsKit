@@ -35,7 +35,10 @@ func TestDeriveRecoverSummaryFromLifecycleAndCircuit(t *testing.T) {
 		if lifecycle.Stages[i].StageID == "E" {
 			lifecycle.Stages[i].Status = schema.StatusFailed
 			lifecycle.Stages[i].LastRunTime = now.Format(time.RFC3339)
-			lifecycle.Stages[i].Metrics = []schema.Metric{{Label: "recover_trigger", Value: "timer"}}
+			lifecycle.Stages[i].Metrics = []schema.Metric{
+				{Label: "recover_trigger", Value: "timer"},
+				{Label: "recover_reason_code", Value: "systemctl_start_exit_nonzero"},
+			}
 		}
 	}
 	s := DeriveRecoverSummary(paths, lifecycle)
@@ -47,6 +50,9 @@ func TestDeriveRecoverSummaryFromLifecycleAndCircuit(t *testing.T) {
 	}
 	if s.FailureCount != 1 {
 		t.Fatalf("expected failure count 1, got %d", s.FailureCount)
+	}
+	if s.LastReasonCode != "systemctl_start_exit_nonzero" {
+		t.Fatalf("expected reason code from stage metric, got %q", s.LastReasonCode)
 	}
 	if !s.CircuitOpen {
 		t.Fatalf("expected circuit open")

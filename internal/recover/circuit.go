@@ -12,6 +12,7 @@ type CircuitState struct {
 	LastFailureTime string `json:"lastFailureTime,omitempty"`
 	CooldownUntil   string `json:"cooldownUntil,omitempty"`
 	LastError       string `json:"lastError,omitempty"`
+	LastErrorCode   string `json:"lastErrorCode,omitempty"`
 	LastRunTime     string `json:"lastRunTime,omitempty"`
 	LastStatus      string `json:"lastStatus,omitempty"`
 	LastTrigger     string `json:"lastTrigger,omitempty"`
@@ -47,7 +48,7 @@ func IsOpen(c CircuitState, now time.Time) (bool, time.Time) {
 }
 
 func Open(path string, now time.Time, cooldown time.Duration, lastErr string) error {
-	return OpenWithTrigger(path, now, cooldown, lastErr, "")
+	return OpenWithTriggerCode(path, now, cooldown, lastErr, "", "")
 }
 
 func Close(path string) error {
@@ -55,6 +56,10 @@ func Close(path string) error {
 }
 
 func OpenWithTrigger(path string, now time.Time, cooldown time.Duration, lastErr string, trigger string) error {
+	return OpenWithTriggerCode(path, now, cooldown, lastErr, "", trigger)
+}
+
+func OpenWithTriggerCode(path string, now time.Time, cooldown time.Duration, lastErr string, lastErrCode string, trigger string) error {
 	state, err := Load(path)
 	if err != nil {
 		return err
@@ -62,6 +67,7 @@ func OpenWithTrigger(path string, now time.Time, cooldown time.Duration, lastErr
 	state.LastFailureTime = now.Format(time.RFC3339)
 	state.CooldownUntil = now.Add(cooldown).Format(time.RFC3339)
 	state.LastError = lastErr
+	state.LastErrorCode = lastErrCode
 	state.LastRunTime = now.Format(time.RFC3339)
 	state.LastStatus = "FAILED"
 	state.LastTrigger = trigger
@@ -76,6 +82,7 @@ func CloseWithTrigger(path string, now time.Time, trigger string) error {
 	}
 	state.CooldownUntil = ""
 	state.LastError = ""
+	state.LastErrorCode = ""
 	state.LastRunTime = now.Format(time.RFC3339)
 	state.LastStatus = "PASSED"
 	state.LastTrigger = trigger
@@ -84,6 +91,10 @@ func CloseWithTrigger(path string, now time.Time, trigger string) error {
 }
 
 func MarkWarn(path string, now time.Time, reason string, trigger string) error {
+	return MarkWarnWithCode(path, now, reason, "", trigger)
+}
+
+func MarkWarnWithCode(path string, now time.Time, reason string, reasonCode string, trigger string) error {
 	state, err := Load(path)
 	if err != nil {
 		return err
@@ -92,6 +103,7 @@ func MarkWarn(path string, now time.Time, reason string, trigger string) error {
 	state.LastStatus = "WARN"
 	state.LastTrigger = trigger
 	state.LastError = reason
+	state.LastErrorCode = reasonCode
 	state.WarnCount++
 	return fsx.AtomicWriteJSON(path, state)
 }

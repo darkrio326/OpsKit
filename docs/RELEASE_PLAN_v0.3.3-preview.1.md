@@ -31,6 +31,7 @@
 - 为 recover 结果增加统一 `reason/code` 字段
 - collect 产物增加来源标识（command/journal/file）
 - 超限截断保留 `original_length` 与 `truncated_length`
+- 当前进度：已完成（代码与测试已落地）
 
 验收：
 

@@ -132,6 +132,9 @@ func TestRecoverSequencePreconditionGeneratesCollectBundle(t *testing.T) {
 	if !hasMetric(res.Metrics, "recover_trigger", "onboot") {
 		t.Fatalf("expected recover_trigger metric onboot")
 	}
+	if !hasMetric(res.Metrics, "recover_reason_code", recoverReasonReadinessPreconditionFailed) {
+		t.Fatalf("expected recover_reason_code metric %s", recoverReasonReadinessPreconditionFailed)
+	}
 	if !strings.Contains(res.Message, "readiness check failed") {
 		t.Fatalf("unexpected message: %s", res.Message)
 	}
@@ -146,6 +149,13 @@ func TestRecoverSequencePreconditionGeneratesCollectBundle(t *testing.T) {
 	}
 	if payload["triggerSource"] != "onboot" {
 		t.Fatalf("unexpected triggerSource: %v", payload["triggerSource"])
+	}
+	reason, ok := payload["reason"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected reason object")
+	}
+	if reason["code"] != recoverReasonReadinessPreconditionFailed {
+		t.Fatalf("unexpected reason code: %v", reason["code"])
 	}
 	if _, ok := payload["paths"]; !ok {
 		t.Fatalf("expected collect paths summary")
@@ -195,6 +205,9 @@ func TestRecoverSequenceAllowEmptyUnits(t *testing.T) {
 	if !hasMetric(res.Metrics, "recovered_units", "0") {
 		t.Fatalf("expected recovered_units metric 0")
 	}
+	if !hasMetric(res.Metrics, "recover_reason_code", recoverReasonNone) {
+		t.Fatalf("expected recover_reason_code metric %s", recoverReasonNone)
+	}
 }
 
 func TestWriteRecoverCollectRedactionAndLimit(t *testing.T) {
@@ -238,6 +251,7 @@ func TestWriteRecoverCollectRedactionAndLimit(t *testing.T) {
 		req,
 		collectFile,
 		[]string{"demo.service"},
+		recoverReasonSystemctlStartExit,
 		"recover failed token=xyz",
 		filepath.Join(stateDir, "recover_circuit.json"),
 		"E",
@@ -259,20 +273,57 @@ func TestWriteRecoverCollectRedactionAndLimit(t *testing.T) {
 	if !ok {
 		t.Fatalf("commands section missing")
 	}
-	ss, _ := commands["ss_ltn"].(string)
+	ssEntry, ok := commands["ss_ltn"].(map[string]any)
+	if !ok {
+		t.Fatalf("ss_ltn command entry missing")
+	}
+	ss, _ := ssEntry["output"].(string)
 	if strings.Contains(ss, "xyz") {
 		t.Fatalf("expected token redaction in command output")
 	}
 	if !strings.Contains(ss, "...(truncated)") {
 		t.Fatalf("expected command output truncation marker")
 	}
+	if ssEntry["source"] != "command" {
+		t.Fatalf("expected command source, got %v", ssEntry["source"])
+	}
+	orig, _ := ssEntry["originalLength"].(float64)
+	trunc, _ := ssEntry["truncatedLength"].(float64)
+	if orig <= trunc {
+		t.Fatalf("expected originalLength > truncatedLength, got %v <= %v", orig, trunc)
+	}
 	journals, ok := payload["journals"].(map[string]any)
 	if !ok {
 		t.Fatalf("journals section missing")
 	}
-	j, _ := journals["journal_demo_service"].(string)
+	jEntry, ok := journals["journal_demo_service"].(map[string]any)
+	if !ok {
+		t.Fatalf("journal entry missing")
+	}
+	j, _ := jEntry["output"].(string)
 	if strings.Contains(j, "abc") {
 		t.Fatalf("expected password redaction in journal output")
+	}
+	if jEntry["source"] != "journal" {
+		t.Fatalf("expected journal source, got %v", jEntry["source"])
+	}
+	reason, ok := payload["reason"].(map[string]any)
+	if !ok {
+		t.Fatalf("reason section missing")
+	}
+	if reason["code"] != recoverReasonSystemctlStartExit {
+		t.Fatalf("unexpected reason code: %v", reason["code"])
+	}
+	paths, ok := payload["paths"].([]any)
+	if !ok || len(paths) == 0 {
+		t.Fatalf("paths summary missing")
+	}
+	path0, ok := paths[0].(map[string]any)
+	if !ok {
+		t.Fatalf("path summary item invalid")
+	}
+	if path0["source"] != "file" {
+		t.Fatalf("expected file source, got %v", path0["source"])
 	}
 	limits, ok := payload["limits"].(map[string]any)
 	if !ok {

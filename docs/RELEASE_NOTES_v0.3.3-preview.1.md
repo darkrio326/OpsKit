@@ -14,17 +14,20 @@
 ### Added
 
 - 新增 `scripts/release-check.sh`，固化发布前最小回归（测试/模板校验/A-D-accept 干跑）
-- （待补）Recover 统一 reason/code 与 collect 来源字段
+- Recover 结果新增统一 `recover_reason_code` 指标
+- Recover collect 产物新增来源标识（`source: command/journal/file`）
+- Recover collect 产物新增截断元数据（`originalLength`/`truncatedLength`）
 - （待补）Operate 新增通用检查项
 
 ### Changed
 
-- （待补）阶段摘要结构统一
+- Recover circuit 状态新增 `lastErrorCode`，用于状态汇总与追踪
+- Recover summary 新增 `lastReasonCode`
 - （待补）accept 产物一致性校验策略
 
 ### Fixed
 
-- （待补）
+- 修复 recover 失败原因仅文本、不易聚合的问题（改为 code + message 双轨）
 
 ## 计划验证命令
 

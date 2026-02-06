@@ -55,6 +55,9 @@ func DeriveRecoverSummary(paths Paths, lifecycle schema.LifecycleState) *schema.
 		if trigger := metricValue(stage.Metrics, "recover_trigger"); trigger != "" {
 			s.LastTrigger = trigger
 		}
+		if reasonCode := metricValue(stage.Metrics, "recover_reason_code"); reasonCode != "" {
+			s.LastReasonCode = reasonCode
+		}
 	}
 	if s.LastStatus == "" && circuit.LastStatus != "" {
 		s.LastStatus = schema.Status(circuit.LastStatus)
@@ -64,6 +67,9 @@ func DeriveRecoverSummary(paths Paths, lifecycle schema.LifecycleState) *schema.
 	}
 	if s.LastTrigger == "" {
 		s.LastTrigger = circuit.LastTrigger
+	}
+	if s.LastReasonCode == "" {
+		s.LastReasonCode = circuit.LastErrorCode
 	}
 	return s
 }

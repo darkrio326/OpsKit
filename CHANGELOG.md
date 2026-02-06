@@ -9,16 +9,21 @@
 - 新增 `docs/RELEASE_PLAN_v0.3.3-preview.1.md`（下一版可执行任务清单）
 - 新增 `docs/RELEASE_NOTES_v0.3.3-preview.1.md`（下一版发布文案草稿）
 - 新增 `scripts/release-check.sh`（发布前最小回归脚本）
+- Recover 结果新增 `recover_reason_code` 指标
+- Recover collect 新增 `source` 字段（command/journal/file）
+- Recover collect 新增截断元数据（`originalLength`/`truncatedLength`）
 
 ### Changed
 
 - `README.md` / `README.zh-CN.md` 更新当前版本与下一版计划入口
 - `ROADMAP.md` 更新“最新发布”描述到 `v0.3.2`
 - `docs/GITHUB_RELEASE.md` 更新下一版文案链接
+- Recover circuit 状态新增 `lastErrorCode`
+- recover summary 新增 `lastReasonCode`
 
 ### Fixed
 
-- 无
+- 修复 recover 失败原因无法稳定聚合的问题（统一 reason code）
 
 ## [v0.3.2] - 2026-02-06
 

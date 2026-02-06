@@ -21,6 +21,18 @@ type recoverSequenceAction struct{}
 
 func (a *recoverSequenceAction) Kind() string { return "recover_sequence" }
 
+const (
+	recoverReasonNone                        = "none"
+	recoverReasonCircuitOpen                 = "circuit_open"
+	recoverReasonReadinessFailed             = "readiness_failed"
+	recoverReasonReadinessPreconditionFailed = "readiness_precondition_failed"
+	recoverReasonSystemctlStartExecError     = "systemctl_start_exec_error"
+	recoverReasonSystemctlStartExit          = "systemctl_start_exit_nonzero"
+	recoverReasonSystemctlIsActiveExecError  = "systemctl_is_active_exec_error"
+	recoverReasonUnitNotActive               = "unit_not_active_after_start"
+	recoverReasonUnknown                     = "unknown_recover_failure"
+)
+
 func (a *recoverSequenceAction) Run(ctx context.Context, req Request) (Result, error) {
 	units := toStringSlice(req.Params["units"])
 	allowEmptyUnits := toBool(req.Params["allow_empty_units"], false)
@@ -61,7 +73,7 @@ func (a *recoverSequenceAction) Run(ctx context.Context, req Request) (Result, e
 	open, until := recover.IsOpen(circuit, now)
 	if open {
 		msg := fmt.Sprintf("recovery circuit open until %s", until.Format(time.RFC3339))
-		_ = recover.MarkWarn(circuitFile, now, msg, triggerSource)
+		_ = recover.MarkWarnWithCode(circuitFile, now, msg, recoverReasonCircuitOpen, triggerSource)
 		issue := &schema.Issue{ID: req.ID, Severity: schema.SeverityWarn, Message: msg, Advice: "wait for cooldown or manual intervention"}
 		return Result{
 			ActionID: req.ID,
@@ -69,15 +81,19 @@ func (a *recoverSequenceAction) Run(ctx context.Context, req Request) (Result, e
 			Severity: schema.SeverityWarn,
 			Message:  msg,
 			Issue:    issue,
-			Metrics:  []schema.Metric{{Label: "recover_trigger", Value: triggerSource}},
+			Metrics:  appendRecoverReasonMetrics([]schema.Metric{{Label: "recover_trigger", Value: triggerSource}}, recoverReasonCircuitOpen, msg, redactKeys),
 		}, nil
 	}
 
 	if err := checkReadiness(ctx, req, requireNetwork, requiredMounts); err != nil {
-		_ = recover.OpenWithTrigger(circuitFile, now, time.Duration(cooldownSeconds)*time.Second, err.Error(), triggerSource)
+		reasonCode := recoverReasonReadinessFailed
+		if errors.Is(err, coreerr.ErrPreconditionFailed) {
+			reasonCode = recoverReasonReadinessPreconditionFailed
+		}
+		_ = recover.OpenWithTriggerCode(circuitFile, now, time.Duration(cooldownSeconds)*time.Second, err.Error(), reasonCode, triggerSource)
 		bundles := []schema.ArtifactRef{}
 		if collectFile != "" {
-			if b, collectErr := writeRecoverCollect(ctx, req, collectFile, units, err.Error(), circuitFile, stageID, collectBundleDir, triggerSource, collectPaths, redactKeys, collectOutputLimit); collectErr == nil && b.Path != "" {
+			if b, collectErr := writeRecoverCollect(ctx, req, collectFile, units, reasonCode, err.Error(), circuitFile, stageID, collectBundleDir, triggerSource, collectPaths, redactKeys, collectOutputLimit); collectErr == nil && b.Path != "" {
 				bundles = append(bundles, b)
 			}
 		}
@@ -94,20 +110,22 @@ func (a *recoverSequenceAction) Run(ctx context.Context, req Request) (Result, e
 			Message:  issue.Message,
 			Issue:    issue,
 			Bundles:  bundles,
-			Metrics: []schema.Metric{
+			Metrics: appendRecoverReasonMetrics([]schema.Metric{
 				{Label: "recover_trigger", Value: triggerSource},
 				{Label: "recover_precondition", Value: boolMetric(errors.Is(err, coreerr.ErrPreconditionFailed))},
-			},
+			}, reasonCode, err.Error(), redactKeys),
 		}, nil
 	}
 
 	lastErr := ""
+	lastReasonCode := recoverReasonUnknown
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		allActive := true
 		for _, unit := range units {
 			startRes, runErr := runCmd(ctx, req, "systemctl", "start", unit)
 			if runErr != nil {
 				lastErr = runErr.Error()
+				lastReasonCode = recoverReasonSystemctlStartExecError
 				allActive = false
 				break
 			}
@@ -116,17 +134,20 @@ func (a *recoverSequenceAction) Run(ctx context.Context, req Request) (Result, e
 				if lastErr == "" {
 					lastErr = fmt.Sprintf("failed to start %s", unit)
 				}
+				lastReasonCode = recoverReasonSystemctlStartExit
 				allActive = false
 				break
 			}
 			activeRes, activeErr := runCmd(ctx, req, "systemctl", "is-active", unit)
 			if activeErr != nil {
 				lastErr = activeErr.Error()
+				lastReasonCode = recoverReasonSystemctlIsActiveExecError
 				allActive = false
 				break
 			}
 			if strings.TrimSpace(activeRes.Stdout) != "active" {
 				lastErr = fmt.Sprintf("unit not active after start: %s", unit)
+				lastReasonCode = recoverReasonUnitNotActive
 				allActive = false
 				break
 			}
@@ -143,6 +164,7 @@ func (a *recoverSequenceAction) Run(ctx context.Context, req Request) (Result, e
 					{Label: "recover_trigger", Value: triggerSource},
 					{Label: "recover_attempts", Value: fmt.Sprintf("%d", attempt)},
 					{Label: "recovered_units", Value: fmt.Sprintf("%d", recoveredUnits)},
+					{Label: "recover_reason_code", Value: recoverReasonNone},
 				},
 			}, nil
 		}
@@ -150,11 +172,12 @@ func (a *recoverSequenceAction) Run(ctx context.Context, req Request) (Result, e
 
 	if lastErr == "" {
 		lastErr = "unknown recovery failure"
+		lastReasonCode = recoverReasonUnknown
 	}
-	_ = recover.OpenWithTrigger(circuitFile, now, time.Duration(cooldownSeconds)*time.Second, lastErr, triggerSource)
+	_ = recover.OpenWithTriggerCode(circuitFile, now, time.Duration(cooldownSeconds)*time.Second, lastErr, lastReasonCode, triggerSource)
 	bundles := []schema.ArtifactRef{}
 	if collectFile != "" {
-		if b, collectErr := writeRecoverCollect(ctx, req, collectFile, units, lastErr, circuitFile, stageID, collectBundleDir, triggerSource, collectPaths, redactKeys, collectOutputLimit); collectErr == nil && b.Path != "" {
+		if b, collectErr := writeRecoverCollect(ctx, req, collectFile, units, lastReasonCode, lastErr, circuitFile, stageID, collectBundleDir, triggerSource, collectPaths, redactKeys, collectOutputLimit); collectErr == nil && b.Path != "" {
 			bundles = append(bundles, b)
 		}
 	}
@@ -165,10 +188,10 @@ func (a *recoverSequenceAction) Run(ctx context.Context, req Request) (Result, e
 		Severity: schema.SeverityFail,
 		Message:  issue.Message,
 		Issue:    issue,
-		Metrics: []schema.Metric{
+		Metrics: appendRecoverReasonMetrics([]schema.Metric{
 			{Label: "recover_trigger", Value: triggerSource},
 			{Label: "recover_attempts", Value: fmt.Sprintf("%d", maxAttempts)},
-		},
+		}, lastReasonCode, lastErr, redactKeys),
 		Bundles: bundles,
 	}, nil
 }
@@ -209,20 +232,23 @@ func checkReadiness(ctx context.Context, req Request, requireNetwork bool, requi
 	return nil
 }
 
-func writeRecoverCollect(ctx context.Context, req Request, path string, units []string, reason string, circuitFile string, stageID string, collectBundleDir string, triggerSource string, collectPaths []string, redactKeys []string, collectOutputLimit int) (schema.ArtifactRef, error) {
+func writeRecoverCollect(ctx context.Context, req Request, path string, units []string, reasonCode string, reason string, circuitFile string, stageID string, collectBundleDir string, triggerSource string, collectPaths []string, redactKeys []string, collectOutputLimit int) (schema.ArtifactRef, error) {
 	payload := map[string]any{
 		"timestamp":     time.Now().Format(time.RFC3339),
 		"triggerSource": triggerSource,
-		"reason":        redaction.RedactText(reason, redactKeys...),
-		"units":         units,
-		"commands":      map[string]string{},
-		"journals":      map[string]string{},
-		"paths":         summarizePaths(collectPaths),
+		"reason": map[string]any{
+			"code":    reasonCode,
+			"message": redaction.RedactText(reason, redactKeys...),
+		},
+		"units":    units,
+		"commands": map[string]any{},
+		"journals": map[string]any{},
+		"paths":    summarizePaths(collectPaths),
 		"limits": map[string]any{
 			"maxChars": collectOutputLimit,
 		},
 	}
-	cmds := payload["commands"].(map[string]string)
+	cmds := payload["commands"].(map[string]any)
 	for _, spec := range []struct {
 		name string
 		args []string
@@ -234,22 +260,23 @@ func writeRecoverCollect(ctx context.Context, req Request, path string, units []
 	} {
 		res, err := runCmd(ctx, req, spec.name, spec.args...)
 		if err != nil {
-			cmds[spec.key] = limitText("error: "+err.Error(), collectOutputLimit)
+			entry := buildCollectEntry("command", strings.Join(append([]string{spec.name}, spec.args...), " "), spec.name, -1, "error: "+err.Error(), collectOutputLimit, redactKeys)
+			cmds[spec.key] = entry
 			continue
 		}
 		out := formatCommandResult(spec.name, res.ExitCode, res.Stdout, res.Stderr)
-		cmds[spec.key] = limitText(redaction.RedactText(out, redactKeys...), collectOutputLimit)
+		cmds[spec.key] = buildCollectEntry("command", strings.Join(append([]string{spec.name}, spec.args...), " "), spec.name, res.ExitCode, out, collectOutputLimit, redactKeys)
 	}
-	journals := payload["journals"].(map[string]string)
+	journals := payload["journals"].(map[string]any)
 	for _, unit := range units {
 		key := "journal_" + strings.ReplaceAll(strings.ReplaceAll(unit, ".", "_"), "-", "_")
 		res, err := runCmd(ctx, req, "journalctl", "-u", unit, "--no-pager", "-n", "200")
 		if err != nil {
-			journals[key] = limitText("error: "+err.Error(), collectOutputLimit)
+			journals[key] = buildCollectEntry("journal", "journalctl -u "+unit+" --no-pager -n 200", unit, -1, "error: "+err.Error(), collectOutputLimit, redactKeys)
 			continue
 		}
 		out := formatCommandResult("journalctl", res.ExitCode, res.Stdout, res.Stderr)
-		journals[key] = limitText(redaction.RedactText(out, redactKeys...), collectOutputLimit)
+		journals[key] = buildCollectEntry("journal", "journalctl -u "+unit+" --no-pager -n 200", unit, res.ExitCode, out, collectOutputLimit, redactKeys)
 	}
 	if err := writeJSON(path, payload); err != nil {
 		return schema.ArtifactRef{}, err
@@ -269,15 +296,63 @@ func formatCommandResult(name string, exitCode int, stdout string, stderr string
 	return fmt.Sprintf("[%s exit=%d]\n%s", name, exitCode, out)
 }
 
+type limitedText struct {
+	Text            string
+	Truncated       bool
+	OriginalLength  int
+	TruncatedLength int
+}
+
 func limitText(input string, maxChars int) string {
-	if maxChars <= 0 || len(input) <= maxChars {
-		return input
+	return limitTextDetails(input, maxChars).Text
+}
+
+func limitTextDetails(input string, maxChars int) limitedText {
+	original := len(input)
+	out := input
+	truncated := false
+	if maxChars > 0 && len(input) > maxChars {
+		const marker = "\n...(truncated)"
+		truncated = true
+		if maxChars <= len(marker)+1 {
+			out = input[:maxChars]
+		} else {
+			out = input[:maxChars-len(marker)] + marker
+		}
 	}
-	const marker = "\n...(truncated)"
-	if maxChars <= len(marker)+1 {
-		return input[:maxChars]
+	return limitedText{
+		Text:            out,
+		Truncated:       truncated,
+		OriginalLength:  original,
+		TruncatedLength: len(out),
 	}
-	return input[:maxChars-len(marker)] + marker
+}
+
+func buildCollectEntry(source string, command string, target string, exitCode int, rawOutput string, collectOutputLimit int, redactKeys []string) map[string]any {
+	redacted := redaction.RedactText(rawOutput, redactKeys...)
+	limited := limitTextDetails(redacted, collectOutputLimit)
+	entry := map[string]any{
+		"source":          source,
+		"command":         command,
+		"target":          target,
+		"exitCode":        exitCode,
+		"output":          limited.Text,
+		"truncated":       limited.Truncated,
+		"originalLength":  limited.OriginalLength,
+		"truncatedLength": limited.TruncatedLength,
+	}
+	return entry
+}
+
+func appendRecoverReasonMetrics(metrics []schema.Metric, reasonCode string, reason string, redactKeys []string) []schema.Metric {
+	out := make([]schema.Metric, 0, len(metrics)+2)
+	out = append(out, metrics...)
+	out = append(out, schema.Metric{Label: "recover_reason_code", Value: reasonCode})
+	trimmed := strings.TrimSpace(redaction.RedactText(reason, redactKeys...))
+	if trimmed != "" {
+		out = append(out, schema.Metric{Label: "recover_reason", Value: limitText(trimmed, 256)})
+	}
+	return out
 }
 
 func createCollectBundle(collectFile string, circuitFile string, stageID string, collectBundleDir string) (schema.ArtifactRef, error) {
@@ -346,6 +421,7 @@ func summarizePaths(paths []string) []map[string]any {
 			continue
 		}
 		item := map[string]any{
+			"source": "file",
 			"path":   path,
 			"exists": false,
 		}

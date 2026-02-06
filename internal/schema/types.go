@@ -37,14 +37,15 @@ type OverallState struct {
 }
 
 type RecoverSummary struct {
-	LastStatus    Status `json:"lastStatus,omitempty"`
-	LastRunTime   string `json:"lastRunTime,omitempty"`
-	LastTrigger   string `json:"lastTrigger,omitempty"`
-	SuccessCount  int    `json:"successCount,omitempty"`
-	FailureCount  int    `json:"failureCount,omitempty"`
-	WarnCount     int    `json:"warnCount,omitempty"`
-	CircuitOpen   bool   `json:"circuitOpen,omitempty"`
-	CooldownUntil string `json:"cooldownUntil,omitempty"`
+	LastStatus     Status `json:"lastStatus,omitempty"`
+	LastRunTime    string `json:"lastRunTime,omitempty"`
+	LastTrigger    string `json:"lastTrigger,omitempty"`
+	LastReasonCode string `json:"lastReasonCode,omitempty"`
+	SuccessCount   int    `json:"successCount,omitempty"`
+	FailureCount   int    `json:"failureCount,omitempty"`
+	WarnCount      int    `json:"warnCount,omitempty"`
+	CircuitOpen    bool   `json:"circuitOpen,omitempty"`
+	CooldownUntil  string `json:"cooldownUntil,omitempty"`
 }
 
 type Metric struct {
