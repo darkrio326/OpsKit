@@ -2,6 +2,18 @@
   "id": "demo-server-audit-v1",
   "name": "Demo Server Audit v1",
   "mode": "manage",
+  "vars": {
+    "INSTALL_ROOT": {
+      "type": "string",
+      "required": true,
+      "description": "output root for state/reports"
+    },
+    "EVIDENCE_DIR": {
+      "type": "string",
+      "required": true,
+      "description": "evidence directory root"
+    }
+  },
   "stages": {
     "A": {
       "checks": [

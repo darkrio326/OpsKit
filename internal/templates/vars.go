@@ -49,6 +49,25 @@ func DefaultVars(base string) map[string]string {
 	}
 }
 
+func ApplyVarDefaults(vars map[string]string, specs map[string]schema.VarSpec) map[string]string {
+	if len(specs) == 0 {
+		return vars
+	}
+	out := map[string]string{}
+	for k, v := range vars {
+		out[k] = v
+	}
+	for name, spec := range specs {
+		if _, ok := out[name]; ok {
+			continue
+		}
+		if strings.TrimSpace(spec.Default) != "" {
+			out[name] = spec.Default
+		}
+	}
+	return out
+}
+
 func MergeVars(defaults map[string]string, overrides map[string]string) map[string]string {
 	out := map[string]string{}
 	for k, v := range defaults {

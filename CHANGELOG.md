@@ -17,6 +17,7 @@
 - `README.md` 增加“下一版发布计划”入口
 - `docs/GITHUB_RELEASE.md` 增加 preview.2 任务单与 release notes 链接
 - 模板 JSON 严格解析与校验增强（未知字段/未解析变量/非法 severity）
+- 模板变量 schema 校验（必填/类型/枚举/默认值）
 - 麒麟 V10 Docker e2e 文档与示例说明统一
 - `README.zh-CN.md` 增加界面预览占位
 

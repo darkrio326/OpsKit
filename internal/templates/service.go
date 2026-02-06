@@ -16,8 +16,12 @@ func Resolve(opt ResolveOptions) (schema.Template, map[string]string, error) {
 		return schema.Template{}, nil, err
 	}
 	defaults := DefaultVars(opt.BaseDir)
+	vars := ApplyVarDefaults(defaults, t.Vars)
 	overrides := ParseVars(opt.VarsRaw)
-	vars := MergeVars(defaults, overrides)
+	vars = MergeVars(vars, overrides)
+	if err := schema.ValidateVars(t.Vars, vars); err != nil {
+		return schema.Template{}, nil, err
+	}
 	t = ApplyVars(t, vars)
 	if err := schema.ValidateTemplate(t); err != nil {
 		return schema.Template{}, nil, err

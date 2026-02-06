@@ -13,7 +13,7 @@
 
 ## 可选变量
 
-模板使用默认变量即可，必要时可覆盖：
+模板内已声明 `vars` 校验，默认变量即可通过验证，必要时可覆盖：
 
 - `INSTALL_ROOT`
 - `EVIDENCE_DIR`
@@ -23,6 +23,8 @@
 ```bash
 ./opskit run A --template assets/templates/demo-server-audit.json --vars "INSTALL_ROOT=/tmp/opskit-demo"
 ```
+
+说明：若显式覆盖 `INSTALL_ROOT`，建议同时覆盖 `EVIDENCE_DIR` 以保持路径一致。
 
 ## 预期输出
 

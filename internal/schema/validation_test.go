@@ -49,3 +49,19 @@ func TestValidateTemplate_SeverityEnum(t *testing.T) {
 		t.Fatalf("expected invalid severity error")
 	}
 }
+
+func TestValidateVars_RequiredAndEnum(t *testing.T) {
+	specs := map[string]VarSpec{
+		"ENV":  {Type: "string", Required: true, Enum: []string{"dev", "prod"}},
+		"PORT": {Type: "int", Required: true},
+	}
+	if err := ValidateVars(specs, map[string]string{"ENV": "dev", "PORT": "18080"}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if err := ValidateVars(specs, map[string]string{"ENV": "test", "PORT": "18080"}); err == nil {
+		t.Fatalf("expected enum validation error")
+	}
+	if err := ValidateVars(specs, map[string]string{"ENV": "dev"}); err == nil {
+		t.Fatalf("expected required validation error")
+	}
+}

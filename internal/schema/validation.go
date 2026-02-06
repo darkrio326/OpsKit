@@ -3,6 +3,8 @@ package schema
 import (
 	"fmt"
 	"regexp"
+	"strconv"
+	"strings"
 )
 
 var templateVarRef = regexp.MustCompile(`\$\{[A-Za-z0-9_]+\}`)
@@ -19,6 +21,9 @@ func ValidateTemplate(t Template) error {
 	}
 	if len(t.Stages) == 0 {
 		return fmt.Errorf("template.stages is required")
+	}
+	if err := validateVarSpecs(t.Vars); err != nil {
+		return err
 	}
 	for stageID, stage := range t.Stages {
 		if !isStageID(stageID) {
@@ -50,6 +55,114 @@ func ValidateTemplate(t Template) error {
 		}
 	}
 	return nil
+}
+
+func ValidateVars(specs map[string]VarSpec, vars map[string]string) error {
+	if err := validateVarSpecs(specs); err != nil {
+		return err
+	}
+	if len(specs) == 0 {
+		return nil
+	}
+	for name, spec := range specs {
+		if strings.TrimSpace(name) == "" {
+			return fmt.Errorf("template.vars has empty variable name")
+		}
+		val, ok := vars[name]
+		if !ok || strings.TrimSpace(val) == "" {
+			if spec.Required {
+				return fmt.Errorf("template.vars.%s is required", name)
+			}
+			continue
+		}
+		if err := validateVarValue(name, spec, val); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateVarSpecs(specs map[string]VarSpec) error {
+	if len(specs) == 0 {
+		return nil
+	}
+	for name, spec := range specs {
+		if strings.TrimSpace(name) == "" {
+			return fmt.Errorf("template.vars has empty variable name")
+		}
+		if err := validateVarType(name, spec.Type); err != nil {
+			return err
+		}
+		if len(spec.Enum) > 0 {
+			seen := map[string]struct{}{}
+			for _, v := range spec.Enum {
+				v = strings.TrimSpace(v)
+				if v == "" {
+					return fmt.Errorf("template.vars.%s enum contains empty value", name)
+				}
+				if _, ok := seen[v]; ok {
+					return fmt.Errorf("template.vars.%s enum contains duplicate value: %s", name, v)
+				}
+				seen[v] = struct{}{}
+			}
+			if spec.Default != "" {
+				if !containsString(spec.Enum, spec.Default) {
+					return fmt.Errorf("template.vars.%s default not in enum: %s", name, spec.Default)
+				}
+			}
+		}
+		if spec.Default != "" {
+			if err := validateVarValue(name, spec, spec.Default); err != nil {
+				return fmt.Errorf("template.vars.%s default invalid: %w", name, err)
+			}
+		}
+	}
+	return nil
+}
+
+func validateVarType(name, typ string) error {
+	switch strings.ToLower(strings.TrimSpace(typ)) {
+	case "", "string":
+		return nil
+	case "int", "integer", "number", "float", "bool", "boolean":
+		return nil
+	default:
+		return fmt.Errorf("template.vars.%s invalid type: %s", name, typ)
+	}
+}
+
+func validateVarValue(name string, spec VarSpec, val string) error {
+	if len(spec.Enum) > 0 && !containsString(spec.Enum, val) {
+		return fmt.Errorf("template.vars.%s invalid value: %s", name, val)
+	}
+	switch strings.ToLower(strings.TrimSpace(spec.Type)) {
+	case "", "string":
+		return nil
+	case "int", "integer":
+		if _, err := strconv.Atoi(strings.TrimSpace(val)); err != nil {
+			return fmt.Errorf("template.vars.%s expects int", name)
+		}
+	case "number", "float":
+		if _, err := strconv.ParseFloat(strings.TrimSpace(val), 64); err != nil {
+			return fmt.Errorf("template.vars.%s expects number", name)
+		}
+	case "bool", "boolean":
+		if _, err := strconv.ParseBool(strings.TrimSpace(val)); err != nil {
+			return fmt.Errorf("template.vars.%s expects bool", name)
+		}
+	default:
+		return fmt.Errorf("template.vars.%s invalid type: %s", name, spec.Type)
+	}
+	return nil
+}
+
+func containsString(xs []string, v string) bool {
+	for _, s := range xs {
+		if s == v {
+			return true
+		}
+	}
+	return false
 }
 
 func validateStepParams(stageID, stepType string, step TemplateStep) error {

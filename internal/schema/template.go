@@ -4,7 +4,16 @@ type Template struct {
 	ID     string                       `json:"id"`
 	Name   string                       `json:"name"`
 	Mode   string                       `json:"mode"`
+	Vars   map[string]VarSpec           `json:"vars,omitempty"`
 	Stages map[string]TemplateStageSpec `json:"stages"`
+}
+
+type VarSpec struct {
+	Type        string   `json:"type,omitempty"`
+	Required    bool     `json:"required,omitempty"`
+	Default     string   `json:"default,omitempty"`
+	Enum        []string `json:"enum,omitempty"`
+	Description string   `json:"description,omitempty"`
 }
 
 type TemplateStageSpec struct {

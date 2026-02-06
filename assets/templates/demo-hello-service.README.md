@@ -14,6 +14,8 @@
 
 ## 常用变量
 
+模板内已声明 `vars` 校验，缺少必填变量会直接报错。
+
 - `SERVICE_NAME`（默认 `hello-service`）
 - `SERVICE_PORT`（默认 `18080`）
 - `SERVICE_UNIT`（默认 `hello-service.service`，仅作占位）

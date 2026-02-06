@@ -2,6 +2,42 @@
   "id": "demo-hello-service-v1",
   "name": "Demo Hello Service v1",
   "mode": "deploy",
+  "vars": {
+    "SERVICE_NAME": {
+      "type": "string",
+      "required": true,
+      "default": "hello-service",
+      "description": "service name"
+    },
+    "SERVICE_PORT": {
+      "type": "int",
+      "required": true,
+      "default": "18080",
+      "description": "service listen port"
+    },
+    "SERVICE_UNIT": {
+      "type": "string",
+      "required": true,
+      "default": "hello-service.service",
+      "description": "systemd unit name (placeholder in demo)"
+    },
+    "PROCESS_MATCH": {
+      "type": "string",
+      "required": true,
+      "default": "hello-service",
+      "description": "process match keyword"
+    },
+    "INSTALL_ROOT": {
+      "type": "string",
+      "required": true,
+      "description": "install root for demo output"
+    },
+    "CONF_DIR": {
+      "type": "string",
+      "required": true,
+      "description": "config directory root"
+    }
+  },
   "stages": {
     "A": {
       "checks": [
