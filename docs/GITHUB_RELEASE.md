@@ -67,6 +67,7 @@ scripts/release.sh --version v0.3.0-preview.1 --clean
 - 检查文档无客户信息与敏感数据
 - 验证 demo 模板可通过 `template validate`
 - 至少完成一次 `run A`、`run D`、`accept` 验证流程
+- 优先执行 `scripts/release-check.sh` 一键回归
 - 建议完成一次麒麟 V10 Docker e2e（`make -C examples/generic-manage docker-kylin-e2e`）
 - 更新 `CHANGELOG.md` 对应版本条目
 - 如发布二进制，确保 `checksums.txt` 已生成并随附件上传
@@ -74,5 +75,5 @@ scripts/release.sh --version v0.3.0-preview.1 --clean
 ## 7. Release 文案模板
 
 - 可直接使用：`docs/RELEASE_NOTES_v0.3.0-preview.1.md`
-- 下一版草稿：`docs/RELEASE_NOTES_v0.3.2-preview.1.md`
-- 下一版任务单：`docs/RELEASE_PLAN_v0.3.2-preview.1.md`
+- 下一版草稿：`docs/RELEASE_NOTES_v0.3.3-preview.1.md`
+- 下一版任务单：`docs/RELEASE_PLAN_v0.3.3-preview.1.md`

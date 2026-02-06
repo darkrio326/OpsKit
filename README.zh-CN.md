@@ -11,7 +11,7 @@ OpsKit 是一个基于 Go 的运维生命周期工具，围绕 `A -> F` 阶段�
 
 目标是用一个二进制和统一 JSON 状态输出，把“可执行、可观测、可留证据”的链路跑通。
 
-当前版本：`v0.3.1-preview.2`
+当前版本：`v0.3.2`
 
 快速上手：`docs/getting-started/GETSTART.md`
 产品设计总览：`docs/product-design/README.md`
@@ -112,4 +112,4 @@ IMAGE=kylinv10/kylin:b09 DOCKER_PLATFORM=linux/amd64 DRY_RUN=1 make -C examples/
 详细部署与验证说明见：`docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
 
 版本变更记录见：`CHANGELOG.md`
-下一版发布计划：`docs/RELEASE_PLAN_v0.3.2-preview.1.md`
+下一版发布计划：`docs/RELEASE_PLAN_v0.3.3-preview.1.md`

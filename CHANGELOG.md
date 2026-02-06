@@ -6,19 +6,35 @@
 
 ### Added
 
-- 新增 `docs/RELEASE_PLAN_v0.3.2-preview.1.md`（下一版可执行任务清单）
-- 新增 `docs/RELEASE_NOTES_v0.3.2-preview.1.md`（下一版发布文案草稿）
+- 新增 `docs/RELEASE_PLAN_v0.3.3-preview.1.md`（下一版可执行任务清单）
+- 新增 `docs/RELEASE_NOTES_v0.3.3-preview.1.md`（下一版发布文案草稿）
+- 新增 `scripts/release-check.sh`（发布前最小回归脚本）
+
+### Changed
+
+- `README.md` / `README.zh-CN.md` 更新当前版本与下一版计划入口
+- `ROADMAP.md` 更新“最新发布”描述到 `v0.3.2`
+- `docs/GITHUB_RELEASE.md` 更新下一版文案链接
+
+### Fixed
+
+- 无
+
+## [v0.3.2] - 2026-02-06
+
+### Added
+
 - 新增 `--vars-file`（支持 JSON 或 key=value 文件）
 - 变量类型扩展：`array/object`（JSON 形式）
 - 新增 vars-file 解析与回归测试
 - 新增 vars-file 示例（`examples/vars/demo-hello-service.*`）
 - 新增 vars-file 示例（`examples/vars/demo-server-audit.*`）
 - Recover collect 新增输出限流（`collect_output_limit`）与截断标记
+- 新增 `docs/RELEASE_PLAN_v0.3.2-preview.1.md`
+- 新增 `docs/RELEASE_NOTES_v0.3.2-preview.1.md`
 
 ### Changed
 
-- `README.md` 更新下一版发布计划入口
-- `docs/GITHUB_RELEASE.md` 更新 preview.2 → preview.1 文案链接
 - demo 模板变量说明更新
 - 模板校验错误提示路径化
 - Recover collect 命令/日志输出统一结构（含 exit code）并默认脱敏
@@ -26,6 +42,7 @@
 ### Fixed
 
 - 修复 `docs/RELEASE_PLAN_v0.3.2-preview.1.md` 中失效的 vars-file 示例路径
+- 修复 Recover collect 在大输出场景下可能导致 JSON 过大的问题（默认限流 + 截断标记）
 
 ## [v0.3.1-preview.2] - 2026-02-06
 
