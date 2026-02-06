@@ -28,10 +28,10 @@ go build -o opskit ./cmd/opskit
 ## 常用命令
 
 ```bash
-./opskit install [--template id|path] [--vars k=v] [--dry-run] [--output dir]
-./opskit run <A|B|C|D|E|F|AF> [--template id|path] [--vars k=v] [--dry-run] [--output dir]
+./opskit install [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--output dir]
+./opskit run <A|B|C|D|E|F|AF> [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--output dir]
 ./opskit status [--output dir]
-./opskit accept [--template id|path] [--vars k=v] [--dry-run] [--output dir]
+./opskit accept [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--output dir]
 ./opskit handover [--output dir]
 ./opskit web [--output dir] [--listen :18080]
 ./opskit template validate <file>

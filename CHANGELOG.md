@@ -8,11 +8,15 @@
 
 - 新增 `docs/RELEASE_PLAN_v0.3.2-preview.1.md`（下一版可执行任务清单）
 - 新增 `docs/RELEASE_NOTES_v0.3.2-preview.1.md`（下一版发布文案草稿）
+- 新增 `--vars-file`（支持 JSON 或 key=value 文件）
+- 变量类型扩展：`array/object`（JSON 形式）
+- 新增 vars-file 解析与回归测试
 
 ### Changed
 
 - `README.md` 更新下一版发布计划入口
 - `docs/GITHUB_RELEASE.md` 更新 preview.2 → preview.1 文案链接
+- demo 模板变量说明更新
 
 ### Fixed
 

@@ -52,10 +52,12 @@ func TestValidateTemplate_SeverityEnum(t *testing.T) {
 
 func TestValidateVars_RequiredAndEnum(t *testing.T) {
 	specs := map[string]VarSpec{
-		"ENV":  {Type: "string", Required: true, Enum: []string{"dev", "prod"}},
-		"PORT": {Type: "int", Required: true},
+		"ENV":   {Type: "string", Required: true, Enum: []string{"dev", "prod"}},
+		"PORT":  {Type: "int", Required: true},
+		"PORTS": {Type: "array"},
+		"META":  {Type: "object"},
 	}
-	if err := ValidateVars(specs, map[string]string{"ENV": "dev", "PORT": "18080"}); err != nil {
+	if err := ValidateVars(specs, map[string]string{"ENV": "dev", "PORT": "18080", "PORTS": "[80,443]", "META": "{\"env\":\"test\"}"}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if err := ValidateVars(specs, map[string]string{"ENV": "test", "PORT": "18080"}); err == nil {
@@ -63,5 +65,8 @@ func TestValidateVars_RequiredAndEnum(t *testing.T) {
 	}
 	if err := ValidateVars(specs, map[string]string{"ENV": "dev"}); err == nil {
 		t.Fatalf("expected required validation error")
+	}
+	if err := ValidateVars(specs, map[string]string{"ENV": "dev", "PORT": "18080", "PORTS": "80,443"}); err == nil {
+		t.Fatalf("expected array validation error")
 	}
 }

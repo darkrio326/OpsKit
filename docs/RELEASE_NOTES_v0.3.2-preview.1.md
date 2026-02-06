@@ -18,11 +18,14 @@
 
 ### Added
 
-- （待补充）
+- `--vars-file` 支持（JSON 或 key=value 文件）
+- 变量类型扩展：`array/object`（JSON 形式）
+- 变量文件解析与回归测试
 
 ### Changed
 
-- （待补充）
+- 模板校验错误提示更友好（变量未解析/类型不匹配）
+- demo 模板变量说明更新
 
 ### Fixed
 

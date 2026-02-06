@@ -61,15 +61,23 @@ func runCLI(args []string) int {
 
 func cmdTemplate(args []string) int {
 	if len(args) < 1 || args[0] != "validate" {
-		fmt.Fprintln(os.Stderr, "usage: opskit template validate <file>")
+		fmt.Fprintln(os.Stderr, "usage: opskit template validate <file> [--vars k=v] [--vars-file file] [--output dir]")
 		return exitcode.Precondition
 	}
-	if len(args) < 2 {
+	fs := flag.NewFlagSet("template validate", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	varsRaw := fs.String("vars", "", "vars key=value[,key=value]")
+	varsFile := fs.String("vars-file", "", "vars file (json or key=value lines)")
+	output := fs.String("output", defaultOutputRoot(), "output root")
+	if err := fs.Parse(args[1:]); err != nil {
+		return exitcode.Precondition
+	}
+	if fs.NArg() < 1 {
 		fmt.Fprintln(os.Stderr, "missing template file")
 		return exitcode.Precondition
 	}
-	ref := args[1]
-	if _, _, err := templates.Resolve(templates.ResolveOptions{TemplateRef: ref, BaseDir: defaultOutputRoot()}); err != nil {
+	ref := fs.Arg(0)
+	if _, _, err := templates.Resolve(templates.ResolveOptions{TemplateRef: ref, BaseDir: *output, VarsRaw: *varsRaw, VarsFile: *varsFile}); err != nil {
 		fmt.Fprintf(os.Stderr, "template invalid: %v\n", err)
 		return exitcode.Precondition
 	}
@@ -82,6 +90,7 @@ func cmdInstall(args []string) int {
 	fs.SetOutput(os.Stderr)
 	templateRef := fs.String("template", "generic-manage-v1", "template id or path")
 	varsRaw := fs.String("vars", "", "vars key=value[,key=value]")
+	varsFile := fs.String("vars-file", "", "vars file (json or key=value lines)")
 	dryRun := fs.Bool("dry-run", false, "dry run")
 	fix := fs.Bool("fix", false, "include disabled template steps")
 	listenAddr := fs.String("listen", ":18080", "web listen address")
@@ -93,7 +102,7 @@ func cmdInstall(args []string) int {
 		return exitcode.Precondition
 	}
 
-	t, _, err := templates.Resolve(templates.ResolveOptions{TemplateRef: *templateRef, BaseDir: *output, VarsRaw: *varsRaw})
+	t, _, err := templates.Resolve(templates.ResolveOptions{TemplateRef: *templateRef, BaseDir: *output, VarsRaw: *varsRaw, VarsFile: *varsFile})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "install precondition failed: %v\n", err)
 		return exitcode.Precondition
@@ -189,6 +198,7 @@ func cmdRun(args []string) int {
 	fs.SetOutput(os.Stderr)
 	templateRef := fs.String("template", "", "template id or path (default: active template from state, fallback generic-manage-v1)")
 	varsRaw := fs.String("vars", "", "vars key=value[,key=value]")
+	varsFile := fs.String("vars-file", "", "vars file (json or key=value lines)")
 	dryRun := fs.Bool("dry-run", false, "dry run")
 	fix := fs.Bool("fix", false, "include disabled template steps")
 	output := fs.String("output", defaultOutputRoot(), "output root")
@@ -197,7 +207,7 @@ func cmdRun(args []string) int {
 	}
 
 	selectedTemplate := resolveTemplateRef(*templateRef, *output)
-	t, _, err := templates.Resolve(templates.ResolveOptions{TemplateRef: selectedTemplate, BaseDir: *output, VarsRaw: *varsRaw})
+	t, _, err := templates.Resolve(templates.ResolveOptions{TemplateRef: selectedTemplate, BaseDir: *output, VarsRaw: *varsRaw, VarsFile: *varsFile})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "run precondition failed: %v\n", err)
 		return exitcode.Precondition
@@ -235,6 +245,7 @@ func cmdAccept(args []string) int {
 	fs.SetOutput(os.Stderr)
 	templateRef := fs.String("template", "", "template id or path (default: active template from state, fallback generic-manage-v1)")
 	varsRaw := fs.String("vars", "", "vars key=value[,key=value]")
+	varsFile := fs.String("vars-file", "", "vars file (json or key=value lines)")
 	dryRun := fs.Bool("dry-run", false, "dry run")
 	fix := fs.Bool("fix", false, "include disabled template steps")
 	output := fs.String("output", defaultOutputRoot(), "output root")
@@ -242,7 +253,7 @@ func cmdAccept(args []string) int {
 		return exitcode.Precondition
 	}
 	selectedTemplate := resolveTemplateRef(*templateRef, *output)
-	t, _, err := templates.Resolve(templates.ResolveOptions{TemplateRef: selectedTemplate, BaseDir: *output, VarsRaw: *varsRaw})
+	t, _, err := templates.Resolve(templates.ResolveOptions{TemplateRef: selectedTemplate, BaseDir: *output, VarsRaw: *varsRaw, VarsFile: *varsFile})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "accept precondition failed: %v\n", err)
 		return exitcode.Precondition
@@ -530,11 +541,11 @@ func resolveTemplateRef(rawTemplateRef, output string) string {
 func printUsage() {
 	fmt.Println("OpsKit v1")
 	fmt.Println("usage:")
-	fmt.Println("  opskit install [--template id|path] [--vars k=v] [--dry-run] [--fix] [--output dir] [--systemd-dir dir] [--binary-path /path/opskit]")
-	fmt.Println("  opskit run <A|B|C|D|E|F|AF> [--template id|path] [--vars k=v] [--dry-run] [--fix] [--output dir]")
+	fmt.Println("  opskit install [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--fix] [--output dir] [--systemd-dir dir] [--binary-path /path/opskit]")
+	fmt.Println("  opskit run <A|B|C|D|E|F|AF> [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--fix] [--output dir]")
 	fmt.Println("  opskit status [--output dir]")
-	fmt.Println("  opskit accept [--template id|path] [--vars k=v] [--dry-run] [--fix] [--output dir]")
+	fmt.Println("  opskit accept [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--fix] [--output dir]")
 	fmt.Println("  opskit handover [--output dir]")
 	fmt.Println("  opskit web [--output dir] [--listen :18080]")
-	fmt.Println("  opskit template validate <file>")
+	fmt.Println("  opskit template validate <file> [--vars k=v] [--vars-file file] [--output dir]")
 }

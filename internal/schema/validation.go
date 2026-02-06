@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -126,6 +127,8 @@ func validateVarType(name, typ string) error {
 		return nil
 	case "int", "integer", "number", "float", "bool", "boolean":
 		return nil
+	case "array", "object", "map":
+		return nil
 	default:
 		return fmt.Errorf("template.vars.%s invalid type: %s", name, typ)
 	}
@@ -149,6 +152,16 @@ func validateVarValue(name string, spec VarSpec, val string) error {
 	case "bool", "boolean":
 		if _, err := strconv.ParseBool(strings.TrimSpace(val)); err != nil {
 			return fmt.Errorf("template.vars.%s expects bool", name)
+		}
+	case "array":
+		var out []any
+		if err := json.Unmarshal([]byte(strings.TrimSpace(val)), &out); err != nil {
+			return fmt.Errorf("template.vars.%s expects json array", name)
+		}
+	case "object", "map":
+		var out map[string]any
+		if err := json.Unmarshal([]byte(strings.TrimSpace(val)), &out); err != nil {
+			return fmt.Errorf("template.vars.%s expects json object", name)
 		}
 	default:
 		return fmt.Errorf("template.vars.%s invalid type: %s", name, spec.Type)
