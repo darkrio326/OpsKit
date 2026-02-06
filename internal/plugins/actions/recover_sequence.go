@@ -281,7 +281,11 @@ func createCollectBundle(collectFile string, circuitFile string, stageID string,
 			files[abs] = filepath.Join("state", stateName)
 		}
 	}
-	if err := reporting.CreateTarGz(absBundle, files); err != nil {
+	manifestMeta := map[string]string{
+		"bundle": "collect",
+		"stage":  strings.ToUpper(stageID),
+	}
+	if err := reporting.CreateTarGzWithManifest(absBundle, files, manifestMeta); err != nil {
 		return schema.ArtifactRef{}, err
 	}
 

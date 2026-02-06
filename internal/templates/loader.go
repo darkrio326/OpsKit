@@ -1,9 +1,12 @@
 package templates
 
 import (
+	"bytes"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -31,11 +34,7 @@ func loadBuiltin(name string) (schema.Template, error) {
 	if err != nil {
 		return schema.Template{}, err
 	}
-	var t schema.Template
-	if err := json.Unmarshal(b, &t); err != nil {
-		return schema.Template{}, err
-	}
-	return t, nil
+	return decodeTemplateStrict(b)
 }
 
 func loadFile(path string) (schema.Template, error) {
@@ -43,9 +42,18 @@ func loadFile(path string) (schema.Template, error) {
 	if err != nil {
 		return schema.Template{}, err
 	}
+	return decodeTemplateStrict(b)
+}
+
+func decodeTemplateStrict(b []byte) (schema.Template, error) {
+	dec := json.NewDecoder(bytes.NewReader(b))
+	dec.DisallowUnknownFields()
 	var t schema.Template
-	if err := json.Unmarshal(b, &t); err != nil {
+	if err := dec.Decode(&t); err != nil {
 		return schema.Template{}, err
+	}
+	if err := dec.Decode(&struct{}{}); err != nil && !errors.Is(err, io.EOF) {
+		return schema.Template{}, fmt.Errorf("unexpected extra JSON content in template")
 	}
 	return t, nil
 }

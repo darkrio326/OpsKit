@@ -98,7 +98,12 @@ func Generate(store *state.Store) (Result, error) {
 		filepath.Join(store.Paths().StateDir, "services.json"):  filepath.Join("state", "services.json"),
 		filepath.Join(store.Paths().StateDir, "artifacts.json"): filepath.Join("state", "artifacts.json"),
 	}
-	if err := reporting.CreateTarGz(bundleAbs, files); err != nil {
+	manifestMeta := map[string]string{
+		"bundle":    "handover",
+		"templates": strings.Join(overall.ActiveTemplates, ","),
+		"overall":   string(overall.OverallStatus),
+	}
+	if err := reporting.CreateTarGzWithManifest(bundleAbs, files, manifestMeta); err != nil {
 		return Result{}, err
 	}
 

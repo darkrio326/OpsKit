@@ -5,15 +5,33 @@ import (
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
+type ManifestFile struct {
+	Path   string `json:"path"`
+	SHA256 string `json:"sha256"`
+}
+
+type Manifest struct {
+	Version     string            `json:"version"`
+	GeneratedAt string            `json:"generatedAt"`
+	Files       []ManifestFile    `json:"files"`
+	Meta        map[string]string `json:"meta,omitempty"`
+}
+
 func CreateTarGz(bundlePath string, files map[string]string) error {
+	return CreateTarGzWithManifest(bundlePath, files, nil)
+}
+
+func CreateTarGzWithManifest(bundlePath string, files map[string]string, meta map[string]string) error {
 	if err := os.MkdirAll(filepath.Dir(bundlePath), 0o755); err != nil {
 		return err
 	}
@@ -30,17 +48,36 @@ func CreateTarGz(bundlePath string, files map[string]string) error {
 
 	entries := normalizeEntries(files)
 	hashes := make([]string, 0, len(entries))
+	manifest := Manifest{
+		Version:     "v1",
+		GeneratedAt: time.Now().Format(time.RFC3339),
+		Files:       make([]ManifestFile, 0, len(entries)),
+	}
+	if len(meta) > 0 {
+		manifest.Meta = meta
+	}
 	for _, e := range entries {
 		sum, err := fileSHA256(e.Abs)
 		if err != nil {
 			return err
 		}
 		hashes = append(hashes, fmt.Sprintf("%s  %s", sum, filepath.ToSlash(e.Rel)))
+		manifest.Files = append(manifest.Files, ManifestFile{
+			Path:   filepath.ToSlash(e.Rel),
+			SHA256: sum,
+		})
 		if err := addFile(tw, e.Abs, e.Rel); err != nil {
 			return err
 		}
 	}
 	if err := addBytes(tw, []byte(strings.Join(hashes, "\n")+"\n"), "hashes.txt", 0o644); err != nil {
+		return err
+	}
+	b, err := json.MarshalIndent(manifest, "", "  ")
+	if err != nil {
+		return err
+	}
+	if err := addBytes(tw, b, "manifest.json", 0o644); err != nil {
 		return err
 	}
 	return nil

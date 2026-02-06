@@ -1,6 +1,11 @@
 package schema
 
-import "fmt"
+import (
+	"fmt"
+	"regexp"
+)
+
+var templateVarRef = regexp.MustCompile(`\$\{[A-Za-z0-9_]+\}`)
 
 func ValidateTemplate(t Template) error {
 	if t.ID == "" {
@@ -23,19 +28,69 @@ func ValidateTemplate(t Template) error {
 			if c.ID == "" || c.Kind == "" {
 				return fmt.Errorf("stage %s check id/kind is required", stageID)
 			}
+			if err := validateStepParams(stageID, "check", c); err != nil {
+				return err
+			}
 		}
 		for _, a := range stage.Actions {
 			if a.ID == "" || a.Kind == "" {
 				return fmt.Errorf("stage %s action id/kind is required", stageID)
+			}
+			if err := validateStepParams(stageID, "action", a); err != nil {
+				return err
 			}
 		}
 		for _, e := range stage.Evidence {
 			if e.ID == "" || e.Kind == "" {
 				return fmt.Errorf("stage %s evidence id/kind is required", stageID)
 			}
+			if err := validateStepParams(stageID, "evidence", e); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
+}
+
+func validateStepParams(stageID, stepType string, step TemplateStep) error {
+	if step.Params == nil {
+		return nil
+	}
+	if raw, ok := step.Params["severity"]; ok {
+		s, ok := raw.(string)
+		if !ok {
+			return fmt.Errorf("stage %s %s %s severity must be string", stageID, stepType, step.ID)
+		}
+		if !IsValidSeverity(Severity(s)) {
+			return fmt.Errorf("stage %s %s %s invalid severity: %s", stageID, stepType, step.ID, s)
+		}
+	}
+	if path, token, ok := findUnresolvedVar(step.Params, "params"); ok {
+		return fmt.Errorf("stage %s %s %s unresolved var %s at %s", stageID, stepType, step.ID, token, path)
+	}
+	return nil
+}
+
+func findUnresolvedVar(value any, path string) (string, string, bool) {
+	switch v := value.(type) {
+	case string:
+		if token := templateVarRef.FindString(v); token != "" {
+			return path, token, true
+		}
+	case []any:
+		for i, item := range v {
+			if p, token, ok := findUnresolvedVar(item, fmt.Sprintf("%s[%d]", path, i)); ok {
+				return p, token, ok
+			}
+		}
+	case map[string]any:
+		for k, item := range v {
+			if p, token, ok := findUnresolvedVar(item, path+"."+k); ok {
+				return p, token, ok
+			}
+		}
+	}
+	return "", "", false
 }
 
 func IsValidStatus(v Status) bool {

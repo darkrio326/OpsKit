@@ -96,7 +96,14 @@ func executeEvidenceStage(ctx context.Context, rt *engine.Runtime, stageID strin
 
 	bundleName := "acceptance-" + now + ".tar.gz"
 	bundlePath := filepath.Join(rt.Store.Paths().BundlesDir, bundleName)
-	if err := reporting.CreateTarGz(bundlePath, bundleFiles); err != nil {
+	manifestMeta := map[string]string{
+		"bundle":    "acceptance",
+		"stage":     stageID,
+		"template":  rt.Options.TemplateID,
+		"mode":      rt.Options.TemplateMode,
+		"generated": time.Now().Format(time.RFC3339),
+	}
+	if err := reporting.CreateTarGzWithManifest(bundlePath, bundleFiles, manifestMeta); err != nil {
 		return engine.StageResult{}, err
 	}
 	result.Bundles = append(result.Bundles, schema.ArtifactRef{ID: "acceptance", Path: filepath.Join("bundles", bundleName)})
