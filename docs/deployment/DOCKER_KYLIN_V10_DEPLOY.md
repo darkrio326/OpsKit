@@ -11,6 +11,7 @@ OpsKit Docker 部署说明（银河麒麟 V10）
 	•	基础镜像 Dockerfile：`docker/kylin-v10/Dockerfile`
 	•	一键验证脚本：`examples/generic-manage/run-af-kylin-v10-docker.sh`
 	•	通用流程脚本：`examples/generic-manage/run-af.sh`
+	•	通用流程说明：`docs/examples/generic-manage/README.zh-CN.md`
 
 ⸻
 

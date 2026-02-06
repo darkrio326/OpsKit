@@ -52,6 +52,8 @@ Notes:
 
 Use a clean Kylin V10 container to verify OpsKit generic capability flow:
 
+See deployment guide: `docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
+
 ```bash
 OUTPUT=$PWD/.tmp/generic-e2e-kylin \
   ./examples/generic-manage/run-af-kylin-v10-docker.sh

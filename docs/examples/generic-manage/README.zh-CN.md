@@ -46,6 +46,8 @@ DRY_RUN=1 BIN=./opskit OUTPUT=/tmp/opskit-generic ./examples/generic-manage/run-
 
 ## 在银河麒麟 V10 Docker 中运行（纯净环境）
 
+部署说明：`docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
+
 ```bash
 OUTPUT=$PWD/.tmp/generic-e2e-kylin \
   ./examples/generic-manage/run-af-kylin-v10-docker.sh

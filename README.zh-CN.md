@@ -52,6 +52,14 @@ go build -o opskit ./cmd/opskit
 - 插件机制：checks/actions/evidence 统一注册入口
 - 最小 UI：静态页面读取 JSON，展示 A~F 状态与产物入口
 
+## 界面预览（建议补充截图）
+
+为便于开源读者快速理解，可以补充以下截图（建议放在 `docs/assets/screenshots/`）：
+
+- 状态总览页（overall + A~F 概览）
+- 阶段详情页（某一阶段的 checks/actions/evidence）
+- 证据包列表页（reports/bundles 入口）
+
 ## 目录说明（核心）
 
 - `cmd/opskit`：CLI 入口
