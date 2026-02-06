@@ -44,6 +44,10 @@ func (a *recoverSequenceAction) Run(ctx context.Context, req Request) (Result, e
 	circuitFile := toString(req.Params["circuit_file"], "/var/lib/opskit/state/recover_circuit.json")
 	collectFile := toString(req.Params["collect_file"], "")
 	collectBundleDir := toString(req.Params["collect_bundle_dir"], "")
+	collectOutputLimit := toInt(req.Params["collect_output_limit"], 16384)
+	if collectOutputLimit < 256 {
+		collectOutputLimit = 256
+	}
 	stageID := strings.ToUpper(toString(req.Params["stage"], "E"))
 	triggerSource := toString(req.Params["trigger_source"], "manual")
 	redactKeys := toStringSlice(req.Params["redact_keys"])
@@ -73,7 +77,7 @@ func (a *recoverSequenceAction) Run(ctx context.Context, req Request) (Result, e
 		_ = recover.OpenWithTrigger(circuitFile, now, time.Duration(cooldownSeconds)*time.Second, err.Error(), triggerSource)
 		bundles := []schema.ArtifactRef{}
 		if collectFile != "" {
-			if b, collectErr := writeRecoverCollect(ctx, req, collectFile, units, err.Error(), circuitFile, stageID, collectBundleDir, triggerSource, collectPaths, redactKeys); collectErr == nil && b.Path != "" {
+			if b, collectErr := writeRecoverCollect(ctx, req, collectFile, units, err.Error(), circuitFile, stageID, collectBundleDir, triggerSource, collectPaths, redactKeys, collectOutputLimit); collectErr == nil && b.Path != "" {
 				bundles = append(bundles, b)
 			}
 		}
@@ -150,7 +154,7 @@ func (a *recoverSequenceAction) Run(ctx context.Context, req Request) (Result, e
 	_ = recover.OpenWithTrigger(circuitFile, now, time.Duration(cooldownSeconds)*time.Second, lastErr, triggerSource)
 	bundles := []schema.ArtifactRef{}
 	if collectFile != "" {
-		if b, collectErr := writeRecoverCollect(ctx, req, collectFile, units, lastErr, circuitFile, stageID, collectBundleDir, triggerSource, collectPaths, redactKeys); collectErr == nil && b.Path != "" {
+		if b, collectErr := writeRecoverCollect(ctx, req, collectFile, units, lastErr, circuitFile, stageID, collectBundleDir, triggerSource, collectPaths, redactKeys, collectOutputLimit); collectErr == nil && b.Path != "" {
 			bundles = append(bundles, b)
 		}
 	}
@@ -205,7 +209,7 @@ func checkReadiness(ctx context.Context, req Request, requireNetwork bool, requi
 	return nil
 }
 
-func writeRecoverCollect(ctx context.Context, req Request, path string, units []string, reason string, circuitFile string, stageID string, collectBundleDir string, triggerSource string, collectPaths []string, redactKeys []string) (schema.ArtifactRef, error) {
+func writeRecoverCollect(ctx context.Context, req Request, path string, units []string, reason string, circuitFile string, stageID string, collectBundleDir string, triggerSource string, collectPaths []string, redactKeys []string, collectOutputLimit int) (schema.ArtifactRef, error) {
 	payload := map[string]any{
 		"timestamp":     time.Now().Format(time.RFC3339),
 		"triggerSource": triggerSource,
@@ -214,6 +218,9 @@ func writeRecoverCollect(ctx context.Context, req Request, path string, units []
 		"commands":      map[string]string{},
 		"journals":      map[string]string{},
 		"paths":         summarizePaths(collectPaths),
+		"limits": map[string]any{
+			"maxChars": collectOutputLimit,
+		},
 	}
 	cmds := payload["commands"].(map[string]string)
 	for _, spec := range []struct {
@@ -227,33 +234,50 @@ func writeRecoverCollect(ctx context.Context, req Request, path string, units []
 	} {
 		res, err := runCmd(ctx, req, spec.name, spec.args...)
 		if err != nil {
-			cmds[spec.key] = "error: " + err.Error()
+			cmds[spec.key] = limitText("error: "+err.Error(), collectOutputLimit)
 			continue
 		}
-		out := strings.TrimSpace(res.Stdout)
-		if out == "" {
-			out = strings.TrimSpace(res.Stderr)
-		}
-		cmds[spec.key] = redaction.RedactText(out, redactKeys...)
+		out := formatCommandResult(spec.name, res.ExitCode, res.Stdout, res.Stderr)
+		cmds[spec.key] = limitText(redaction.RedactText(out, redactKeys...), collectOutputLimit)
 	}
 	journals := payload["journals"].(map[string]string)
 	for _, unit := range units {
 		key := "journal_" + strings.ReplaceAll(strings.ReplaceAll(unit, ".", "_"), "-", "_")
 		res, err := runCmd(ctx, req, "journalctl", "-u", unit, "--no-pager", "-n", "200")
 		if err != nil {
-			journals[key] = "error: " + err.Error()
+			journals[key] = limitText("error: "+err.Error(), collectOutputLimit)
 			continue
 		}
-		out := strings.TrimSpace(res.Stdout)
-		if out == "" {
-			out = strings.TrimSpace(res.Stderr)
-		}
-		journals[key] = redaction.RedactText(out, redactKeys...)
+		out := formatCommandResult("journalctl", res.ExitCode, res.Stdout, res.Stderr)
+		journals[key] = limitText(redaction.RedactText(out, redactKeys...), collectOutputLimit)
 	}
 	if err := writeJSON(path, payload); err != nil {
 		return schema.ArtifactRef{}, err
 	}
 	return createCollectBundle(path, circuitFile, stageID, collectBundleDir)
+}
+
+func formatCommandResult(name string, exitCode int, stdout string, stderr string) string {
+	out := strings.TrimSpace(stdout)
+	errText := strings.TrimSpace(stderr)
+	if out == "" {
+		out = errText
+	}
+	if out == "" {
+		out = "(empty output)"
+	}
+	return fmt.Sprintf("[%s exit=%d]\n%s", name, exitCode, out)
+}
+
+func limitText(input string, maxChars int) string {
+	if maxChars <= 0 || len(input) <= maxChars {
+		return input
+	}
+	const marker = "\n...(truncated)"
+	if maxChars <= len(marker)+1 {
+		return input[:maxChars]
+	}
+	return input[:maxChars-len(marker)] + marker
 }
 
 func createCollectBundle(collectFile string, circuitFile string, stageID string, collectBundleDir string) (schema.ArtifactRef, error) {

@@ -12,6 +12,7 @@
 - 变量类型扩展：`array/object`（JSON 形式）
 - 新增 vars-file 解析与回归测试
 - 新增 vars-file 示例（`examples/vars/demo-hello-service.*`）
+- Recover collect 新增输出限流（`collect_output_limit`）与截断标记
 
 ### Changed
 
@@ -19,6 +20,7 @@
 - `docs/GITHUB_RELEASE.md` 更新 preview.2 → preview.1 文案链接
 - demo 模板变量说明更新
 - 模板校验错误提示路径化
+- Recover collect 命令/日志输出统一结构（含 exit code）并默认脱敏
 
 ### Fixed
 

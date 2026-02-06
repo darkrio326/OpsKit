@@ -22,11 +22,13 @@
 - 变量类型扩展：`array/object`（JSON 形式）
 - 变量文件解析与回归测试
 - 新增 vars-file 示例（JSON/ENV）
+- Recover collect 输出限流（`collect_output_limit`）与截断标记
 
 ### Changed
 
 - 模板校验错误提示更友好（变量未解析/类型不匹配）
 - demo 模板变量说明更新
+- Recover collect 命令/日志输出统一为 `[cmd exit=code]` 格式并默认脱敏
 
 ### Fixed
 

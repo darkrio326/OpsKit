@@ -197,6 +197,93 @@ func TestRecoverSequenceAllowEmptyUnits(t *testing.T) {
 	}
 }
 
+func TestWriteRecoverCollectRedactionAndLimit(t *testing.T) {
+	root := t.TempDir()
+	stateDir := filepath.Join(root, "state")
+	evidenceDir := filepath.Join(root, "evidence")
+	if err := os.MkdirAll(stateDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(evidenceDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range []string{
+		filepath.Join(stateDir, "overall.json"),
+		filepath.Join(stateDir, "lifecycle.json"),
+		filepath.Join(stateDir, "services.json"),
+		filepath.Join(stateDir, "artifacts.json"),
+		filepath.Join(stateDir, "recover_circuit.json"),
+	} {
+		if err := os.WriteFile(f, []byte(`{"ok":true}`), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	req := Request{
+		ID: "e.recover_sequence",
+		Exec: fakeExecRunner{
+			run: func(_ context.Context, spec executil.Spec) (executil.Result, error) {
+				switch spec.Name {
+				case "journalctl":
+					return executil.Result{ExitCode: 0, Stdout: "password=abc " + strings.Repeat("J", 200)}, nil
+				default:
+					return executil.Result{ExitCode: 0, Stdout: "token=xyz " + strings.Repeat("S", 200)}, nil
+				}
+			},
+		},
+	}
+	collectFile := filepath.Join(evidenceDir, "recover-collect.json")
+	_, err := writeRecoverCollect(
+		context.Background(),
+		req,
+		collectFile,
+		[]string{"demo.service"},
+		"recover failed token=xyz",
+		filepath.Join(stateDir, "recover_circuit.json"),
+		"E",
+		"",
+		"manual",
+		[]string{stateDir},
+		[]string{"token", "password"},
+		120,
+	)
+	if err != nil {
+		t.Fatalf("writeRecoverCollect: %v", err)
+	}
+
+	payload, err := readJSONMap(collectFile)
+	if err != nil {
+		t.Fatalf("read collect payload failed: %v", err)
+	}
+	commands, ok := payload["commands"].(map[string]any)
+	if !ok {
+		t.Fatalf("commands section missing")
+	}
+	ss, _ := commands["ss_ltn"].(string)
+	if strings.Contains(ss, "xyz") {
+		t.Fatalf("expected token redaction in command output")
+	}
+	if !strings.Contains(ss, "...(truncated)") {
+		t.Fatalf("expected command output truncation marker")
+	}
+	journals, ok := payload["journals"].(map[string]any)
+	if !ok {
+		t.Fatalf("journals section missing")
+	}
+	j, _ := journals["journal_demo_service"].(string)
+	if strings.Contains(j, "abc") {
+		t.Fatalf("expected password redaction in journal output")
+	}
+	limits, ok := payload["limits"].(map[string]any)
+	if !ok {
+		t.Fatalf("limits section missing")
+	}
+	maxChars, _ := limits["maxChars"].(float64)
+	if int(maxChars) != 120 {
+		t.Fatalf("unexpected maxChars: %v", limits["maxChars"])
+	}
+}
+
 func fmtPrecondition(cmd string) error {
 	return errors.Join(coreerr.ErrPreconditionFailed, errors.New("required command not found: "+cmd))
 }
