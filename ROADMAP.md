@@ -1,6 +1,8 @@
 # OpsKit Roadmap（v0.x）
 
 > 当前发布目标：`v0.3.x Preview`，优先开放“框架 + 通用能力 + demo 模板”。
+>
+> 最新发布：`v0.3.1-preview.2`（模板校验/证据包一致性/测试覆盖增强）
 
 ## Milestone 0：框架与工程骨架
 

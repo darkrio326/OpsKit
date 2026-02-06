@@ -54,3 +54,7 @@ scripts/release.sh --version v0.3.1-preview.2 --clean
 - 仅发布框架、通用能力与 demo 模板
 - 不发布生产 deploy 模板与客户环境信息
 - UI 默认建议监听 `127.0.0.1`
+
+## 变更记录
+
+- 详见：`CHANGELOG.md`

@@ -11,6 +11,8 @@ OpsKit 是一个基于 Go 的运维生命周期工具，围绕 `A -> F` 阶段�
 
 目标是用一个二进制和统一 JSON 状态输出，把“可执行、可观测、可留证据”的链路跑通。
 
+当前版本：`v0.3.1-preview.2`
+
 快速上手：`docs/getting-started/GETSTART.md`
 产品设计总览：`docs/product-design/README.md`
 
@@ -49,6 +51,7 @@ go build -o opskit ./cmd/opskit
 - 统一 state JSON：`overall/lifecycle/services/artifacts`
 - 原子写：所有状态文件以原子方式落盘
 - 模板机制：支持模板加载、变量渲染、执行计划构建
+- 模板变量校验：必填/类型/枚举/默认值
 - 插件机制：checks/actions/evidence 统一注册入口
 - 最小 UI：静态页面读取 JSON，展示 A~F 状态与产物入口
 

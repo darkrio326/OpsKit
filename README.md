@@ -2,12 +2,15 @@
 
 一句话定位：**面向离线/信创环境的服务器全生命周期运维与验收工具**（A~F 阶段：Preflight/Baseline/Deploy/Operate/Recover/Accept-Handover）。
 
+当前版本：`v0.3.1-preview.2`
+
 ## 当前能力（Milestone 3）
 
 - 通用巡检能力：A/D 阶段可独立运行，支持状态汇总与问题分级
 - 可复核证据包：`accept` 生成 manifest + hashes + reports + snapshots
 - UI 状态页：读取 `state/*.json` 展示 overall、阶段状态与产物入口
 - 模板驱动：支持模板 + 变量渲染（内置与外部模板）
+- 模板变量校验：必填/类型/枚举/默认值
 - 统一执行器：`executil` 统一外部命令执行与审计入口
 - 并发安全：全局锁防并发执行冲突（冲突返回退出码 `4`）
 
@@ -45,6 +48,14 @@ go build -o opskit ./cmd/opskit
 ```
 
 浏览器访问：`http://127.0.0.1:18080`
+
+4) Docker 回归（银河麒麟 V10）
+
+```bash
+make -C examples/generic-manage docker-kylin-e2e
+```
+
+详见：`docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
 
 ## 目录结构（简述）
 
