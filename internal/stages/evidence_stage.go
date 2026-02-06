@@ -108,12 +108,42 @@ func executeEvidenceStage(ctx context.Context, rt *engine.Runtime, stageID strin
 	if err := reporting.CreateTarGzWithManifest(bundlePath, bundleFiles, manifestMeta); err != nil {
 		return engine.StageResult{}, err
 	}
+	consistency, verifyErr := reporting.VerifyBundleConsistency(bundlePath, snapshots)
+	consistencyPath := filepath.Join(rt.Store.Paths().EvidenceDir, "acceptance-consistency-"+now+".json")
+	if verifyErr != nil {
+		return engine.StageResult{}, verifyErr
+	}
+	if err := writeJSON(consistencyPath, consistency); err != nil {
+		return engine.StageResult{}, err
+	}
+
+	consistencyStatus := schema.StatusPassed
+	consistencyMessage := "acceptance bundle consistency check passed"
+	if !consistency.OK {
+		consistencyStatus = schema.StatusFailed
+		consistencyMessage = "acceptance bundle consistency check failed"
+		issues = append(issues, schema.Issue{
+			ID:       "f.acceptance_consistency",
+			Severity: schema.SeverityFail,
+			Message:  consistencyMessage,
+			Advice:   "inspect acceptance-consistency report and regenerate bundle",
+		})
+		result.Status = schema.StatusFailed
+	}
+	evidenceRows = append(evidenceRows, map[string]any{
+		"evidenceId": "f.acceptance_consistency",
+		"status":     consistencyStatus,
+		"message":    consistencyMessage,
+		"path":       consistencyPath,
+	})
 	result.Bundles = append(result.Bundles, schema.ArtifactRef{ID: "acceptance", Path: filepath.Join("bundles", bundleName)})
 
 	result.Metrics = append(metrics,
 		schema.Metric{Label: "evidence_items", Value: fmt.Sprintf("%d", len(evidenceRows))},
 		schema.Metric{Label: "snapshots", Value: fmt.Sprintf("%d", len(snapshots))},
 		schema.Metric{Label: "bundle", Value: bundleName},
+		schema.Metric{Label: "accept_consistency", Value: boolMetric(consistency.OK)},
+		schema.Metric{Label: "accept_consistency_missing", Value: fmt.Sprintf("%d", len(consistency.MissingRequiredState))},
 	)
 	result.Issues = issues
 	result.StepStatuses = stepStatuses
@@ -135,4 +165,11 @@ func writeJSON(path string, v any) error {
 		return err
 	}
 	return os.WriteFile(path, b, 0o644)
+}
+
+func boolMetric(ok bool) string {
+	if ok {
+		return "1"
+	}
+	return "0"
 }

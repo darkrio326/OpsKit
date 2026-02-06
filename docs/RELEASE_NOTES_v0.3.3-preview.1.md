@@ -18,6 +18,7 @@
 - Recover collect 产物新增来源标识（`source: command/journal/file`）
 - Recover collect 产物新增截断元数据（`originalLength`/`truncatedLength`）
 - 新增通用检查：`dns_resolve`、`systemd_restart_count`
+- Accept 阶段新增一致性校验记录：`acceptance-consistency-*.json`
 
 ### Changed
 
@@ -25,11 +26,13 @@
 - Recover summary 新增 `lastReasonCode`
 - demo 审计模板 D 阶段新增 `dns_resolve` 检查
 - `lifecycle.json` 阶段新增 `summary(total/pass/warn/fail/skip)` 计数结构
+- accept 新增 `manifest <-> hashes <-> state` 一致性校验流程与指标
 - （待补）accept 产物一致性校验策略
 
 ### Fixed
 
 - 修复 recover 失败原因仅文本、不易聚合的问题（改为 code + message 双轨）
+- 修复 accept 证据包一致性缺少显式记录的问题
 
 ## 计划验证命令
 
