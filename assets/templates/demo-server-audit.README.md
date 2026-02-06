@@ -26,6 +26,16 @@
 
 说明：若显式覆盖 `INSTALL_ROOT`，建议同时覆盖 `EVIDENCE_DIR` 以保持路径一致。
 
+使用 `--vars-file`（示例）：
+
+```bash
+cat > /tmp/demo-server-audit.vars <<'EOF'
+INSTALL_ROOT=/tmp/opskit-demo
+EVIDENCE_DIR=/tmp/opskit-demo/evidence
+EOF
+./opskit run A --template assets/templates/demo-server-audit.json --vars-file /tmp/demo-server-audit.vars
+```
+
 ## 预期输出
 
 - `state/overall.json`

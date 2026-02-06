@@ -30,6 +30,15 @@
   --vars "SERVICE_NAME=demo-hello,SERVICE_PORT=19090,PROCESS_MATCH=demo-hello"
 ```
 
+使用 `--vars-file`（推荐）：
+
+```bash
+./opskit run C \
+  --template assets/templates/demo-hello-service.json \
+  --vars-file examples/vars/demo-hello-service.json \
+  --output ./.tmp/opskit-hello
+```
+
 ## 预期输出
 
 - `conf/<service>/hello-demo.env`（模板渲染结果）
