@@ -91,6 +91,26 @@ web/ui/                    # 开发态 UI 资源
 - 开源许可证：`LICENSE`（Apache-2.0）
 - 中文扩展说明：`README.zh-CN.md`
 
+## 发布前门禁（v0.3.5）
+
+常规门禁（建议默认）：
+
+```bash
+scripts/release-check.sh --with-offline-validate
+```
+
+严格门禁（要求离线回归阶段 exit 全为 0）：
+
+```bash
+scripts/release-check.sh --with-offline-validate --offline-strict-exit
+```
+
+构建发布资产：
+
+```bash
+scripts/release.sh --version v0.3.5-preview.1 --clean
+```
+
 ## 免责声明
 
 本项目当前版本（`v0.3.x Preview`）主要用于**内网/离线场景验证**与能力演示。生产环境使用前请完成安全、稳定性与合规评估。

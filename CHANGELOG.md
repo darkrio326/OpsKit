@@ -26,6 +26,7 @@
 - `README.md` / `README.zh-CN.md` / `ROADMAP.md` / `docs/GITHUB_RELEASE.md` 滚动到 `v0.3.3-preview.1`
 - `README.md` / `README.zh-CN.md` / `docs/getting-started/GETSTART.md` 增加麒麟离线部署与回归入口
 - `docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md` 回归口径从 dry-run 调整为真实执行，并补充退出码判读
+- `README.md` / `README.zh-CN.md` / `docs/GITHUB_RELEASE.md` 补充 `v0.3.5` 常规与严格门禁发版命令
 - `scripts/release-check.sh` 新增步骤耗时与总耗时汇总输出
 - `dns_resolve` 新增 `skip_network_query` 参数（受限网络可跳过外部查询）
 - check 降级结果统一输出指标：`check_degraded` / `check_degraded_reason`

@@ -41,7 +41,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/opskit-linux-amd64 ./cmd/
 一键脚本（推荐）：
 
 ```bash
-scripts/release.sh --version v0.3.0-preview.1 --clean
+scripts/release.sh --version v0.3.5-preview.1 --clean
 ```
 
 生成 `checksums.txt`（二选一）：
@@ -87,3 +87,17 @@ scripts/release.sh --version v0.3.0-preview.1 --clean
 - 当前版草稿：`docs/RELEASE_NOTES_v0.3.4-preview.1.md`
 - 下一版草稿：`docs/RELEASE_NOTES_v0.3.5-preview.1.md`
 - 下一版任务单：`docs/RELEASE_PLAN_v0.3.5-preview.1.md`
+
+## 8. v0.3.5 发布命令（建议）
+
+```bash
+scripts/release-check.sh --with-offline-validate
+scripts/release.sh --version v0.3.5-preview.1 --clean
+gh release create v0.3.5-preview.1 \
+  dist/opskit-v0.3.5-preview.1-linux-arm64 \
+  dist/opskit-v0.3.5-preview.1-linux-amd64 \
+  dist/checksums.txt \
+  --title "OpsKit v0.3.5-preview.1" \
+  --notes-file docs/RELEASE_NOTES_v0.3.5-preview.1.md \
+  --prerelease
+```
