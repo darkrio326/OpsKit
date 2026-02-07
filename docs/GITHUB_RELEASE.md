@@ -64,15 +64,15 @@ scripts/release.sh --version v0.3.6-preview.1 --clean
 
 - 出现 `release-check passed` 且退出码为 `0`：门禁通过
 - `release-check summary` 中 `steps` 与各步骤耗时可用于定位慢步骤
+- `recommended action: continue_release`：可继续发布；`block_release`：应阻断并修复
 - dry-run 阶段输出中的 `checks/actions/evidence` 计数可用于确认模板执行计划未异常漂移
 - 如任一步骤失败，脚本立即退出；先修复失败项，再重新执行整套门禁
 
 ## 7. Release 文案模板
 
 - 可直接使用：`docs/RELEASE_NOTES_v0.3.0-preview.1.md`
-- 当前版草稿：`docs/RELEASE_NOTES_v0.3.5-preview.1.md`
-- 下一版草稿：`docs/RELEASE_NOTES_v0.3.6-preview.1.md`
-- 下一版任务单：`docs/RELEASE_PLAN_v0.3.6-preview.1.md`
+- 当前版草稿：`docs/RELEASE_NOTES_v0.3.6-preview.1.md`
+- 当前版任务单：`docs/RELEASE_PLAN_v0.3.6-preview.1.md`
 
 ## 8. v0.3.6 发布命令（建议）
 

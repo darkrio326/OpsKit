@@ -137,3 +137,5 @@ scripts/release-check.sh --with-offline-validate --offline-strict-exit
 ```bash
 scripts/release.sh --version v0.3.6-preview.1 --clean
 ```
+
+发布资产包含：双架构二进制、`checksums.txt`、`release-metadata.json`。

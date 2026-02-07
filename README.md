@@ -111,6 +111,8 @@ scripts/release-check.sh --with-offline-validate --offline-strict-exit
 scripts/release.sh --version v0.3.6-preview.1 --clean
 ```
 
+发布资产会包含：二进制（amd64/arm64）、`checksums.txt`、`release-metadata.json`。
+
 ## 免责声明
 
 本项目当前版本（`v0.3.x Preview`）主要用于**内网/离线场景验证**与能力演示。生产环境使用前请完成安全、稳定性与合规评估。

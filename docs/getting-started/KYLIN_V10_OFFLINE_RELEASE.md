@@ -10,12 +10,16 @@
 
 ## 2. 在联网机器下载 Release 资产
 
-以 `v0.3.4-preview.1` 为例：
+以 `v0.3.6-preview.1` 为例（发布时请替换为实际版本）：
+
+```bash
+VERSION=v0.3.6-preview.1
+```
 
 1. 打开 Release 页面：
-   - `https://github.com/darkrio326/OpsKit/releases/tag/v0.3.4-preview.1`
+   - `https://github.com/darkrio326/OpsKit/releases/tag/${VERSION}`
 2. 下载以下文件（按服务器架构选择二进制）：
-   - `opskit-v0.3.4-preview.1-linux-amd64` 或 `opskit-v0.3.4-preview.1-linux-arm64`
+   - `opskit-${VERSION}-linux-amd64` 或 `opskit-${VERSION}-linux-arm64`
    - `checksums.txt`
    - `release-metadata.json`
 
@@ -30,7 +34,7 @@ sha256sum -c checksums.txt
 
 ```bash
 # 手动比对 checksums.txt 中对应行
-shasum -a 256 opskit-v0.3.4-preview.1-linux-amd64
+shasum -a 256 opskit-${VERSION}-linux-amd64
 ```
 
 可选：查看 `release-metadata.json`，确认 `gitCommit/goVersion/generatedAt` 与发布说明一致。
@@ -49,7 +53,7 @@ uname -m
 # aarch64 -> 用 arm64
 
 # 3) 安装二进制（以 amd64 为例）
-install -m 0755 opskit-v0.3.4-preview.1-linux-amd64 /usr/local/bin/opskit
+install -m 0755 opskit-${VERSION}-linux-amd64 /usr/local/bin/opskit
 
 # 4) 验证
 opskit --help
@@ -59,7 +63,7 @@ opskit --help
 
 ```bash
 mkdir -p "$HOME/bin"
-cp opskit-v0.3.4-preview.1-linux-amd64 "$HOME/bin/opskit"
+cp opskit-${VERSION}-linux-amd64 "$HOME/bin/opskit"
 chmod +x "$HOME/bin/opskit"
 export PATH="$HOME/bin:$PATH"
 opskit --help
@@ -85,15 +89,16 @@ opskit status --output /data/opskit-demo
 
 如果需要执行非 dry-run（真实检查/动作），去掉 `--dry-run`。
 
-## 4.1 `v0.3.4-preview.1` 用户侧回归清单（推荐）
+## 4.1 `v0.3.x` 用户侧回归清单（推荐）
 
 建议在麒麟离线机按以下顺序做一次完整回归：
 
 ```bash
 scripts/kylin-offline-validate.sh \
   --bin /usr/local/bin/opskit \
-  --output /data/opskit-regression-v034 \
-  --json-status-file /data/opskit-regression-v034/status.json \
+  --output /data/opskit-regression-v036 \
+  --json-status-file /data/opskit-regression-v036/status.json \
+  --summary-json-file /data/opskit-regression-v036/summary.json \
   --clean
 ```
 
@@ -102,8 +107,9 @@ scripts/kylin-offline-validate.sh \
 ```bash
 scripts/kylin-offline-validate.sh \
   --bin /usr/local/bin/opskit \
-  --output /data/opskit-regression-v034 \
-  --json-status-file /data/opskit-regression-v034/status.json \
+  --output /data/opskit-regression-v036 \
+  --json-status-file /data/opskit-regression-v036/status.json \
+  --summary-json-file /data/opskit-regression-v036/summary.json \
   --strict-exit \
   --clean
 ```
@@ -112,7 +118,7 @@ scripts/kylin-offline-validate.sh \
 
 ```bash
 # 0) 输出目录
-export OPSKIT_OUT=/data/opskit-regression-v034
+export OPSKIT_OUT=/data/opskit-regression-v036
 mkdir -p "$OPSKIT_OUT"
 
 # 1) 模板可用性（离线建议用内置模板 ID）

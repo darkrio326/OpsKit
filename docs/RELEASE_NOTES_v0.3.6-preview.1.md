@@ -29,6 +29,8 @@
 - `scripts/release-check.sh` 增加 `--offline-summary-json-file` 透传
 - `scripts/release-check.sh` summary 增加 `recommended action`
 - `docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md` / `docs/getting-started/GETSTART.md` 增加 `summary.json` 用法
+- `docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md` 示例版本统一为 `v0.3.6` 口径
+- `assets/templates/demo-server-audit.README.md` / `assets/templates/demo-hello-service.README.md` 补充“最低可运行变量集”和“常见失败”
 
 ### Fixed
 

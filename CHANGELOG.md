@@ -38,6 +38,8 @@
 - 离线部署/验证文档补充 `status.json health` 与退出码映射口径
 - `assets/templates/demo-server-audit.json` D 阶段接入 inode/只读挂载/时钟偏移检查
 - `scripts/release.sh` 自动生成并校验 `checksums.txt`
+- `docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md` 示例版本与路径口径同步到 `v0.3.6`/`v036`
+- demo 模板 README 补充“最低可运行变量集”与“常见失败”
 - `README.md` / `README.zh-CN.md` 当前版本标记同步到 `v0.3.5-preview.1`
 - `README.md` / `README.zh-CN.md` / `ROADMAP.md` / `docs/GITHUB_RELEASE.md` 滚动到 `v0.3.3-preview.1`
 - `README.md` / `README.zh-CN.md` / `docs/getting-started/GETSTART.md` 增加麒麟离线部署与回归入口
