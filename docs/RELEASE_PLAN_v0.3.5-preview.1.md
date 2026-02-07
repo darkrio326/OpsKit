@@ -55,6 +55,7 @@ GOCACHE=$PWD/.gocache go run ./cmd/opskit status --output ./.tmp/offline-validat
 
 - release notes 与 changelog 对齐到 `v0.3.5-preview.1`
 - GitHub release 指引包含离线回归脚本入口
+- `scripts/release-check.sh` 支持可选 `--with-offline-validate` 门禁
 
 验收：
 

@@ -12,6 +12,14 @@ Options:
   -o, --output <dir>    Output root for dry-run execution (default: ./.tmp/release-check)
       --skip-tests      Skip go test
       --skip-run        Skip run A/D/accept dry-run checks
+      --with-offline-validate
+                         Run offline validation script as an extra gate
+      --offline-bin <path>
+                         Binary path for offline validation (default: <output>/opskit-release-check)
+      --offline-output <dir>
+                         Output dir for offline validation (default: <output>/offline-validate)
+      --offline-json-status-file <path>
+                         status --json output file (default: <offline-output>/status.json)
   -h, --help            Show help
 
 Environment:
@@ -24,6 +32,10 @@ OUTPUT_DIR="${ROOT_DIR}/.tmp/release-check"
 GO_CACHE_DIR="${GO_CACHE_DIR:-${ROOT_DIR}/.tmp/gocache-release-check}"
 SKIP_TESTS=0
 SKIP_RUN=0
+WITH_OFFLINE_VALIDATE=0
+OFFLINE_BIN=""
+OFFLINE_OUTPUT=""
+OFFLINE_JSON_STATUS_FILE=""
 STEP_COUNT=0
 TOTAL_SECONDS=0
 STEP_LINES=()
@@ -42,6 +54,25 @@ while [[ $# -gt 0 ]]; do
     --skip-run)
       SKIP_RUN=1
       shift
+      ;;
+    --with-offline-validate)
+      WITH_OFFLINE_VALIDATE=1
+      shift
+      ;;
+    --offline-bin)
+      [[ $# -ge 2 ]] || { echo "missing value for $1" >&2; exit 2; }
+      OFFLINE_BIN="$2"
+      shift 2
+      ;;
+    --offline-output)
+      [[ $# -ge 2 ]] || { echo "missing value for $1" >&2; exit 2; }
+      OFFLINE_OUTPUT="$2"
+      shift 2
+      ;;
+    --offline-json-status-file)
+      [[ $# -ge 2 ]] || { echo "missing value for $1" >&2; exit 2; }
+      OFFLINE_JSON_STATUS_FILE="$2"
+      shift 2
       ;;
     -h|--help)
       usage
@@ -77,6 +108,16 @@ run_step() {
 mkdir -p "${GO_CACHE_DIR}"
 mkdir -p "${OUTPUT_DIR}"
 
+if [[ -z "${OFFLINE_OUTPUT}" ]]; then
+  OFFLINE_OUTPUT="${OUTPUT_DIR}/offline-validate"
+fi
+if [[ -z "${OFFLINE_BIN}" ]]; then
+  OFFLINE_BIN="${OUTPUT_DIR}/opskit-release-check"
+fi
+if [[ -z "${OFFLINE_JSON_STATUS_FILE}" ]]; then
+  OFFLINE_JSON_STATUS_FILE="${OFFLINE_OUTPUT}/status.json"
+fi
+
 cd "${ROOT_DIR}"
 
 if [[ "${SKIP_TESTS}" == "0" ]]; then
@@ -94,6 +135,11 @@ if [[ "${SKIP_RUN}" == "0" ]]; then
   run_step "status refresh" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit status --output "${DEMO_OUT}"
 fi
 
+if [[ "${WITH_OFFLINE_VALIDATE}" == "1" ]]; then
+  run_step "build offline validation binary" env GOCACHE="${GO_CACHE_DIR}" go build -o "${OFFLINE_BIN}" ./cmd/opskit
+  run_step "offline validation gate" ./scripts/kylin-offline-validate.sh --bin "${OFFLINE_BIN}" --output "${OFFLINE_OUTPUT}" --json-status-file "${OFFLINE_JSON_STATUS_FILE}" --clean
+fi
+
 echo ""
 echo "release-check summary"
 echo "- steps: ${STEP_COUNT}"
@@ -104,4 +150,8 @@ for line in "${STEP_LINES[@]}"; do
 done
 echo "- total duration: ${TOTAL_SECONDS}s"
 echo "- output: ${OUTPUT_DIR}"
+if [[ "${WITH_OFFLINE_VALIDATE}" == "1" ]]; then
+  echo "- offline output: ${OFFLINE_OUTPUT}"
+  echo "- offline status json: ${OFFLINE_JSON_STATUS_FILE}"
+fi
 echo "release-check passed"
