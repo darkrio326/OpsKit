@@ -12,6 +12,9 @@ Options:
   -b, --bin <path>        OpsKit binary path or command name (default: opskit)
   -o, --output <dir>      Output directory (default: /data/opskit-regression-v034)
   -t, --template <id>     Template id/path (default: generic-manage-v1)
+      --json-status-file <path>
+                           Save `opskit status --json` output to this file
+                           (default: <output>/status.json)
       --clean             Remove output directory before running
   -h, --help              Show help
 
@@ -24,6 +27,7 @@ USAGE
 BIN="${BIN:-opskit}"
 OUTPUT="${OUTPUT:-/data/opskit-regression-v034}"
 TEMPLATE="${TEMPLATE:-generic-manage-v1}"
+JSON_STATUS_FILE=""
 CLEAN=0
 
 while [[ $# -gt 0 ]]; do
@@ -41,6 +45,11 @@ while [[ $# -gt 0 ]]; do
     -t|--template)
       [[ $# -ge 2 ]] || { echo "missing value for $1" >&2; exit 2; }
       TEMPLATE="$2"
+      shift 2
+      ;;
+    --json-status-file)
+      [[ $# -ge 2 ]] || { echo "missing value for $1" >&2; exit 2; }
+      JSON_STATUS_FILE="$2"
       shift 2
       ;;
     --clean)
@@ -68,6 +77,10 @@ if [[ "${CLEAN}" == "1" ]]; then
   rm -rf "${OUTPUT}"
 fi
 mkdir -p "${OUTPUT}"
+if [[ -z "${JSON_STATUS_FILE}" ]]; then
+  JSON_STATUS_FILE="${OUTPUT}/status.json"
+fi
+mkdir -p "$(dirname "${JSON_STATUS_FILE}")"
 
 RESULT_LINES=()
 FAIL_COUNT=0
@@ -116,6 +129,43 @@ run_expect_stage_rc() {
   fi
 }
 
+run_status_json_expect_stage_rc() {
+  local name="$1"
+  shift
+  local json_file="$1"
+  shift
+  echo "==> ${name}"
+  set +e
+  "${BIN}" "$@" --json > "${json_file}"
+  local rc=$?
+  set -e
+  mark_result "${name}" "${rc}"
+  if is_allowed_stage_rc "${rc}"; then
+    echo "    ok: rc=${rc}"
+  else
+    echo "    failed: unexpected rc=${rc} (expect 0/1/3)" >&2
+    HARD_FAIL=1
+  fi
+  if [[ ! -s "${json_file}" ]]; then
+    echo "    failed: status json is empty (${json_file})" >&2
+    HARD_FAIL=1
+    return
+  fi
+  if ! grep -q '"command"[[:space:]]*:[[:space:]]*"opskit status"' "${json_file}"; then
+    echo "    failed: status json missing command field (${json_file})" >&2
+    HARD_FAIL=1
+  fi
+  if ! grep -q '"schemaVersion"[[:space:]]*:[[:space:]]*"v1"' "${json_file}"; then
+    echo "    failed: status json missing schemaVersion=v1 (${json_file})" >&2
+    HARD_FAIL=1
+  fi
+  if ! grep -q "\"exitCode\"[[:space:]]*:[[:space:]]*${rc}" "${json_file}"; then
+    echo "    failed: status json exitCode mismatch (${json_file})" >&2
+    HARD_FAIL=1
+  fi
+  echo "    json: ${json_file}"
+}
+
 require_file() {
   local path="$1"
   if [[ -f "${path}" ]]; then
@@ -142,16 +192,19 @@ run_expect_zero "template validate (${TEMPLATE})" template validate "${TEMPLATE}
 run_expect_stage_rc "run A" run A --template "${TEMPLATE}" --output "${OUTPUT}"
 run_expect_stage_rc "run D" run D --template "${TEMPLATE}" --output "${OUTPUT}"
 run_expect_stage_rc "accept" accept --template "${TEMPLATE}" --output "${OUTPUT}"
-run_expect_stage_rc "status" status --output "${OUTPUT}"
+run_status_json_expect_stage_rc "status" "${JSON_STATUS_FILE}" status --output "${OUTPUT}"
 
 echo "==> verify outputs"
 require_file "${OUTPUT}/state/overall.json"
 require_file "${OUTPUT}/state/lifecycle.json"
 require_file "${OUTPUT}/state/services.json"
 require_file "${OUTPUT}/state/artifacts.json"
+require_file "${JSON_STATUS_FILE}"
 
 require_grep '"summary"' "${OUTPUT}/state/lifecycle.json"
 require_grep 'acceptance-consistency-' "${OUTPUT}/state/artifacts.json"
+require_grep '"schemaVersion"[[:space:]]*:[[:space:]]*"v1"' "${JSON_STATUS_FILE}"
+require_grep '"command"[[:space:]]*:[[:space:]]*"opskit status"' "${JSON_STATUS_FILE}"
 
 latest_accept="$(ls -1t "${OUTPUT}"/reports/accept-*.html 2>/dev/null | head -n1 || true)"
 if [[ -z "${latest_accept}" ]]; then
@@ -170,6 +223,7 @@ for line in "${RESULT_LINES[@]}"; do
   echo "- ${name}: rc=${rc}"
 done
 echo "- output: ${OUTPUT}"
+echo "- status json: ${JSON_STATUS_FILE}"
 
 if [[ "${HARD_FAIL}" == "1" || "${FAIL_COUNT}" -gt 0 ]]; then
   echo "offline validation failed (hard_fail=${HARD_FAIL}, verify_fail=${FAIL_COUNT})" >&2

@@ -17,6 +17,7 @@
 - 新增 `docs/RELEASE_PLAN_v0.3.5-preview.1.md`
 - 新增 `opskit status --json` 机器可读状态输出
 - 新增 `docs/specs/SPEC_STATUS_JSON.md`（`status --json` 契约规范）
+- 离线回归脚本新增 `--json-status-file`，可保存 `status --json` 结果
 
 ### Changed
 

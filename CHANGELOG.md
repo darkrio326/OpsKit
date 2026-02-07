@@ -12,6 +12,7 @@
 - 新增 `scripts/kylin-offline-validate.sh`（麒麟离线机一键回归脚本）
 - 新增 `opskit status --json`（机器可读状态输出）
 - 新增 `docs/specs/SPEC_STATUS_JSON.md`（status JSON 输出契约）
+- 离线回归脚本支持 `--json-status-file`（落盘 status JSON）
 - UI 新增阶段 summary 展示（`total/pass/warn/fail/skip`）
 - UI artifacts 高亮新增 latest acceptance consistency 入口
 - Accept 阶段新增 `acceptance-consistency` 报告索引写入 `artifacts.json`

@@ -87,7 +87,11 @@ opskit status --output /data/opskit-demo
 建议在麒麟离线机按以下顺序做一次完整回归：
 
 ```bash
-scripts/kylin-offline-validate.sh --bin /usr/local/bin/opskit --output /data/opskit-regression-v034 --clean
+scripts/kylin-offline-validate.sh \
+  --bin /usr/local/bin/opskit \
+  --output /data/opskit-regression-v034 \
+  --json-status-file /data/opskit-regression-v034/status.json \
+  --clean
 ```
 
 若需手工逐步执行，可使用以下命令：
@@ -116,6 +120,7 @@ echo "status exit=$?"
 - `state/lifecycle.json` 含 `summary(total/pass/warn/fail/skip)` 字段
 - `state/artifacts.json` 存在 `acceptance-consistency-*.json` 报告索引
 - `reports/accept-*.html` 可打开并看到 consistency 摘要
+- `status.json` 存在且包含 `command/schemaVersion/exitCode`
 
 可选检查命令（系统有 `grep` 即可）：
 
@@ -123,6 +128,8 @@ echo "status exit=$?"
 grep -R "\"summary\"" "$OPSKIT_OUT/state/lifecycle.json"
 grep -R "acceptance-consistency-" "$OPSKIT_OUT/state/artifacts.json"
 grep -R "\"consistency\"" "$OPSKIT_OUT/reports"/accept-*.html
+grep -R "\"schemaVersion\"" "$OPSKIT_OUT/status.json"
+grep -R "\"exitCode\"" "$OPSKIT_OUT/status.json"
 ```
 
 ## 5. 启动 Web UI 查看状态
@@ -149,6 +156,7 @@ ssh -L 18080:127.0.0.1:18080 user@kylin-host
 - `/data/opskit-demo/state/lifecycle.json`
 - `/data/opskit-demo/state/services.json`
 - `/data/opskit-demo/state/artifacts.json`
+- `/data/opskit-demo/status.json`（一键回归脚本默认输出）
 - `/data/opskit-demo/reports/*.html`
 - `/data/opskit-demo/bundles/*.tar.gz`
 - `/data/opskit-demo/ui/index.html`

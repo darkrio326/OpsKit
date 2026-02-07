@@ -27,6 +27,7 @@
 ### A. 离线回归脚本化
 
 - 新增离线一键回归脚本：模板校验、`run A`、`run D`、`accept`、`status`
+- 支持 `--json-status-file`，落盘 `status --json` 结果供后续工具消费
 - 输出校验：`state/*.json`、`acceptance-consistency`、accept 报告 consistency 摘要
 - 退出码策略：允许 `0/1/3`，拒绝其他码
 

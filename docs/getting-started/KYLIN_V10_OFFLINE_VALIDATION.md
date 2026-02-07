@@ -13,7 +13,11 @@
 优先使用一键脚本：
 
 ```bash
-scripts/kylin-offline-validate.sh --bin /usr/local/bin/opskit --output /data/opskit-regression-v034 --clean
+scripts/kylin-offline-validate.sh \
+  --bin /usr/local/bin/opskit \
+  --output /data/opskit-regression-v034 \
+  --json-status-file /data/opskit-regression-v034/status.json \
+  --clean
 ```
 
 若需手工执行，可使用：
@@ -41,6 +45,7 @@ opskit status --output "$OPSKIT_OUT"
 - 存在 `state/overall.json`
 - 存在 `state/lifecycle.json` 且各阶段有 `summary(total/pass/warn/fail/skip)`
 - 存在 `state/artifacts.json`
+- 存在 `status.json`，且含 `command/schemaVersion/exitCode`
 
 3. 报告与证据层
 
@@ -54,6 +59,8 @@ opskit status --output "$OPSKIT_OUT"
 grep -R "\"summary\"" "$OPSKIT_OUT/state/lifecycle.json"
 grep -R "acceptance-consistency-" "$OPSKIT_OUT/state/artifacts.json"
 grep -R "\"consistency\"" "$OPSKIT_OUT/reports"/accept-*.html
+grep -R "\"schemaVersion\"" "$OPSKIT_OUT/status.json"
+grep -R "\"exitCode\"" "$OPSKIT_OUT/status.json"
 ```
 
 ## 5. UI 验证
