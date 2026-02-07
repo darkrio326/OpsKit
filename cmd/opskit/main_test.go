@@ -98,6 +98,12 @@ func TestCmdStatus_JSONOutputContract(t *testing.T) {
 	if payload.SchemaVersion != statusJSONSchemaVersion {
 		t.Fatalf("unexpected schemaVersion: %s", payload.SchemaVersion)
 	}
+	if payload.Command != statusJSONCommand {
+		t.Fatalf("unexpected command: %s", payload.Command)
+	}
+	if payload.ExitCode != exit {
+		t.Fatalf("unexpected exitCode: %d", payload.ExitCode)
+	}
 	if strings.TrimSpace(payload.GeneratedAt) == "" {
 		t.Fatalf("generatedAt should not be empty")
 	}

@@ -28,9 +28,14 @@ import (
 	"opskit/internal/webserver"
 )
 
-const statusJSONSchemaVersion = "v1"
+const (
+	statusJSONSchemaVersion = "v1"
+	statusJSONCommand       = "opskit status"
+)
 
 type statusJSONPayload struct {
+	Command       string                `json:"command"`
+	ExitCode      int                   `json:"exitCode"`
 	SchemaVersion string                `json:"schemaVersion"`
 	GeneratedAt   string                `json:"generatedAt"`
 	Overall       schema.OverallState   `json:"overall"`
@@ -395,16 +400,17 @@ func cmdStatus(args []string) int {
 		fmt.Fprintf(os.Stderr, "status write failed: %v\n", err)
 		return exitcode.Failure
 	}
+	finalCode := exitForLifecycle(lifecycle)
 
 	if *jsonOutput {
-		payload := buildStatusJSONPayload(overall, lifecycle, services, artifacts)
+		payload := buildStatusJSONPayload(overall, lifecycle, services, artifacts, finalCode)
 		body, err := json.MarshalIndent(payload, "", "  ")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "status marshal failed: %v\n", err)
 			return exitcode.Failure
 		}
 		fmt.Println(string(body))
-		return exitForLifecycle(lifecycle)
+		return finalCode
 	}
 
 	fmt.Printf("overall=%s issues=%d template=%s refreshed=%s\n", overall.OverallStatus, overall.OpenIssuesCount, strings.Join(overall.ActiveTemplates, ","), overall.LastRefreshTime)
@@ -416,15 +422,17 @@ func cmdStatus(args []string) int {
 	for _, s := range lifecycle.Stages {
 		fmt.Printf("- %s %-16s %s\n", s.StageID, s.Name, s.Status)
 	}
-	return exitForLifecycle(lifecycle)
+	return finalCode
 }
 
-func buildStatusJSONPayload(overall schema.OverallState, lifecycle schema.LifecycleState, services schema.ServicesState, artifacts schema.ArtifactsState) statusJSONPayload {
+func buildStatusJSONPayload(overall schema.OverallState, lifecycle schema.LifecycleState, services schema.ServicesState, artifacts schema.ArtifactsState, exitCode int) statusJSONPayload {
 	generatedAt := strings.TrimSpace(overall.LastRefreshTime)
 	if generatedAt == "" {
 		generatedAt = timeutil.NowISO8601()
 	}
 	return statusJSONPayload{
+		Command:       statusJSONCommand,
+		ExitCode:      exitCode,
 		SchemaVersion: statusJSONSchemaVersion,
 		GeneratedAt:   generatedAt,
 		Overall:       overall,

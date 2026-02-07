@@ -46,6 +46,8 @@
 
 `status --json` 顶层字段约定：
 
+- `command`：当前固定 `opskit status`
+- `exitCode`：与该次 status 命令退出码一致（`0|1|3`）
 - `schemaVersion`：当前固定 `v1`
 - `generatedAt`：本次状态刷新时间（ISO8601）
 - `overall` / `lifecycle` / `services` / `artifacts`：对应状态对象
