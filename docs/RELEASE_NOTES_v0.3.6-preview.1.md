@@ -13,7 +13,8 @@
 ### Added
 
 - 新增 `docs/RELEASE_PLAN_v0.3.6-preview.1.md`
-- 离线回归脚本支持输出结构化 summary（计划）
+- `scripts/kylin-offline-validate.sh` 支持 `--summary-json-file`
+- 离线回归 `summary.json` 增加 `result/reasonCode/stageResults/durationSeconds`
 - 新增通用检查：`fs_readonly`、`disk_inodes`、`clock_skew`（计划）
 - 发布资产 metadata 与 checksum 一致性自检（计划）
 
@@ -22,6 +23,8 @@
 - `README.md` / `README.zh-CN.md` 下一版计划入口更新到 `v0.3.6-preview.1`
 - `ROADMAP.md` 当前进行中版本滚动到 `v0.3.6-preview.1`
 - `docs/GITHUB_RELEASE.md` 下一版文案与发版命令滚动到 `v0.3.6-preview.1`
+- `scripts/release-check.sh` 增加 `--offline-summary-json-file` 透传
+- `docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md` / `docs/getting-started/GETSTART.md` 增加 `summary.json` 用法
 
 ### Fixed
 

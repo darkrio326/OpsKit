@@ -1,11 +1,11 @@
-# 银河麒麟 V10 离线回归验证清单（OpsKit v0.3.4-preview.1）
+# 银河麒麟 V10 离线回归验证清单（OpsKit v0.3.x）
 
 本文用于发布后用户侧验收，目标是确认二进制在离线麒麟 V10 服务器可运行，并产出可追踪状态与证据。
 
 ## 1. 前置条件
 
 - 已将 release 包拷贝到离线服务器并安装 `opskit`
-- 可写目录：例如 `/data/opskit-regression-v034`
+- 可写目录：例如 `/data/opskit-regression-v036`
 - 可执行 `grep`（系统默认通常具备）
 
 ## 2. 一次性回归命令
@@ -15,8 +15,9 @@
 ```bash
 scripts/kylin-offline-validate.sh \
   --bin /usr/local/bin/opskit \
-  --output /data/opskit-regression-v034 \
-  --json-status-file /data/opskit-regression-v034/status.json \
+  --output /data/opskit-regression-v036 \
+  --json-status-file /data/opskit-regression-v036/status.json \
+  --summary-json-file /data/opskit-regression-v036/summary.json \
   --clean
 ```
 
@@ -25,8 +26,9 @@ scripts/kylin-offline-validate.sh \
 ```bash
 scripts/kylin-offline-validate.sh \
   --bin /usr/local/bin/opskit \
-  --output /data/opskit-regression-v034 \
-  --json-status-file /data/opskit-regression-v034/status.json \
+  --output /data/opskit-regression-v036 \
+  --json-status-file /data/opskit-regression-v036/status.json \
+  --summary-json-file /data/opskit-regression-v036/summary.json \
   --strict-exit \
   --clean
 ```
@@ -35,7 +37,7 @@ scripts/kylin-offline-validate.sh \
 
 ```bash
 set -e
-export OPSKIT_OUT=/data/opskit-regression-v034
+export OPSKIT_OUT=/data/opskit-regression-v036
 mkdir -p "$OPSKIT_OUT"
 
 opskit run A --template generic-manage-v1 --output "$OPSKIT_OUT"
@@ -57,6 +59,7 @@ opskit status --output "$OPSKIT_OUT"
 - 存在 `state/lifecycle.json` 且各阶段有 `summary(total/pass/warn/fail/skip)`
 - 存在 `state/artifacts.json`
 - 存在 `status.json`，且含 `command/schemaVersion/exitCode`
+- 存在 `summary.json`，且含 `result/reasonCode/stageResults`
 
 3. 报告与证据层
 
@@ -72,6 +75,8 @@ grep -R "acceptance-consistency-" "$OPSKIT_OUT/state/artifacts.json"
 grep -R "\"consistency\"" "$OPSKIT_OUT/reports"/accept-*.html
 grep -R "\"schemaVersion\"" "$OPSKIT_OUT/status.json"
 grep -R "\"exitCode\"" "$OPSKIT_OUT/status.json"
+grep -R "\"result\"" "$OPSKIT_OUT/summary.json"
+grep -R "\"reasonCode\"" "$OPSKIT_OUT/summary.json"
 ```
 
 ## 5. UI 验证

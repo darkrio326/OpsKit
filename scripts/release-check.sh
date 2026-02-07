@@ -20,6 +20,8 @@ Options:
                          Output dir for offline validation (default: <output>/offline-validate)
       --offline-json-status-file <path>
                          status --json output file (default: <offline-output>/status.json)
+      --offline-summary-json-file <path>
+                         offline summary output file (default: <offline-output>/summary.json)
       --offline-strict-exit
                          Require offline run A/D/accept/status exit code to be 0
   -h, --help            Show help
@@ -38,6 +40,7 @@ WITH_OFFLINE_VALIDATE=0
 OFFLINE_BIN=""
 OFFLINE_OUTPUT=""
 OFFLINE_JSON_STATUS_FILE=""
+OFFLINE_SUMMARY_JSON_FILE=""
 OFFLINE_STRICT_EXIT=0
 STEP_COUNT=0
 TOTAL_SECONDS=0
@@ -75,6 +78,11 @@ while [[ $# -gt 0 ]]; do
     --offline-json-status-file)
       [[ $# -ge 2 ]] || { echo "missing value for $1" >&2; exit 2; }
       OFFLINE_JSON_STATUS_FILE="$2"
+      shift 2
+      ;;
+    --offline-summary-json-file)
+      [[ $# -ge 2 ]] || { echo "missing value for $1" >&2; exit 2; }
+      OFFLINE_SUMMARY_JSON_FILE="$2"
       shift 2
       ;;
     --offline-strict-exit)
@@ -124,6 +132,9 @@ fi
 if [[ -z "${OFFLINE_JSON_STATUS_FILE}" ]]; then
   OFFLINE_JSON_STATUS_FILE="${OFFLINE_OUTPUT}/status.json"
 fi
+if [[ -z "${OFFLINE_SUMMARY_JSON_FILE}" ]]; then
+  OFFLINE_SUMMARY_JSON_FILE="${OFFLINE_OUTPUT}/summary.json"
+fi
 
 cd "${ROOT_DIR}"
 
@@ -147,6 +158,7 @@ if [[ "${WITH_OFFLINE_VALIDATE}" == "1" ]]; then
     --bin "${OFFLINE_BIN}"
     --output "${OFFLINE_OUTPUT}"
     --json-status-file "${OFFLINE_JSON_STATUS_FILE}"
+    --summary-json-file "${OFFLINE_SUMMARY_JSON_FILE}"
     --clean
   )
   if [[ "${OFFLINE_STRICT_EXIT}" == "1" ]]; then
@@ -169,6 +181,7 @@ echo "- output: ${OUTPUT_DIR}"
 if [[ "${WITH_OFFLINE_VALIDATE}" == "1" ]]; then
   echo "- offline output: ${OFFLINE_OUTPUT}"
   echo "- offline status json: ${OFFLINE_JSON_STATUS_FILE}"
+  echo "- offline summary json: ${OFFLINE_SUMMARY_JSON_FILE}"
   echo "- offline strict exit: ${OFFLINE_STRICT_EXIT}"
 fi
 echo "release-check passed"

@@ -52,13 +52,14 @@ IMAGE=kylinv10/kylin:b09 DOCKER_PLATFORM=linux/amd64 DRY_RUN=1 make -C examples/
 - `OUTPUT/ui/index.html`
 - `OUTPUT/summary.json`
 
-## 7) 麒麟离线机一键回归（v0.3.4）
+## 7) 麒麟离线机一键回归（v0.3.x）
 
 ```bash
 scripts/kylin-offline-validate.sh \
   --bin /usr/local/bin/opskit \
-  --output /data/opskit-regression-v034 \
-  --json-status-file /data/opskit-regression-v034/status.json \
+  --output /data/opskit-regression-v036 \
+  --json-status-file /data/opskit-regression-v036/status.json \
+  --summary-json-file /data/opskit-regression-v036/summary.json \
   --clean
 ```
 
