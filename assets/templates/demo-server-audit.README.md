@@ -44,4 +44,4 @@
 - `evidence/state-dir-hash.json`
 
 说明：模板中的服务相关检查均为占位并默认禁用，避免误导为生产可用策略。
-当前 D 阶段默认启用通用检查：磁盘、内存、负载、NTP 同步、DNS 解析（`localhost`）。
+当前 D 阶段默认启用通用检查：磁盘容量、inode、只读挂载、内存、负载、NTP 同步、时钟偏移、DNS 解析（`localhost`）。

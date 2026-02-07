@@ -15,7 +15,8 @@
 - 新增 `docs/RELEASE_PLAN_v0.3.6-preview.1.md`
 - `scripts/kylin-offline-validate.sh` 支持 `--summary-json-file`
 - 离线回归 `summary.json` 增加 `result/reasonCode/stageResults/durationSeconds`
-- 新增通用检查：`fs_readonly`、`disk_inodes`、`clock_skew`（计划）
+- 新增通用检查：`fs_readonly`、`disk_inodes`、`clock_skew`
+- `assets/templates/demo-server-audit.json` D 阶段接入上述 3 个检查
 - 发布资产 metadata 与 checksum 一致性自检（计划）
 
 ### Changed

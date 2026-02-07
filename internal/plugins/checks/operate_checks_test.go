@@ -3,7 +3,9 @@ package checks
 import (
 	"context"
 	"errors"
+	"os"
 	osexec "os/exec"
+	"path/filepath"
 	"testing"
 
 	"opskit/internal/core/executil"
@@ -336,6 +338,189 @@ func TestSystemdRestartCountDegraded(t *testing.T) {
 	}
 	if !hasMetric(res.Metrics, "check_degraded_reason", "systemctl_query_failed") {
 		t.Fatalf("expected systemctl_query_failed reason")
+	}
+}
+
+func TestDiskInodesWarn(t *testing.T) {
+	plugin := &diskInodesCheck{}
+	res, err := plugin.Run(context.Background(), Request{
+		ID: "d.disk_inodes",
+		Params: map[string]any{
+			"mount":             "/",
+			"max_iused_percent": 90,
+			"severity":          "warn",
+		},
+		Exec: fakeRunner{run: func(_ context.Context, spec executil.Spec) (executil.Result, error) {
+			if spec.Name != "df" {
+				t.Fatalf("unexpected command: %s", spec.Name)
+			}
+			return executil.Result{
+				ExitCode: 0,
+				Stdout:   "Filesystem Inodes IUsed IFree IUse% Mounted on\n/dev/sda1 1000 950 50 95% /\n",
+			}, nil
+		}},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.Status != schema.StatusWarn {
+		t.Fatalf("expected warn, got %s", res.Status)
+	}
+	if !hasMetric(res.Metrics, "inode_used_percent", "95") {
+		t.Fatalf("expected inode_used_percent=95")
+	}
+}
+
+func TestDiskInodesDegradedWhenDFUnavailable(t *testing.T) {
+	plugin := &diskInodesCheck{}
+	res, err := plugin.Run(context.Background(), Request{
+		ID: "d.disk_inodes",
+		Exec: fakeRunner{run: func(_ context.Context, _ executil.Spec) (executil.Result, error) {
+			return executil.Result{}, errors.New("df unavailable")
+		}},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.Status != schema.StatusWarn {
+		t.Fatalf("expected warn, got %s", res.Status)
+	}
+	if !hasMetric(res.Metrics, "check_degraded_reason", "df_unavailable") {
+		t.Fatalf("expected df_unavailable reason")
+	}
+}
+
+func TestFSReadonlyPass(t *testing.T) {
+	plugin := &fsReadonlyCheck{}
+	mountFile := filepath.Join(t.TempDir(), "mounts")
+	data := "/dev/sda1 / ext4 rw,relatime 0 0\n" +
+		"/dev/sdb1 /data ext4 ro,relatime 0 0\n"
+	if err := os.WriteFile(mountFile, []byte(data), 0o600); err != nil {
+		t.Fatalf("write mounts file: %v", err)
+	}
+	res, err := plugin.Run(context.Background(), Request{
+		ID: "d.fs_readonly",
+		Params: map[string]any{
+			"mounts_file":     mountFile,
+			"mounts":          []any{"/", "/data"},
+			"allow_readonly":  []any{"/data"},
+			"require_present": true,
+		},
+		Exec: fakeRunner{run: func(_ context.Context, _ executil.Spec) (executil.Result, error) {
+			t.Fatalf("mount command should not run when mounts_file exists")
+			return executil.Result{}, nil
+		}},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.Status != schema.StatusPassed {
+		t.Fatalf("expected passed, got %s", res.Status)
+	}
+	if !hasMetric(res.Metrics, "fs_readonly_violations", "0") {
+		t.Fatalf("expected fs_readonly_violations=0")
+	}
+}
+
+func TestFSReadonlyFailOnUnexpectedReadonlyMount(t *testing.T) {
+	plugin := &fsReadonlyCheck{}
+	mountFile := filepath.Join(t.TempDir(), "mounts")
+	data := "/dev/sda1 / ext4 ro,relatime 0 0\n"
+	if err := os.WriteFile(mountFile, []byte(data), 0o600); err != nil {
+		t.Fatalf("write mounts file: %v", err)
+	}
+	res, err := plugin.Run(context.Background(), Request{
+		ID: "d.fs_readonly",
+		Params: map[string]any{
+			"mounts_file": mountFile,
+			"mounts":      []any{"/"},
+			"severity":    "fail",
+		},
+		Exec: fakeRunner{run: func(_ context.Context, _ executil.Spec) (executil.Result, error) {
+			return executil.Result{}, nil
+		}},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.Status != schema.StatusFailed {
+		t.Fatalf("expected failed, got %s", res.Status)
+	}
+	if !hasMetric(res.Metrics, "fs_readonly_violations", "1") {
+		t.Fatalf("expected fs_readonly_violations=1")
+	}
+}
+
+func TestClockSkewPassWithChrony(t *testing.T) {
+	plugin := &clockSkewCheck{}
+	res, err := plugin.Run(context.Background(), Request{
+		ID: "d.clock_skew",
+		Params: map[string]any{
+			"max_skew_ms": 1000,
+		},
+		Exec: fakeRunner{run: func(_ context.Context, spec executil.Spec) (executil.Result, error) {
+			if spec.Name != "chronyc" {
+				t.Fatalf("unexpected command: %s", spec.Name)
+			}
+			return executil.Result{
+				ExitCode: 0,
+				Stdout:   "System time     : 0.000123 seconds slow of NTP time\nLast offset     : +0.000003 seconds\n",
+			}, nil
+		}},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.Status != schema.StatusPassed {
+		t.Fatalf("expected passed, got %s", res.Status)
+	}
+	if !hasMetric(res.Metrics, "clock_skew_source", "chronyc_system_time") {
+		t.Fatalf("expected clock_skew_source=chronyc_system_time")
+	}
+}
+
+func TestClockSkewFailWithSeverity(t *testing.T) {
+	plugin := &clockSkewCheck{}
+	res, err := plugin.Run(context.Background(), Request{
+		ID: "d.clock_skew",
+		Params: map[string]any{
+			"max_skew_ms": 1000,
+			"severity":    "fail",
+		},
+		Exec: fakeRunner{run: func(_ context.Context, spec executil.Spec) (executil.Result, error) {
+			if spec.Name != "chronyc" {
+				t.Fatalf("unexpected command: %s", spec.Name)
+			}
+			return executil.Result{
+				ExitCode: 0,
+				Stdout:   "System time     : 5.000000 seconds fast of NTP time\n",
+			}, nil
+		}},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.Status != schema.StatusFailed {
+		t.Fatalf("expected failed, got %s", res.Status)
+	}
+}
+
+func TestClockSkewDegradedWhenToolsUnavailable(t *testing.T) {
+	plugin := &clockSkewCheck{}
+	res, err := plugin.Run(context.Background(), Request{
+		ID: "d.clock_skew",
+		Exec: fakeRunner{run: func(_ context.Context, _ executil.Spec) (executil.Result, error) {
+			return executil.Result{}, osexec.ErrNotFound
+		}},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.Status != schema.StatusWarn {
+		t.Fatalf("expected warn, got %s", res.Status)
+	}
+	if !hasMetric(res.Metrics, "check_degraded_reason", "tool_unavailable") {
+		t.Fatalf("expected tool_unavailable reason")
 	}
 }
 

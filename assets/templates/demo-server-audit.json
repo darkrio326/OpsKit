@@ -69,6 +69,25 @@
           "enabled": true
         },
         {
+          "id": "d.disk_inodes_root",
+          "kind": "disk_inodes",
+          "params": {
+            "mount": "/",
+            "max_iused_percent": 90,
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.fs_readonly",
+          "kind": "fs_readonly",
+          "params": {
+            "mounts": ["/"],
+            "severity": "fail"
+          },
+          "enabled": true
+        },
+        {
           "id": "d.memory_available",
           "kind": "memory_available",
           "params": {
@@ -90,6 +109,15 @@
           "id": "d.ntp_sync",
           "kind": "ntp_sync",
           "params": {
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.clock_skew",
+          "kind": "clock_skew",
+          "params": {
+            "max_skew_ms": 2000,
             "severity": "warn"
           },
           "enabled": true

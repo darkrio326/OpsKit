@@ -19,6 +19,9 @@ func RegisterBuiltins(r *Registry) {
 	r.Register(func() Plugin { return &systemdUnitActiveCheck{} })
 	r.Register(func() Plugin { return &systemdRestartCountCheck{} })
 	r.Register(func() Plugin { return &diskUsageCheck{} })
+	r.Register(func() Plugin { return &diskInodesCheck{} })
+	r.Register(func() Plugin { return &fsReadonlyCheck{} })
+	r.Register(func() Plugin { return &clockSkewCheck{} })
 	r.Register(func() Plugin { return &memoryAvailableCheck{} })
 	r.Register(func() Plugin { return &loadAverageCheck{} })
 }
