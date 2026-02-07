@@ -28,6 +28,17 @@ import (
 	"opskit/internal/webserver"
 )
 
+const statusJSONSchemaVersion = "v1"
+
+type statusJSONPayload struct {
+	SchemaVersion string                `json:"schemaVersion"`
+	GeneratedAt   string                `json:"generatedAt"`
+	Overall       schema.OverallState   `json:"overall"`
+	Lifecycle     schema.LifecycleState `json:"lifecycle"`
+	Services      schema.ServicesState  `json:"services"`
+	Artifacts     schema.ArtifactsState `json:"artifacts"`
+}
+
 func main() {
 	os.Exit(runCLI(os.Args[1:]))
 }
@@ -386,12 +397,7 @@ func cmdStatus(args []string) int {
 	}
 
 	if *jsonOutput {
-		payload := map[string]any{
-			"overall":   overall,
-			"lifecycle": lifecycle,
-			"services":  services,
-			"artifacts": artifacts,
-		}
+		payload := buildStatusJSONPayload(overall, lifecycle, services, artifacts)
 		body, err := json.MarshalIndent(payload, "", "  ")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "status marshal failed: %v\n", err)
@@ -411,6 +417,21 @@ func cmdStatus(args []string) int {
 		fmt.Printf("- %s %-16s %s\n", s.StageID, s.Name, s.Status)
 	}
 	return exitForLifecycle(lifecycle)
+}
+
+func buildStatusJSONPayload(overall schema.OverallState, lifecycle schema.LifecycleState, services schema.ServicesState, artifacts schema.ArtifactsState) statusJSONPayload {
+	generatedAt := strings.TrimSpace(overall.LastRefreshTime)
+	if generatedAt == "" {
+		generatedAt = timeutil.NowISO8601()
+	}
+	return statusJSONPayload{
+		SchemaVersion: statusJSONSchemaVersion,
+		GeneratedAt:   generatedAt,
+		Overall:       overall,
+		Lifecycle:     lifecycle,
+		Services:      services,
+		Artifacts:     artifacts,
+	}
 }
 
 func cmdWeb(args []string) int {

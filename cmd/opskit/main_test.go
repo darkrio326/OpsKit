@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	coreerr "opskit/internal/core/errors"
@@ -63,6 +66,46 @@ func TestCmdStatus_ExitCodes(t *testing.T) {
 				t.Fatalf("expected %d with --json, got %d", tt.want, gotJSON)
 			}
 		})
+	}
+}
+
+func TestCmdStatus_JSONOutputContract(t *testing.T) {
+	tmp := t.TempDir()
+	store := state.NewStore(state.NewPaths(tmp))
+	if err := store.InitStateIfMissing("demo"); err != nil {
+		t.Fatalf("init state: %v", err)
+	}
+
+	lifecycle := state.DefaultLifecycle()
+	for i := range lifecycle.Stages {
+		lifecycle.Stages[i].Status = schema.StatusPassed
+	}
+	if err := store.WriteLifecycle(lifecycle); err != nil {
+		t.Fatalf("write lifecycle: %v", err)
+	}
+
+	exit, stdout := captureStdout(t, func() int {
+		return cmdStatus([]string{"--output", tmp, "--json"})
+	})
+	if exit != exitcode.Success {
+		t.Fatalf("expected success, got %d", exit)
+	}
+
+	var payload statusJSONPayload
+	if err := json.Unmarshal([]byte(strings.TrimSpace(stdout)), &payload); err != nil {
+		t.Fatalf("json unmarshal failed: %v, output=%q", err, stdout)
+	}
+	if payload.SchemaVersion != statusJSONSchemaVersion {
+		t.Fatalf("unexpected schemaVersion: %s", payload.SchemaVersion)
+	}
+	if strings.TrimSpace(payload.GeneratedAt) == "" {
+		t.Fatalf("generatedAt should not be empty")
+	}
+	if payload.Overall.LastRefreshTime != payload.GeneratedAt {
+		t.Fatalf("generatedAt should match overall.lastRefreshTime, got %s vs %s", payload.GeneratedAt, payload.Overall.LastRefreshTime)
+	}
+	if len(payload.Lifecycle.Stages) != 6 {
+		t.Fatalf("expected 6 lifecycle stages, got %d", len(payload.Lifecycle.Stages))
 	}
 }
 
@@ -209,3 +252,27 @@ func TestStageResultsExit(t *testing.T) {
 type errDummy struct{}
 
 func (errDummy) Error() string { return "dummy" }
+
+func captureStdout(t *testing.T, fn func() int) (int, string) {
+	t.Helper()
+	oldStdout := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("create stdout pipe: %v", err)
+	}
+	os.Stdout = w
+
+	exit := fn()
+
+	if err := w.Close(); err != nil {
+		t.Fatalf("close stdout writer: %v", err)
+	}
+	os.Stdout = oldStdout
+
+	out, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatalf("read stdout: %v", err)
+	}
+	_ = r.Close()
+	return exit, string(out)
+}

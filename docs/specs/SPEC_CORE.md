@@ -40,8 +40,15 @@
 ### 2.4 输出约定
 
 - `stdout`：人类可读摘要
+- `opskit status --json`：机器可读 JSON（稳定顶层字段）
 - 状态 JSON：写入 `<output>/state`
 - 日志：按运行环境输出到文件或控制台
+
+`status --json` 顶层字段约定：
+
+- `schemaVersion`：当前固定 `v1`
+- `generatedAt`：本次状态刷新时间（ISO8601）
+- `overall` / `lifecycle` / `services` / `artifacts`：对应状态对象
 
 ## 3. 状态模型规范
 
