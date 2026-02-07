@@ -31,6 +31,7 @@
 - 阶段卡片展示 `summary(total/pass/warn/fail/skip)`
 - artifacts 区域增加 latest acceptance consistency 入口
 - Recover/Accept 关键指标显示（reason code / consistency）
+- 当前进度：已完成（web/ui + installer assets 同步）
 
 验收：
 

@@ -13,8 +13,8 @@
 
 ### Added
 
-- （待补）UI 展示阶段 summary 统计
-- （待补）latest acceptance consistency 入口
+- UI 新增阶段 summary 展示（`total/pass/warn/fail/skip`）
+- artifacts 高亮区新增 latest acceptance consistency 入口
 - （待补）release-check 统计输出
 
 ### Changed

@@ -105,10 +105,12 @@ function renderStages(lifecycle, artifacts) {
     }
     const recoverLinksHtml = recoverLinks.length ? `<div class="stage-action">${recoverLinks.join('<span class="sep">·</span>')}</div>` : '';
     const triggerHtml = recoverTrigger ? `<div class="muted">trigger: ${htmlEscape(recoverTrigger)}</div>` : '';
+    const summaryHtml = stageSummaryLine(s.summary);
     return card(`${s.stageId} ${s.name}`, `
       <div class="status ${htmlEscape(s.status)}">${htmlEscape(s.status)}</div>
       <div class="muted">${htmlEscape(s.lastRunTime || '-')}</div>
       <div class="muted">issues: ${(s.issues || []).length}</div>
+      ${summaryHtml}
       ${triggerHtml}
       ${recoverLinksHtml}
     `);
@@ -118,6 +120,16 @@ function renderStages(lifecycle, artifacts) {
 function stageMetricValue(stage, label) {
   const metric = (stage.metrics || []).find((m) => m.label === label);
   return metric ? metric.value : '';
+}
+
+function stageSummaryLine(summary) {
+  if (!summary) return '';
+  const total = Number(summary.total || 0);
+  const pass = Number(summary.pass || 0);
+  const warn = Number(summary.warn || 0);
+  const fail = Number(summary.fail || 0);
+  const skip = Number(summary.skip || 0);
+  return `<div class="muted">steps: pass ${pass} · warn ${warn} · fail ${fail} · skip ${skip} (total ${total})</div>`;
 }
 
 function renderServices(services) {
@@ -286,6 +298,10 @@ function renderArtifactHighlights(artifacts, summary) {
   const reports = artifacts.reports || [];
   const bundles = artifacts.bundles || [];
   const latestAccept = latestBy((x) => (x.path || '').includes('acceptance-') || String(x.id || '').includes('accept'), bundles);
+  const latestAcceptConsistency = latestBy(
+    (x) => (x.path || '').includes('acceptance-consistency-') || String(x.id || '').includes('consistency'),
+    reports,
+  ) || consistencyFromAcceptanceBundle(latestAccept);
   const latestCollect = latestBy((x) => (x.path || '').includes('collect-') || String(x.id || '').includes('collect'), bundles);
   const latestHandover = latestBy((x) => (x.path || '').includes('handover-') || String(x.id || '').includes('handover'), bundles);
   const summaryCard = summary
@@ -294,10 +310,21 @@ function renderArtifactHighlights(artifacts, summary) {
   target.innerHTML = [
     card('Counts', `<div>reports: ${reports.length}</div><div>bundles: ${bundles.length}</div>`),
     card('Latest Acceptance', artifactLink('bundle', latestAccept)),
+    card('Latest Acceptance Consistency', artifactLink('report', latestAcceptConsistency)),
     card('Latest Recover Collect', artifactLink('bundle', latestCollect)),
     card('Latest Handover', artifactLink('bundle', latestHandover)),
     summaryCard,
   ].join('');
+}
+
+function consistencyFromAcceptanceBundle(artifact) {
+  const path = String(artifact?.path || '');
+  const match = path.match(/acceptance-(\d{8}-\d{6})\.tar\.gz$/);
+  if (!match) return null;
+  return {
+    id: `acceptance-consistency-${match[1]}`,
+    path: `evidence/acceptance-consistency-${match[1]}.json`,
+  };
 }
 
 async function boot() {

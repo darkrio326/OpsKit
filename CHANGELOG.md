@@ -8,6 +8,8 @@
 
 - 新增 `docs/RELEASE_PLAN_v0.3.4-preview.1.md`（下一版可执行任务清单）
 - 新增 `docs/RELEASE_NOTES_v0.3.4-preview.1.md`（下一版发布文案草稿）
+- UI 新增阶段 summary 展示（`total/pass/warn/fail/skip`）
+- UI artifacts 高亮新增 latest acceptance consistency 入口
 
 ### Changed
 
