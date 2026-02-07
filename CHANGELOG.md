@@ -23,6 +23,7 @@
 
 ### Changed
 
+- `README.md` / `README.zh-CN.md` 当前版本标记同步到 `v0.3.5-preview.1`
 - `README.md` / `README.zh-CN.md` / `ROADMAP.md` / `docs/GITHUB_RELEASE.md` 滚动到 `v0.3.3-preview.1`
 - `README.md` / `README.zh-CN.md` / `docs/getting-started/GETSTART.md` 增加麒麟离线部署与回归入口
 - `docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md` 回归口径从 dry-run 调整为真实执行，并补充退出码判读

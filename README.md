@@ -2,7 +2,7 @@
 
 一句话定位：**面向离线/信创环境的服务器全生命周期运维与验收工具**（A~F 阶段：Preflight/Baseline/Deploy/Operate/Recover/Accept-Handover）。
 
-当前版本：`v0.3.4-preview.1`
+当前版本：`v0.3.5-preview.1`
 
 ## 当前能力（Milestone 3）
 
