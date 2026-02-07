@@ -18,7 +18,9 @@
 - 新增 `opskit status --json` 机器可读状态输出
 - 新增 `docs/specs/SPEC_STATUS_JSON.md`（`status --json` 契约规范）
 - 离线回归脚本新增 `--json-status-file`，可保存 `status --json` 结果
+- 离线回归脚本新增 `--strict-exit`，可选严格通过模式
 - `scripts/release-check.sh` 新增 `--with-offline-validate` 可选门禁
+- `scripts/release-check.sh` 新增 `--offline-strict-exit` 透传严格模式
 
 ### Changed
 

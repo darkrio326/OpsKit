@@ -69,6 +69,7 @@ scripts/release.sh --version v0.3.0-preview.1 --clean
 - 至少完成一次 `run A`、`run D`、`accept` 验证流程
 - 优先执行 `scripts/release-check.sh` 一键回归
 - 建议在发版前增加离线门禁：`scripts/release-check.sh --with-offline-validate`
+- 对“环境应全部健康”的发布，可使用严格模式：`scripts/release-check.sh --with-offline-validate --offline-strict-exit`
 - 建议完成一次麒麟 V10 Docker e2e（`make -C examples/generic-manage docker-kylin-e2e`）
 - 更新 `CHANGELOG.md` 对应版本条目
 - 如发布二进制，确保 `checksums.txt` 已生成并随附件上传

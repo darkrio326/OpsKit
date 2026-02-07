@@ -94,6 +94,17 @@ scripts/kylin-offline-validate.sh \
   --clean
 ```
 
+严格模式（要求 `run A/D/accept/status` 均 exit=0）：
+
+```bash
+scripts/kylin-offline-validate.sh \
+  --bin /usr/local/bin/opskit \
+  --output /data/opskit-regression-v034 \
+  --json-status-file /data/opskit-regression-v034/status.json \
+  --strict-exit \
+  --clean
+```
+
 若需手工逐步执行，可使用以下命令：
 
 ```bash

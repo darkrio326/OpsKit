@@ -15,12 +15,14 @@ Options:
       --json-status-file <path>
                            Save `opskit status --json` output to this file
                            (default: <output>/status.json)
+      --strict-exit       Require run A/D/accept/status exit code to be 0
       --clean             Remove output directory before running
   -h, --help              Show help
 
 Notes:
   - This script runs real commands (not dry-run): run A, run D, accept, status.
-  - Expected stage/status exit codes are 0/1/3 (pass/fail/warn).
+  - Default expected stage/status exit codes are 0/1/3 (pass/fail/warn).
+  - Use --strict-exit to enforce exit code 0 for all stage/status commands.
 USAGE
 }
 
@@ -28,6 +30,7 @@ BIN="${BIN:-opskit}"
 OUTPUT="${OUTPUT:-/data/opskit-regression-v034}"
 TEMPLATE="${TEMPLATE:-generic-manage-v1}"
 JSON_STATUS_FILE=""
+STRICT_EXIT=0
 CLEAN=0
 
 while [[ $# -gt 0 ]]; do
@@ -51,6 +54,10 @@ while [[ $# -gt 0 ]]; do
       [[ $# -ge 2 ]] || { echo "missing value for $1" >&2; exit 2; }
       JSON_STATUS_FILE="$2"
       shift 2
+      ;;
+    --strict-exit)
+      STRICT_EXIT=1
+      shift
       ;;
     --clean)
       CLEAN=1
@@ -94,6 +101,10 @@ mark_result() {
 
 is_allowed_stage_rc() {
   local rc="$1"
+  if [[ "${STRICT_EXIT}" == "1" ]]; then
+    [[ "${rc}" == "0" ]]
+    return
+  fi
   [[ "${rc}" == "0" || "${rc}" == "1" || "${rc}" == "3" ]]
 }
 
@@ -124,7 +135,11 @@ run_expect_stage_rc() {
   if is_allowed_stage_rc "${rc}"; then
     echo "    ok: rc=${rc}"
   else
-    echo "    failed: unexpected rc=${rc} (expect 0/1/3)" >&2
+    if [[ "${STRICT_EXIT}" == "1" ]]; then
+      echo "    failed: unexpected rc=${rc} (expect 0 in strict mode)" >&2
+    else
+      echo "    failed: unexpected rc=${rc} (expect 0/1/3)" >&2
+    fi
     HARD_FAIL=1
   fi
 }
@@ -143,7 +158,11 @@ run_status_json_expect_stage_rc() {
   if is_allowed_stage_rc "${rc}"; then
     echo "    ok: rc=${rc}"
   else
-    echo "    failed: unexpected rc=${rc} (expect 0/1/3)" >&2
+    if [[ "${STRICT_EXIT}" == "1" ]]; then
+      echo "    failed: unexpected rc=${rc} (expect 0 in strict mode)" >&2
+    else
+      echo "    failed: unexpected rc=${rc} (expect 0/1/3)" >&2
+    fi
     HARD_FAIL=1
   fi
   if [[ ! -s "${json_file}" ]]; then
@@ -224,6 +243,7 @@ for line in "${RESULT_LINES[@]}"; do
 done
 echo "- output: ${OUTPUT}"
 echo "- status json: ${JSON_STATUS_FILE}"
+echo "- strict exit: ${STRICT_EXIT}"
 
 if [[ "${HARD_FAIL}" == "1" || "${FAIL_COUNT}" -gt 0 ]]; then
   echo "offline validation failed (hard_fail=${HARD_FAIL}, verify_fail=${FAIL_COUNT})" >&2

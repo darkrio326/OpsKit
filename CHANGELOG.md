@@ -13,7 +13,9 @@
 - 新增 `opskit status --json`（机器可读状态输出）
 - 新增 `docs/specs/SPEC_STATUS_JSON.md`（status JSON 输出契约）
 - 离线回归脚本支持 `--json-status-file`（落盘 status JSON）
+- 离线回归脚本支持 `--strict-exit`（可选严格通过模式）
 - `scripts/release-check.sh` 支持 `--with-offline-validate` 可选门禁
+- `scripts/release-check.sh` 支持 `--offline-strict-exit` 透传
 - UI 新增阶段 summary 展示（`total/pass/warn/fail/skip`）
 - UI artifacts 高亮新增 latest acceptance consistency 入口
 - Accept 阶段新增 `acceptance-consistency` 报告索引写入 `artifacts.json`

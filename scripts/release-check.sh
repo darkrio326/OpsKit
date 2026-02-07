@@ -20,6 +20,8 @@ Options:
                          Output dir for offline validation (default: <output>/offline-validate)
       --offline-json-status-file <path>
                          status --json output file (default: <offline-output>/status.json)
+      --offline-strict-exit
+                         Require offline run A/D/accept/status exit code to be 0
   -h, --help            Show help
 
 Environment:
@@ -36,6 +38,7 @@ WITH_OFFLINE_VALIDATE=0
 OFFLINE_BIN=""
 OFFLINE_OUTPUT=""
 OFFLINE_JSON_STATUS_FILE=""
+OFFLINE_STRICT_EXIT=0
 STEP_COUNT=0
 TOTAL_SECONDS=0
 STEP_LINES=()
@@ -73,6 +76,10 @@ while [[ $# -gt 0 ]]; do
       [[ $# -ge 2 ]] || { echo "missing value for $1" >&2; exit 2; }
       OFFLINE_JSON_STATUS_FILE="$2"
       shift 2
+      ;;
+    --offline-strict-exit)
+      OFFLINE_STRICT_EXIT=1
+      shift
       ;;
     -h|--help)
       usage
@@ -136,8 +143,17 @@ if [[ "${SKIP_RUN}" == "0" ]]; then
 fi
 
 if [[ "${WITH_OFFLINE_VALIDATE}" == "1" ]]; then
+  offline_args=(
+    --bin "${OFFLINE_BIN}"
+    --output "${OFFLINE_OUTPUT}"
+    --json-status-file "${OFFLINE_JSON_STATUS_FILE}"
+    --clean
+  )
+  if [[ "${OFFLINE_STRICT_EXIT}" == "1" ]]; then
+    offline_args+=(--strict-exit)
+  fi
   run_step "build offline validation binary" env GOCACHE="${GO_CACHE_DIR}" go build -o "${OFFLINE_BIN}" ./cmd/opskit
-  run_step "offline validation gate" ./scripts/kylin-offline-validate.sh --bin "${OFFLINE_BIN}" --output "${OFFLINE_OUTPUT}" --json-status-file "${OFFLINE_JSON_STATUS_FILE}" --clean
+  run_step "offline validation gate" ./scripts/kylin-offline-validate.sh "${offline_args[@]}"
 fi
 
 echo ""
@@ -153,5 +169,6 @@ echo "- output: ${OUTPUT_DIR}"
 if [[ "${WITH_OFFLINE_VALIDATE}" == "1" ]]; then
   echo "- offline output: ${OFFLINE_OUTPUT}"
   echo "- offline status json: ${OFFLINE_JSON_STATUS_FILE}"
+  echo "- offline strict exit: ${OFFLINE_STRICT_EXIT}"
 fi
 echo "release-check passed"

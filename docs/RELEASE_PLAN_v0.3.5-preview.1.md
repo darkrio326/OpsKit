@@ -28,6 +28,7 @@
 
 - 新增离线一键回归脚本：模板校验、`run A`、`run D`、`accept`、`status`
 - 支持 `--json-status-file`，落盘 `status --json` 结果供后续工具消费
+- 支持 `--strict-exit`，可选要求阶段命令全部 `exit=0`
 - 输出校验：`state/*.json`、`acceptance-consistency`、accept 报告 consistency 摘要
 - 退出码策略：允许 `0/1/3`，拒绝其他码
 
@@ -56,6 +57,7 @@ GOCACHE=$PWD/.gocache go run ./cmd/opskit status --output ./.tmp/offline-validat
 - release notes 与 changelog 对齐到 `v0.3.5-preview.1`
 - GitHub release 指引包含离线回归脚本入口
 - `scripts/release-check.sh` 支持可选 `--with-offline-validate` 门禁
+- `scripts/release-check.sh` 支持 `--offline-strict-exit` 透传
 
 验收：
 

@@ -20,6 +20,17 @@ scripts/kylin-offline-validate.sh \
   --clean
 ```
 
+若你希望“所有阶段必须 exit=0”再算通过，可开启严格模式：
+
+```bash
+scripts/kylin-offline-validate.sh \
+  --bin /usr/local/bin/opskit \
+  --output /data/opskit-regression-v034 \
+  --json-status-file /data/opskit-regression-v034/status.json \
+  --strict-exit \
+  --clean
+```
+
 若需手工执行，可使用：
 
 ```bash
