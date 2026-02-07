@@ -55,5 +55,6 @@ IMAGE=kylinv10/kylin:b09 DOCKER_PLATFORM=linux/amd64 DRY_RUN=1 make -C examples/
 
 - 项目总览：`README.md` / `README.zh-CN.md`
 - 麒麟离线部署（从 Release 包开始）：`docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md`
+- 麒麟离线回归清单（v0.3.4）：`docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md`
 - 麒麟容器部署：`docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
 - 通用示例：`docs/examples/generic-manage/README.md` / `docs/examples/generic-manage/README.zh-CN.md`

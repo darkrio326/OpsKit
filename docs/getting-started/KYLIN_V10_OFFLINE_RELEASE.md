@@ -10,12 +10,12 @@
 
 ## 2. 在联网机器下载 Release 资产
 
-以 `v0.3.2` 为例：
+以 `v0.3.4-preview.1` 为例：
 
 1. 打开 Release 页面：
-   - `https://github.com/darkrio326/OpsKit/releases/tag/v0.3.2`
+   - `https://github.com/darkrio326/OpsKit/releases/tag/v0.3.4-preview.1`
 2. 下载以下文件（按服务器架构选择二进制）：
-   - `opskit-v0.3.2-linux-amd64` 或 `opskit-v0.3.2-linux-arm64`
+   - `opskit-v0.3.4-preview.1-linux-amd64` 或 `opskit-v0.3.4-preview.1-linux-arm64`
    - `checksums.txt`
 
 可选：在联网机器先校验哈希（推荐）
@@ -29,7 +29,7 @@ sha256sum -c checksums.txt
 
 ```bash
 # 手动比对 checksums.txt 中对应行
-shasum -a 256 opskit-v0.3.2-linux-amd64
+shasum -a 256 opskit-v0.3.4-preview.1-linux-amd64
 ```
 
 ## 3. 传输到离线麒麟服务器并安装
@@ -46,7 +46,7 @@ uname -m
 # aarch64 -> 用 arm64
 
 # 3) 安装二进制（以 amd64 为例）
-install -m 0755 opskit-v0.3.2-linux-amd64 /usr/local/bin/opskit
+install -m 0755 opskit-v0.3.4-preview.1-linux-amd64 /usr/local/bin/opskit
 
 # 4) 验证
 opskit --help
@@ -56,7 +56,7 @@ opskit --help
 
 ```bash
 mkdir -p "$HOME/bin"
-cp opskit-v0.3.2-linux-amd64 "$HOME/bin/opskit"
+cp opskit-v0.3.4-preview.1-linux-amd64 "$HOME/bin/opskit"
 chmod +x "$HOME/bin/opskit"
 export PATH="$HOME/bin:$PATH"
 opskit --help
@@ -81,6 +81,43 @@ opskit status --output /data/opskit-demo
 ```
 
 如果需要执行非 dry-run（真实检查/动作），去掉 `--dry-run`。
+
+## 4.1 `v0.3.4-preview.1` 用户侧回归清单（推荐）
+
+建议在麒麟离线机按以下顺序做一次完整回归：
+
+```bash
+# 0) 输出目录
+export OPSKIT_OUT=/data/opskit-regression-v034
+mkdir -p "$OPSKIT_OUT"
+
+# 1) 模板可用性（离线建议用内置模板 ID）
+opskit template validate generic-manage-v1 --output "$OPSKIT_OUT"
+
+# 2) A / D / accept（先 dry-run）
+opskit run A --template generic-manage-v1 --dry-run --output "$OPSKIT_OUT"
+opskit run D --template generic-manage-v1 --dry-run --output "$OPSKIT_OUT"
+opskit accept --template generic-manage-v1 --dry-run --output "$OPSKIT_OUT"
+
+# 3) 刷新状态并检查退出码
+opskit status --output "$OPSKIT_OUT"
+echo "status exit=$?"
+```
+
+回归通过建议至少满足：
+
+- `opskit status` 退出码为 `0/3`（`3` 代表存在 WARN）
+- `state/lifecycle.json` 含 `summary(total/pass/warn/fail/skip)` 字段
+- `state/artifacts.json` 存在 `acceptance-consistency-*.json` 报告索引
+- `reports/accept-*.html` 可打开并看到 consistency 摘要
+
+可选检查命令（系统有 `grep` 即可）：
+
+```bash
+grep -R "\"summary\"" "$OPSKIT_OUT/state/lifecycle.json"
+grep -R "acceptance-consistency-" "$OPSKIT_OUT/state/artifacts.json"
+grep -R "\"consistency\"" "$OPSKIT_OUT/reports"/accept-*.html
+```
 
 ## 5. 启动 Web UI 查看状态
 
@@ -132,6 +169,7 @@ chmod +x /usr/local/bin/opskit
 
 - 离线仅有二进制时，请优先使用内置模板 ID：`generic-manage-v1`
 - 若使用外部模板路径，需确认模板文件已随包拷贝到服务器
+- 若仅复制了二进制但没有仓库文件，`template validate templates/builtin/...` 会失败，此时请改用模板 ID
 
 5. `run A` / `run D` 返回失败或 WARN
 
@@ -154,6 +192,12 @@ opskit status --output /data/opskit-demo
 - 检查进程是否启动，端口是否监听
 - 确认使用 `http://` 而不是 `https://`
 - 远程访问请使用 SSH 隧道，或按安全策略显式开放监听地址
+
+8. `acceptance-consistency` 没有出现在 `artifacts.json`
+
+- 先确认是否执行了 `opskit accept`
+- 再检查 `--output` 是否和 `status/web` 使用的是同一目录
+- 若中途清理过目录，请重新执行 `run A/D` + `accept` + `status`
 
 ## 8. 功能使用速查
 

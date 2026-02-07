@@ -8,6 +8,7 @@
 
 - 新增 `docs/RELEASE_PLAN_v0.3.4-preview.1.md`（下一版可执行任务清单）
 - 新增 `docs/RELEASE_NOTES_v0.3.4-preview.1.md`（下一版发布文案草稿）
+- 新增 `docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md`（麒麟离线用户侧回归清单）
 - UI 新增阶段 summary 展示（`total/pass/warn/fail/skip`）
 - UI artifacts 高亮新增 latest acceptance consistency 入口
 - Accept 阶段新增 `acceptance-consistency` 报告索引写入 `artifacts.json`
@@ -16,6 +17,7 @@
 ### Changed
 
 - `README.md` / `README.zh-CN.md` / `ROADMAP.md` / `docs/GITHUB_RELEASE.md` 滚动到 `v0.3.3-preview.1`
+- `README.md` / `README.zh-CN.md` / `docs/getting-started/GETSTART.md` 增加麒麟离线部署与回归入口
 - `scripts/release-check.sh` 新增步骤耗时与总耗时汇总输出
 - `dns_resolve` 新增 `skip_network_query` 参数（受限网络可跳过外部查询）
 - check 降级结果统一输出指标：`check_degraded` / `check_degraded_reason`

@@ -2,7 +2,7 @@
 
 一句话定位：**面向离线/信创环境的服务器全生命周期运维与验收工具**（A~F 阶段：Preflight/Baseline/Deploy/Operate/Recover/Accept-Handover）。
 
-当前版本：`v0.3.3-preview.1`
+当前版本：`v0.3.4-preview.1`
 
 ## 当前能力（Milestone 3）
 
@@ -56,6 +56,8 @@ make -C examples/generic-manage docker-kylin-e2e
 ```
 
 详见：`docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
+麒麟离线部署：`docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md`
+麒麟离线回归：`docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md`
 
 ## 目录结构（简述）
 
