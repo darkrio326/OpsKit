@@ -60,6 +60,7 @@ make -C examples/generic-manage docker-kylin-e2e
 麒麟离线部署：`docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md`
 麒麟离线回归：`docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md`
 离线一键回归脚本：`scripts/kylin-offline-validate.sh`
+真实服务器前统一门禁：`scripts/generic-readiness-check.sh`
 
 ## 目录结构（简述）
 
@@ -97,6 +98,18 @@ web/ui/                    # 开发态 UI 资源
 
 ```bash
 scripts/release-check.sh --with-offline-validate
+```
+
+进入真实服务器前（建议）：
+
+```bash
+scripts/generic-readiness-check.sh --clean
+```
+
+严格模式（通用链路 + 离线回归都要求 exit=0）：
+
+```bash
+scripts/generic-readiness-check.sh --generic-strict --offline-strict --clean
 ```
 
 严格门禁（要求离线回归阶段 exit 全为 0）：

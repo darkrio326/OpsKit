@@ -2,7 +2,7 @@
 
 > 主线：在保持“离线可跑通”的基础上，提升“结果可判读、失败可定位、发布可复核”的工程完成度。
 
-> 进度：A/B/C/D 已完成并合入主干，当前推进 E（文档与示例收敛）。
+> 进度：A/B/C/D 已完成并合入主干，E 收敛中（新增统一门禁脚本，待最终回归与发布）。
 
 ## 1. 版本目标（增加交付密度）
 
@@ -83,11 +83,12 @@ scripts/release-check.sh --with-offline-validate --offline-strict-exit
 - `GETSTART`、`KYLIN_V10_OFFLINE_RELEASE`、`GITHUB_RELEASE` 链接与版本号同步
 - demo 模板 README 补齐“最低可运行变量集”与“常见失败”
 - `CHANGELOG` 按 `Added/Changed/Fixed` 保持可追溯
+- 新增统一门禁脚本：`scripts/generic-readiness-check.sh`（用于真实服务器前 Go/No-Go）
 
 验收：
 
 ```bash
-rg -n "v0.3.6-preview.1|offline-validate|release-check|status --json" README.md README.zh-CN.md docs/**/*.md
+rg -n "v0.3.6-preview.1|offline-validate|release-check|generic-readiness-check|status --json" README.md README.zh-CN.md docs/**/*.md
 ```
 
 ## 4. 发布准入（Go/No-Go）

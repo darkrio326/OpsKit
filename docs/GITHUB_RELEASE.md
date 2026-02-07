@@ -56,6 +56,8 @@ scripts/release.sh --version v0.3.6-preview.1 --clean
 - 优先执行 `scripts/release-check.sh` 一键回归
 - 建议在发版前增加离线门禁：`scripts/release-check.sh --with-offline-validate`
 - 对“环境应全部健康”的发布，可使用严格模式：`scripts/release-check.sh --with-offline-validate --offline-strict-exit`
+- 在进入真实服务器验证前，建议执行统一门禁：`scripts/generic-readiness-check.sh --clean`
+- 如需严格放行，可执行：`scripts/generic-readiness-check.sh --generic-strict --offline-strict --clean`
 - 建议完成一次麒麟 V10 Docker e2e（`make -C examples/generic-manage docker-kylin-e2e`）
 - 更新 `CHANGELOG.md` 对应版本条目
 - 如发布二进制，确保 `checksums.txt` 与 `release-metadata.json` 已生成并随附件上传
@@ -67,6 +69,13 @@ scripts/release.sh --version v0.3.6-preview.1 --clean
 - `recommended action: continue_release`：可继续发布；`block_release`：应阻断并修复
 - dry-run 阶段输出中的 `checks/actions/evidence` 计数可用于确认模板执行计划未异常漂移
 - 如任一步骤失败，脚本立即退出；先修复失败项，再重新执行整套门禁
+
+### 6.2 `generic-readiness-check` 结果快速判读
+
+- `result=pass` 且 `recommendedAction=continue_real_server_validation`：可进入真实服务器验证
+- `result=warn`（通常在 non-strict 下出现）可继续，但应先审阅 `generic-manage/summary.json`
+- `result=fail` 或 `recommendedAction=block_real_server_validation`：先修复再进真实服务器
+- 输出目录默认 `./.tmp/generic-readiness-check`，重点检查 `summary.json` 与 `generic-manage/status.json`
 
 ## 7. Release 文案模板
 

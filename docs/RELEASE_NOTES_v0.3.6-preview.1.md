@@ -22,6 +22,7 @@
 - `scripts/release.sh` 自动校验 `checksums.txt` 与二进制一致性
 - `examples/generic-manage/run-af.sh` 增强为可门禁模式（期望退出码判定、`status.json` 固定落盘）
 - 通用自检 `summary.json` 增加 `result/reasonCode/recommendedAction`
+- 新增 `scripts/generic-readiness-check.sh`，统一发布门禁与通用链路门禁输出
 
 ### Changed
 
@@ -34,6 +35,7 @@
 - `docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md` 示例版本统一为 `v0.3.6` 口径
 - `assets/templates/demo-server-audit.README.md` / `assets/templates/demo-hello-service.README.md` 补充“最低可运行变量集”和“常见失败”
 - `docs/examples/generic-manage/README*.md` 补充 strict 模式与 `status.json` 产物说明
+- `README*` / `GETSTART` / `GITHUB_RELEASE` 新增真实服务器前统一门禁入口说明
 
 ### Fixed
 
@@ -45,5 +47,6 @@
 GOCACHE=$PWD/.gocache go test ./...
 scripts/kylin-offline-validate.sh --bin ./.tmp/opskit-local --output ./.tmp/offline-validate --clean
 scripts/release-check.sh --with-offline-validate
+scripts/generic-readiness-check.sh --clean --skip-tests
 scripts/release.sh --version v0.3.6-preview.1 --clean
 ```

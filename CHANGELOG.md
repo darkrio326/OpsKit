@@ -14,6 +14,7 @@
 - `scripts/release.sh` 新增 `release-metadata.json`（`gitCommit/buildTime/goVersion`）
 - `examples/generic-manage/run-af.sh` 新增可门禁模式与 `status.json` 固定输出
 - 通用自检 `summary.json` 新增 `result/reasonCode/recommendedAction`
+- 新增 `scripts/generic-readiness-check.sh`（真实服务器前统一 Go/No-Go 门禁）
 - 新增 `docs/RELEASE_PLAN_v0.3.4-preview.1.md`（下一版可执行任务清单）
 - 新增 `docs/RELEASE_NOTES_v0.3.4-preview.1.md`（下一版发布文案草稿）
 - 新增 `docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md`（麒麟离线用户侧回归清单）
@@ -43,6 +44,7 @@
 - `docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md` 示例版本与路径口径同步到 `v0.3.6`/`v036`
 - demo 模板 README 补充“最低可运行变量集”与“常见失败”
 - `docs/examples/generic-manage/README*.md` 补充 strict 模式与 `status.json` 产物说明
+- `README.md` / `README.zh-CN.md` / `docs/getting-started/GETSTART.md` / `docs/GITHUB_RELEASE.md` 补充统一门禁脚本入口
 - `README.md` / `README.zh-CN.md` 当前版本标记同步到 `v0.3.5-preview.1`
 - `README.md` / `README.zh-CN.md` / `ROADMAP.md` / `docs/GITHUB_RELEASE.md` 滚动到 `v0.3.3-preview.1`
 - `README.md` / `README.zh-CN.md` / `docs/getting-started/GETSTART.md` 增加麒麟离线部署与回归入口

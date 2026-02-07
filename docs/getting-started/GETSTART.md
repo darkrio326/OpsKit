@@ -63,6 +63,18 @@ scripts/kylin-offline-validate.sh \
   --clean
 ```
 
+## 8) 进入真实服务器前统一门禁（建议）
+
+```bash
+scripts/generic-readiness-check.sh --clean
+```
+
+严格模式（通用链路与离线回归都要求 exit=0）：
+
+```bash
+scripts/generic-readiness-check.sh --generic-strict --offline-strict --clean
+```
+
 更多说明：
 
 - 项目总览：`README.md` / `README.zh-CN.md`
