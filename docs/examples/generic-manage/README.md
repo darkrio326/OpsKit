@@ -32,11 +32,18 @@ GOCACHE=/tmp/opskit-gocache BIN="go run ./cmd/opskit" OUTPUT=/tmp/opskit-generic
 DRY_RUN=1 BIN=./opskit OUTPUT=/tmp/opskit-generic ./examples/generic-manage/run-af.sh
 ```
 
+Strict exit mode (requires stage commands to return `exit=0`):
+
+```bash
+STRICT_EXIT=1 BIN=./opskit OUTPUT=/tmp/opskit-generic ./examples/generic-manage/run-af.sh
+```
+
 ## Expected outputs
 
 - `OUTPUT/state/overall.json`
 - `OUTPUT/state/lifecycle.json`
 - `OUTPUT/state/artifacts.json`
+- `OUTPUT/status.json`
 - `OUTPUT/summary.json`
 - `OUTPUT/reports/*.html`
 - `OUTPUT/bundles/*.tar.gz`
@@ -47,6 +54,7 @@ Notes:
 - In non-Linux or minimal environments, some checks may return WARN/FAILED.
 - This is expected for generic capability validation; the script still prints
   output paths for inspection.
+- `summary.json` now includes `result/reasonCode/recommendedAction` for gate decisions.
 
 ## Run in Kylin V10 Docker (clean runtime)
 

@@ -29,11 +29,18 @@ GOCACHE=/tmp/opskit-gocache BIN="go run ./cmd/opskit" OUTPUT=/tmp/opskit-generic
 DRY_RUN=1 BIN=./opskit OUTPUT=/tmp/opskit-generic ./examples/generic-manage/run-af.sh
 ```
 
+严格退出码模式（所有阶段命令要求 `exit=0`）：
+
+```bash
+STRICT_EXIT=1 BIN=./opskit OUTPUT=/tmp/opskit-generic ./examples/generic-manage/run-af.sh
+```
+
 ## 预期产物
 
 - `OUTPUT/state/overall.json`
 - `OUTPUT/state/lifecycle.json`
 - `OUTPUT/state/artifacts.json`
+- `OUTPUT/status.json`
 - `OUTPUT/summary.json`
 - `OUTPUT/reports/*.html`
 - `OUTPUT/bundles/*.tar.gz`
@@ -43,6 +50,7 @@ DRY_RUN=1 BIN=./opskit OUTPUT=/tmp/opskit-generic ./examples/generic-manage/run-
 
 - 在非 Linux 或最小化环境中，部分检查可能是 WARN/FAILED。
 - 这是通用能力验证的预期情况，脚本仍会输出产物路径供检查。
+- `summary.json` 新增 `result/reasonCode/recommendedAction`，可直接用于门禁判读。
 
 ## 在银河麒麟 V10 Docker 中运行（纯净环境）
 
