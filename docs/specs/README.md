@@ -11,7 +11,7 @@
 - `docs/specs/SPEC_OPS_SECURITY.md`  
   覆盖安装交付、运行边界、安全与脱敏规则。
 - `docs/specs/SPEC_TEST_ACCEPTANCE.md`  
-  覆盖最小验收测试路径与阶段验收点。
+  覆盖最小验收测试路径、阶段验收点，以及 non-strict/strict 门禁策略。
 
 ## 历史文档（归档）
 

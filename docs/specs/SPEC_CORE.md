@@ -37,6 +37,12 @@
 - `3` 部分成功（WARN）
 - `4` 需人工介入（如全局锁冲突）
 
+验收门禁口径：
+
+- 默认 non-strict：`run A/D/accept/status` 允许 `0|1|3`
+- strict（可选）：`run A/D/accept/status` 要求全 `0`
+- 详细规则见：`docs/specs/SPEC_TEST_ACCEPTANCE.md`
+
 ### 2.4 输出约定
 
 - `stdout`：人类可读摘要

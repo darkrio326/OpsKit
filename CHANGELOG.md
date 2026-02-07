@@ -63,6 +63,29 @@
 - 修复 `load_average` 在非 Linux 环境容易误降级的问题
 - 修复 `dns_resolve` 在受限网络场景误报问题
 
+## [v0.3.6] - 2026-02-07
+
+### Added
+
+- 新增通用检查：`fs_readonly`、`disk_inodes`、`clock_skew`
+- 新增统一门禁脚本：`scripts/generic-readiness-check.sh`
+- 离线回归摘要支持 `--summary-json-file`
+- 新增正式版发布说明：`docs/RELEASE_NOTES_v0.3.6.md`
+- 新增下一版任务单：`docs/RELEASE_PLAN_v0.3.7-preview.1.md`
+
+### Changed
+
+- `status --json` 增加 `health`（`ok|warn|fail`）
+- `release-check` 汇总新增建议动作（`continue_release`/`block_release`）
+- 门禁策略冻结为双轨：默认 non-strict（`0/1/3`）+ 可选 strict（全 `0`）
+- `scripts/kylin-offline-validate.sh` 默认输出目录改为 `/data/opskit-regression`
+- 根文档与发布文档统一切换到 `v0.3.6` 正式版口径
+
+### Fixed
+
+- 修复发布与离线回归文档中的版本口径漂移
+- 修复 strict 适用场景描述不清导致的验收误判
+
 ## [v0.3.3-preview.1] - 2026-02-07
 
 ### Added

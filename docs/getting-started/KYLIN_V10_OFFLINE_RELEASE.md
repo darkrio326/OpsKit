@@ -10,10 +10,10 @@
 
 ## 2. 在联网机器下载 Release 资产
 
-以 `v0.3.6-preview.1` 为例（发布时请替换为实际版本）：
+以 `v0.3.6` 为例（发布时请替换为实际版本）：
 
 ```bash
-VERSION=v0.3.6-preview.1
+VERSION=v0.3.6
 ```
 
 1. 打开 Release 页面：
@@ -96,9 +96,9 @@ opskit status --output /data/opskit-demo
 ```bash
 scripts/kylin-offline-validate.sh \
   --bin /usr/local/bin/opskit \
-  --output /data/opskit-regression-v036 \
-  --json-status-file /data/opskit-regression-v036/status.json \
-  --summary-json-file /data/opskit-regression-v036/summary.json \
+  --output /data/opskit-regression \
+  --json-status-file /data/opskit-regression/status.json \
+  --summary-json-file /data/opskit-regression/summary.json \
   --clean
 ```
 
@@ -107,9 +107,9 @@ scripts/kylin-offline-validate.sh \
 ```bash
 scripts/kylin-offline-validate.sh \
   --bin /usr/local/bin/opskit \
-  --output /data/opskit-regression-v036 \
-  --json-status-file /data/opskit-regression-v036/status.json \
-  --summary-json-file /data/opskit-regression-v036/summary.json \
+  --output /data/opskit-regression \
+  --json-status-file /data/opskit-regression/status.json \
+  --summary-json-file /data/opskit-regression/summary.json \
   --strict-exit \
   --clean
 ```
@@ -123,7 +123,7 @@ scripts/kylin-offline-validate.sh \
 
 ```bash
 # 0) 输出目录
-export OPSKIT_OUT=/data/opskit-regression-v036
+export OPSKIT_OUT=/data/opskit-regression
 mkdir -p "$OPSKIT_OUT"
 
 # 1) 模板可用性（离线建议用内置模板 ID）

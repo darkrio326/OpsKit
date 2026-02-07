@@ -1,4 +1,4 @@
-# GitHub 发布说明（v0.3.x Preview）
+# GitHub 发布说明（v0.3.x）
 
 ## 1. 发布目标
 
@@ -21,8 +21,9 @@
 
 ## 4. Tag 与版本建议
 
-- 推荐 tag：`v0.3.x-preview`（例如 `v0.3.0-preview.1`）
-- 版本定位：预览版，不承诺生产 SLA
+- 正式版：`v0.3.x`（例如 `v0.3.6`）
+- 预览版：`v0.3.x-preview.N`（用于下一阶段试运行）
+- 版本定位：`v0.3.6` 为通用能力正式版；模板接入能力继续以 preview 推进
 
 ## 5. Release 资产建议
 
@@ -42,7 +43,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/opskit-linux-amd64 ./cmd/
 一键脚本（推荐）：
 
 ```bash
-scripts/release.sh --version v0.3.6-preview.1 --clean
+scripts/release.sh --version v0.3.6 --clean
 ```
 
 说明：`scripts/release.sh` 会自动生成并校验 `checksums.txt`，同时生成 `release-metadata.json`（含 `gitCommit/buildTime/goVersion`）。
@@ -81,21 +82,20 @@ scripts/release.sh --version v0.3.6-preview.1 --clean
 
 ## 7. Release 文案模板
 
-- 可直接使用：`docs/RELEASE_NOTES_v0.3.0-preview.1.md`
-- 当前版草稿：`docs/RELEASE_NOTES_v0.3.6-preview.1.md`
-- 当前版任务单：`docs/RELEASE_PLAN_v0.3.6-preview.1.md`
+- 通用能力正式版：`docs/RELEASE_NOTES_v0.3.6.md`
+- 下一版草稿：`docs/RELEASE_NOTES_v0.3.7-preview.1.md`
+- 下一版任务单：`docs/RELEASE_PLAN_v0.3.7-preview.1.md`
 
-## 8. v0.3.6 发布命令（建议）
+## 8. v0.3.6 正式发布命令（建议）
 
 ```bash
 scripts/release-check.sh --with-offline-validate
-scripts/release.sh --version v0.3.6-preview.1 --clean
-gh release create v0.3.6-preview.1 \
-  dist/opskit-v0.3.6-preview.1-linux-arm64 \
-  dist/opskit-v0.3.6-preview.1-linux-amd64 \
+scripts/release.sh --version v0.3.6 --clean
+gh release create v0.3.6 \
+  dist/opskit-v0.3.6-linux-arm64 \
+  dist/opskit-v0.3.6-linux-amd64 \
   dist/checksums.txt \
   dist/release-metadata.json \
-  --title "OpsKit v0.3.6-preview.1" \
-  --notes-file docs/RELEASE_NOTES_v0.3.6-preview.1.md \
-  --prerelease
+  --title "OpsKit v0.3.6" \
+  --notes-file docs/RELEASE_NOTES_v0.3.6.md
 ```

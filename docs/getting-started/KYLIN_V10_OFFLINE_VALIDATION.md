@@ -5,7 +5,7 @@
 ## 1. 前置条件
 
 - 已将 release 包拷贝到离线服务器并安装 `opskit`
-- 可写目录：例如 `/data/opskit-regression-v036`
+- 可写目录：例如 `/data/opskit-regression`
 - 可执行 `grep`（系统默认通常具备）
 
 ## 2. 一次性回归命令
@@ -15,9 +15,9 @@
 ```bash
 scripts/kylin-offline-validate.sh \
   --bin /usr/local/bin/opskit \
-  --output /data/opskit-regression-v036 \
-  --json-status-file /data/opskit-regression-v036/status.json \
-  --summary-json-file /data/opskit-regression-v036/summary.json \
+  --output /data/opskit-regression \
+  --json-status-file /data/opskit-regression/status.json \
+  --summary-json-file /data/opskit-regression/summary.json \
   --clean
 ```
 
@@ -26,9 +26,9 @@ scripts/kylin-offline-validate.sh \
 ```bash
 scripts/kylin-offline-validate.sh \
   --bin /usr/local/bin/opskit \
-  --output /data/opskit-regression-v036 \
-  --json-status-file /data/opskit-regression-v036/status.json \
-  --summary-json-file /data/opskit-regression-v036/summary.json \
+  --output /data/opskit-regression \
+  --json-status-file /data/opskit-regression/status.json \
+  --summary-json-file /data/opskit-regression/summary.json \
   --strict-exit \
   --clean
 ```
@@ -42,7 +42,7 @@ scripts/kylin-offline-validate.sh \
 
 ```bash
 set -e
-export OPSKIT_OUT=/data/opskit-regression-v036
+export OPSKIT_OUT=/data/opskit-regression
 mkdir -p "$OPSKIT_OUT"
 
 opskit run A --template generic-manage-v1 --output "$OPSKIT_OUT"
