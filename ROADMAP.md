@@ -2,7 +2,7 @@
 
 > 当前发布目标：`v0.3.x Preview`，优先开放“框架 + 通用能力 + demo 模板”。
 >
-> 最新发布：`v0.3.2`（vars-file、模板错误提示、Recover 输出限流增强）
+> 最新发布：`v0.3.3-preview.1`（Recover 标准化、Operate 检查扩展、accept 一致性校验）
 
 ## Milestone 0：框架与工程骨架
 

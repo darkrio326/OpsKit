@@ -2,7 +2,7 @@
 
 一句话定位：**面向离线/信创环境的服务器全生命周期运维与验收工具**（A~F 阶段：Preflight/Baseline/Deploy/Operate/Recover/Accept-Handover）。
 
-当前版本：`v0.3.2`
+当前版本：`v0.3.3-preview.1`
 
 ## 当前能力（Milestone 3）
 
@@ -81,7 +81,7 @@ web/ui/                    # 开发态 UI 资源
 - 规格与安全：`docs/specs/README.md`
 - 产品设计（整理版）：`docs/product-design/README.md`
 - GitHub 发布说明：`docs/GITHUB_RELEASE.md`
-- 下一版发布计划：`docs/RELEASE_PLAN_v0.3.3-preview.1.md`
+- 下一版发布计划：`docs/RELEASE_PLAN_v0.3.4-preview.1.md`
 - 版本变更记录：`CHANGELOG.md`
 - 安全边界：`SECURITY.md`
 - 开源许可证：`LICENSE`（Apache-2.0）

@@ -6,32 +6,42 @@
 
 ### Added
 
-- 新增 `docs/RELEASE_PLAN_v0.3.3-preview.1.md`（下一版可执行任务清单）
-- 新增 `docs/RELEASE_NOTES_v0.3.3-preview.1.md`（下一版发布文案草稿）
+- 新增 `docs/RELEASE_PLAN_v0.3.4-preview.1.md`（下一版可执行任务清单）
+- 新增 `docs/RELEASE_NOTES_v0.3.4-preview.1.md`（下一版发布文案草稿）
+
+### Changed
+
+- `README.md` / `README.zh-CN.md` / `ROADMAP.md` / `docs/GITHUB_RELEASE.md` 滚动到 `v0.3.3-preview.1`
+
+### Fixed
+
+- 无
+
+## [v0.3.3-preview.1] - 2026-02-07
+
+### Added
+
 - 新增 `scripts/release-check.sh`（发布前最小回归脚本）
 - Recover 结果新增 `recover_reason_code` 指标
 - Recover collect 新增 `source` 字段（command/journal/file）
 - Recover collect 新增截断元数据（`originalLength`/`truncatedLength`）
-- 新增检查插件：`dns_resolve`、`systemd_restart_count`
-- 新增检查插件：`ntp_sync`
+- 新增检查插件：`ntp_sync`、`dns_resolve`、`systemd_restart_count`
 - `lifecycle.json` 阶段新增 `summary(total/pass/warn/fail/skip)` 结构
 - accept 新增一致性校验记录（`acceptance-consistency-*.json`）
 
 ### Changed
 
-- `README.md` / `README.zh-CN.md` 更新当前版本与下一版计划入口
-- `ROADMAP.md` 更新“最新发布”描述到 `v0.3.2`
-- `docs/GITHUB_RELEASE.md` 更新下一版文案链接
 - Recover circuit 状态新增 `lastErrorCode`
 - recover summary 新增 `lastReasonCode`
-- demo 审计模板 D 阶段新增 `dns_resolve` 检查
-- demo 审计模板 D 阶段新增 `ntp_sync` 检查
+- demo 审计模板 D 阶段新增 `ntp_sync`、`dns_resolve` 检查
 - 引擎在阶段执行后统一写入 stage summary 计数
 - accept 新增 `manifest <-> hashes <-> state` 一致性检查与指标输出
+- 新增并完善 `v0.3.3-preview.1` 计划文档与发布说明
 
 ### Fixed
 
 - 修复 recover 失败原因无法稳定聚合的问题（统一 reason code）
+- 修复 accept 证据包一致性缺少显式记录的问题
 
 ## [v0.3.2] - 2026-02-06
 
