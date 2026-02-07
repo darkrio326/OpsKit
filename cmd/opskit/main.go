@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -324,6 +325,7 @@ func cmdStatus(args []string) int {
 	fs := flag.NewFlagSet("status", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	output := fs.String("output", defaultOutputRoot(), "output root")
+	jsonOutput := fs.Bool("json", false, "print status as json")
 	if err := fs.Parse(args); err != nil {
 		return exitcode.Precondition
 	}
@@ -381,6 +383,22 @@ func cmdStatus(args []string) int {
 	if err := store.WriteOverall(overall); err != nil {
 		fmt.Fprintf(os.Stderr, "status write failed: %v\n", err)
 		return exitcode.Failure
+	}
+
+	if *jsonOutput {
+		payload := map[string]any{
+			"overall":   overall,
+			"lifecycle": lifecycle,
+			"services":  services,
+			"artifacts": artifacts,
+		}
+		body, err := json.MarshalIndent(payload, "", "  ")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "status marshal failed: %v\n", err)
+			return exitcode.Failure
+		}
+		fmt.Println(string(body))
+		return exitForLifecycle(lifecycle)
 	}
 
 	fmt.Printf("overall=%s issues=%d template=%s refreshed=%s\n", overall.OverallStatus, overall.OpenIssuesCount, strings.Join(overall.ActiveTemplates, ","), overall.LastRefreshTime)
@@ -543,7 +561,7 @@ func printUsage() {
 	fmt.Println("usage:")
 	fmt.Println("  opskit install [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--fix] [--output dir] [--systemd-dir dir] [--binary-path /path/opskit]")
 	fmt.Println("  opskit run <A|B|C|D|E|F|AF> [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--fix] [--output dir]")
-	fmt.Println("  opskit status [--output dir]")
+	fmt.Println("  opskit status [--output dir] [--json]")
 	fmt.Println("  opskit accept [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--fix] [--output dir]")
 	fmt.Println("  opskit handover [--output dir]")
 	fmt.Println("  opskit web [--output dir] [--listen :18080]")

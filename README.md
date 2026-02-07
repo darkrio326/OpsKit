@@ -39,6 +39,7 @@ go build -o opskit ./cmd/opskit
 ./opskit run D --template templates/builtin/default-manage.json --output ./.tmp/opskit-demo
 ./opskit accept --template templates/builtin/default-manage.json --output ./.tmp/opskit-demo
 ./opskit status --output ./.tmp/opskit-demo
+./opskit status --output ./.tmp/opskit-demo --json
 ```
 
 3) 启动 UI 查看状态
@@ -58,6 +59,7 @@ make -C examples/generic-manage docker-kylin-e2e
 详见：`docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
 麒麟离线部署：`docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md`
 麒麟离线回归：`docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md`
+离线一键回归脚本：`scripts/kylin-offline-validate.sh`
 
 ## 目录结构（简述）
 
@@ -83,7 +85,7 @@ web/ui/                    # 开发态 UI 资源
 - 规格与安全：`docs/specs/README.md`
 - 产品设计（整理版）：`docs/product-design/README.md`
 - GitHub 发布说明：`docs/GITHUB_RELEASE.md`
-- 下一版发布计划：`docs/RELEASE_PLAN_v0.3.4-preview.1.md`
+- 下一版发布计划：`docs/RELEASE_PLAN_v0.3.5-preview.1.md`
 - 版本变更记录：`CHANGELOG.md`
 - 安全边界：`SECURITY.md`
 - 开源许可证：`LICENSE`（Apache-2.0）

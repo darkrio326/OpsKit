@@ -20,6 +20,7 @@ go build -o opskit ./cmd/opskit
 ./opskit install --template generic-manage-v1 --dry-run --no-systemd --output ./.tmp/opskit-demo
 ./opskit run AF --template generic-manage-v1 --dry-run --output ./.tmp/opskit-demo
 ./opskit status --output ./.tmp/opskit-demo
+./opskit status --output ./.tmp/opskit-demo --json
 ```
 
 ## 4) 用示例脚本跑通通用链路
@@ -50,6 +51,12 @@ IMAGE=kylinv10/kylin:b09 DOCKER_PLATFORM=linux/amd64 DRY_RUN=1 make -C examples/
 - `OUTPUT/bundles/*.tar.gz`
 - `OUTPUT/ui/index.html`
 - `OUTPUT/summary.json`
+
+## 7) 麒麟离线机一键回归（v0.3.4）
+
+```bash
+scripts/kylin-offline-validate.sh --bin /usr/local/bin/opskit --output /data/opskit-regression-v034 --clean
+```
 
 更多说明：
 

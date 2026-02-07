@@ -10,14 +10,22 @@
 
 ## 2. 一次性回归命令
 
+优先使用一键脚本：
+
+```bash
+scripts/kylin-offline-validate.sh --bin /usr/local/bin/opskit --output /data/opskit-regression-v034 --clean
+```
+
+若需手工执行，可使用：
+
 ```bash
 set -e
 export OPSKIT_OUT=/data/opskit-regression-v034
 mkdir -p "$OPSKIT_OUT"
 
-opskit run A --template generic-manage-v1 --dry-run --output "$OPSKIT_OUT"
-opskit run D --template generic-manage-v1 --dry-run --output "$OPSKIT_OUT"
-opskit accept --template generic-manage-v1 --dry-run --output "$OPSKIT_OUT"
+opskit run A --template generic-manage-v1 --output "$OPSKIT_OUT"
+opskit run D --template generic-manage-v1 --output "$OPSKIT_OUT"
+opskit accept --template generic-manage-v1 --output "$OPSKIT_OUT"
 opskit status --output "$OPSKIT_OUT"
 ```
 
@@ -25,8 +33,8 @@ opskit status --output "$OPSKIT_OUT"
 
 1. 命令执行层
 
-- `run A`、`run D`、`accept` 返回码为 `0`
-- `status` 返回码为 `0` 或 `3`（有 WARN 允许）
+- `run A`、`run D`、`accept` 返回码属于 `0/1/3`
+- `status` 返回码属于 `0/1/3`
 
 2. 状态文件层
 
@@ -66,3 +74,4 @@ opskit web --output "$OPSKIT_OUT" --listen 127.0.0.1:18080
 - `template not found`：离线机仅有二进制时用内置模板 ID（`generic-manage-v1`）
 - 无 `acceptance-consistency`：确认执行过 `accept`，并使用相同输出目录执行 `status`/`web`
 - UI 空白：确认 `--output` 指向已产生 `state/*.json` 的目录
+- `status=1`：通常表示存在 FAIL 检查项，不代表程序不可用；优先核对 state/reports/artifacts 是否已生成

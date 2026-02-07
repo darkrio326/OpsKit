@@ -16,6 +16,7 @@ OpsKit 是一个基于 Go 的运维生命周期工具，围绕 `A -> F` 阶段�
 快速上手：`docs/getting-started/GETSTART.md`
 麒麟离线部署：`docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md`
 麒麟离线回归：`docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md`
+离线一键回归脚本：`scripts/kylin-offline-validate.sh`
 产品设计总览：`docs/product-design/README.md`
 
 ## 快速开始
@@ -33,6 +34,7 @@ go build -o opskit ./cmd/opskit
 ./opskit install [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--output dir]
 ./opskit run <A|B|C|D|E|F|AF> [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--output dir]
 ./opskit status [--output dir]
+./opskit status [--output dir] [--json]
 ./opskit accept [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--output dir]
 ./opskit handover [--output dir]
 ./opskit web [--output dir] [--listen :18080]
@@ -114,4 +116,4 @@ IMAGE=kylinv10/kylin:b09 DOCKER_PLATFORM=linux/amd64 DRY_RUN=1 make -C examples/
 详细部署与验证说明见：`docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
 
 版本变更记录见：`CHANGELOG.md`
-下一版发布计划：`docs/RELEASE_PLAN_v0.3.4-preview.1.md`
+下一版发布计划：`docs/RELEASE_PLAN_v0.3.5-preview.1.md`

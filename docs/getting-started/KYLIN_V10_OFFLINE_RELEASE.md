@@ -87,6 +87,12 @@ opskit status --output /data/opskit-demo
 建议在麒麟离线机按以下顺序做一次完整回归：
 
 ```bash
+scripts/kylin-offline-validate.sh --bin /usr/local/bin/opskit --output /data/opskit-regression-v034 --clean
+```
+
+若需手工逐步执行，可使用以下命令：
+
+```bash
 # 0) 输出目录
 export OPSKIT_OUT=/data/opskit-regression-v034
 mkdir -p "$OPSKIT_OUT"
@@ -94,10 +100,10 @@ mkdir -p "$OPSKIT_OUT"
 # 1) 模板可用性（离线建议用内置模板 ID）
 opskit template validate generic-manage-v1 --output "$OPSKIT_OUT"
 
-# 2) A / D / accept（先 dry-run）
-opskit run A --template generic-manage-v1 --dry-run --output "$OPSKIT_OUT"
-opskit run D --template generic-manage-v1 --dry-run --output "$OPSKIT_OUT"
-opskit accept --template generic-manage-v1 --dry-run --output "$OPSKIT_OUT"
+# 2) A / D / accept（真实执行）
+opskit run A --template generic-manage-v1 --output "$OPSKIT_OUT"
+opskit run D --template generic-manage-v1 --output "$OPSKIT_OUT"
+opskit accept --template generic-manage-v1 --output "$OPSKIT_OUT"
 
 # 3) 刷新状态并检查退出码
 opskit status --output "$OPSKIT_OUT"
@@ -106,7 +112,7 @@ echo "status exit=$?"
 
 回归通过建议至少满足：
 
-- `opskit status` 退出码为 `0/3`（`3` 代表存在 WARN）
+- `opskit status` 退出码为 `0/1/3`（`1` 代表存在 FAIL，`3` 代表存在 WARN）
 - `state/lifecycle.json` 含 `summary(total/pass/warn/fail/skip)` 字段
 - `state/artifacts.json` 存在 `acceptance-consistency-*.json` 报告索引
 - `reports/accept-*.html` 可打开并看到 consistency 摘要
@@ -198,6 +204,11 @@ opskit status --output /data/opskit-demo
 - 先确认是否执行了 `opskit accept`
 - 再检查 `--output` 是否和 `status/web` 使用的是同一目录
 - 若中途清理过目录，请重新执行 `run A/D` + `accept` + `status`
+
+9. `status` 返回 `1`
+
+- 这通常表示某些检查项为 FAIL（例如挂载/端口/systemd 条件不满足）
+- 对离线回归来说，优先确认状态文件、报告和一致性产物已生成，再决定是否调整模板阈值
 
 ## 8. 功能使用速查
 

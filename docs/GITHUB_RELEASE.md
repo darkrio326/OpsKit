@@ -82,5 +82,6 @@ scripts/release.sh --version v0.3.0-preview.1 --clean
 ## 7. Release 文案模板
 
 - 可直接使用：`docs/RELEASE_NOTES_v0.3.0-preview.1.md`
-- 下一版草稿：`docs/RELEASE_NOTES_v0.3.4-preview.1.md`
-- 下一版任务单：`docs/RELEASE_PLAN_v0.3.4-preview.1.md`
+- 当前版草稿：`docs/RELEASE_NOTES_v0.3.4-preview.1.md`
+- 下一版草稿：`docs/RELEASE_NOTES_v0.3.5-preview.1.md`
+- 下一版任务单：`docs/RELEASE_PLAN_v0.3.5-preview.1.md`

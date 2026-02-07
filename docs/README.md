@@ -19,6 +19,8 @@ Repository-level release history: `CHANGELOG.md`
 ## Getting Started
 
 - `docs/getting-started/GETSTART.md`
+- `docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md`
+- `docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md`
 
 ## Architecture
 

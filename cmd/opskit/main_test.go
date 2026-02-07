@@ -57,6 +57,11 @@ func TestCmdStatus_ExitCodes(t *testing.T) {
 			if got != tt.want {
 				t.Fatalf("expected %d, got %d", tt.want, got)
 			}
+
+			gotJSON := cmdStatus([]string{"--output", tmp, "--json"})
+			if gotJSON != tt.want {
+				t.Fatalf("expected %d with --json, got %d", tt.want, gotJSON)
+			}
 		})
 	}
 }
