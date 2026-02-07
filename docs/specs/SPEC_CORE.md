@@ -52,6 +52,8 @@
 - `generatedAt`：本次状态刷新时间（ISO8601）
 - `overall` / `lifecycle` / `services` / `artifacts`：对应状态对象
 
+详细契约见：`docs/specs/SPEC_STATUS_JSON.md`
+
 ## 3. 状态模型规范
 
 ### 3.1 基本原则

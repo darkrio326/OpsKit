@@ -16,6 +16,7 @@
 - 新增 `docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md` 离线回归清单
 - 新增 `docs/RELEASE_PLAN_v0.3.5-preview.1.md`
 - 新增 `opskit status --json` 机器可读状态输出
+- 新增 `docs/specs/SPEC_STATUS_JSON.md`（`status --json` 契约规范）
 
 ### Changed
 
