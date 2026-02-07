@@ -28,7 +28,7 @@
 - demo 审计模板 D 阶段新增 `ntp_sync` 检查
 - `lifecycle.json` 阶段新增 `summary(total/pass/warn/fail/skip)` 计数结构
 - accept 新增 `manifest <-> hashes <-> state` 一致性校验流程与指标
-- （待补）accept 产物一致性校验策略
+- accept 一致性策略明确：生成 `acceptance-consistency-*.json`，并以 `accept_consistency` / `accept_consistency_missing` 指标输出结果
 
 ### Fixed
 

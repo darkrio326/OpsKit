@@ -70,6 +70,7 @@ GOCACHE=$PWD/.gocache go test ./internal/state ./internal/engine
 - 增加 `scripts/release-check.sh`：一键跑模板校验、关键单测、产物完整性
 - 文档中统一“发布最小命令集”
 - 增加一次 docker 回归作为建议门禁
+- 当前进度：已完成（`release-check` 与发布脚本已可执行）
 
 验收：
 
