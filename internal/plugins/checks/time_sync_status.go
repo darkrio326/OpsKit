@@ -27,7 +27,7 @@ func (c *timeSyncStatusCheck) Run(ctx context.Context, req Request) (Result, err
 			Status:   schema.StatusPassed,
 			Severity: schema.SeverityInfo,
 			Message:  "time synchronization healthy (" + source + ")",
-			Metrics:  metrics,
+			Metrics:  withHealthyMetrics(metrics),
 		}, nil
 	}
 	if source == "unknown" {
@@ -43,7 +43,7 @@ func (c *timeSyncStatusCheck) Run(ctx context.Context, req Request) (Result, err
 			Severity: schema.SeverityWarn,
 			Message:  issue.Message,
 			Issue:    issue,
-			Metrics:  metrics,
+			Metrics:  withDegradedMetrics(metrics, "time_sync_probe_unavailable"),
 		}, nil
 	}
 	msg := "time sync is not ready"
@@ -54,7 +54,7 @@ func (c *timeSyncStatusCheck) Run(ctx context.Context, req Request) (Result, err
 		Severity: sev,
 		Message:  msg,
 		Issue:    issue,
-		Metrics:  metrics,
+		Metrics:  withHealthyMetrics(metrics),
 	}, nil
 }
 

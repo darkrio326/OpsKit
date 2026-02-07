@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"opskit/internal/schema"
 )
@@ -126,4 +127,45 @@ func statusFromSeverity(sev schema.Severity) schema.Status {
 	default:
 		return schema.StatusFailed
 	}
+}
+
+func withHealthyMetrics(metrics []schema.Metric) []schema.Metric {
+	out := append([]schema.Metric{}, metrics...)
+	out = append(out, schema.Metric{Label: "check_degraded", Value: "false"})
+	return out
+}
+
+func withDegradedMetrics(metrics []schema.Metric, reason string) []schema.Metric {
+	out := append([]schema.Metric{}, metrics...)
+	out = append(out,
+		schema.Metric{Label: "check_degraded", Value: "true"},
+		schema.Metric{Label: "check_degraded_reason", Value: normalizeReasonCode(reason)},
+	)
+	return out
+}
+
+func normalizeReasonCode(v string) string {
+	s := strings.ToLower(strings.TrimSpace(v))
+	if s == "" {
+		return "unknown"
+	}
+	var b strings.Builder
+	lastUnderscore := false
+	for _, r := range s {
+		switch {
+		case unicode.IsLetter(r) || unicode.IsDigit(r):
+			b.WriteRune(r)
+			lastUnderscore = false
+		case r == '_' || r == '-' || unicode.IsSpace(r):
+			if !lastUnderscore {
+				b.WriteByte('_')
+				lastUnderscore = true
+			}
+		}
+	}
+	out := strings.Trim(b.String(), "_")
+	if out == "" {
+		return "unknown"
+	}
+	return out
 }

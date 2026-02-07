@@ -24,6 +24,9 @@ OUTPUT_DIR="${ROOT_DIR}/.tmp/release-check"
 GO_CACHE_DIR="${GO_CACHE_DIR:-${ROOT_DIR}/.tmp/gocache-release-check}"
 SKIP_TESTS=0
 SKIP_RUN=0
+STEP_COUNT=0
+TOTAL_SECONDS=0
+STEP_LINES=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -52,9 +55,23 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-run() {
-  echo "==> $*"
+now_s() {
+  date +%s
+}
+
+run_step() {
+  local label="$1"
+  shift
+  local started ended elapsed
+  started="$(now_s)"
+  echo "==> ${label}"
   "$@"
+  ended="$(now_s)"
+  elapsed=$((ended - started))
+  STEP_COUNT=$((STEP_COUNT + 1))
+  TOTAL_SECONDS=$((TOTAL_SECONDS + elapsed))
+  STEP_LINES+=("${label}|${elapsed}")
+  echo "    done: ${elapsed}s"
 }
 
 mkdir -p "${GO_CACHE_DIR}"
@@ -63,20 +80,28 @@ mkdir -p "${OUTPUT_DIR}"
 cd "${ROOT_DIR}"
 
 if [[ "${SKIP_TESTS}" == "0" ]]; then
-  run env GOCACHE="${GO_CACHE_DIR}" go test ./...
+  run_step "go test ./..." env GOCACHE="${GO_CACHE_DIR}" go test ./...
 fi
 
-run env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json
-run env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate assets/templates/demo-hello-service.json --vars-file ./examples/vars/demo-hello-service.env
+run_step "template validate demo-server-audit" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json
+run_step "template validate demo-hello-service" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate assets/templates/demo-hello-service.json --vars-file ./examples/vars/demo-hello-service.env
 
 if [[ "${SKIP_RUN}" == "0" ]]; then
   DEMO_OUT="${OUTPUT_DIR}/demo-audit"
-  run env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run A --template assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json --output "${DEMO_OUT}" --dry-run
-  run env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run D --template assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json --output "${DEMO_OUT}" --dry-run
-  run env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit accept --template assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json --output "${DEMO_OUT}" --dry-run
-  run env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit status --output "${DEMO_OUT}"
+  run_step "run A dry-run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run A --template assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json --output "${DEMO_OUT}" --dry-run
+  run_step "run D dry-run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run D --template assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json --output "${DEMO_OUT}" --dry-run
+  run_step "accept dry-run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit accept --template assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json --output "${DEMO_OUT}" --dry-run
+  run_step "status refresh" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit status --output "${DEMO_OUT}"
 fi
 
 echo ""
+echo "release-check summary"
+echo "- steps: ${STEP_COUNT}"
+for line in "${STEP_LINES[@]}"; do
+  label="${line%%|*}"
+  elapsed="${line##*|}"
+  echo "  - ${label}: ${elapsed}s"
+done
+echo "- total duration: ${TOTAL_SECONDS}s"
+echo "- output: ${OUTPUT_DIR}"
 echo "release-check passed"
-echo "output: ${OUTPUT_DIR}"

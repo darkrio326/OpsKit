@@ -27,7 +27,7 @@ func (c *ntpSyncCheck) Run(ctx context.Context, req Request) (Result, error) {
 			Status:   schema.StatusPassed,
 			Severity: schema.SeverityInfo,
 			Message:  "ntp synchronization healthy (" + source + ")",
-			Metrics:  metrics,
+			Metrics:  withHealthyMetrics(metrics),
 		}, nil
 	}
 	if source == "unknown" {
@@ -43,7 +43,7 @@ func (c *ntpSyncCheck) Run(ctx context.Context, req Request) (Result, error) {
 			Severity: schema.SeverityWarn,
 			Message:  issue.Message,
 			Issue:    issue,
-			Metrics:  metrics,
+			Metrics:  withDegradedMetrics(metrics, "time_sync_probe_unavailable"),
 		}, nil
 	}
 
@@ -55,6 +55,6 @@ func (c *ntpSyncCheck) Run(ctx context.Context, req Request) (Result, error) {
 		Severity: sev,
 		Message:  msg,
 		Issue:    issue,
-		Metrics:  metrics,
+		Metrics:  withHealthyMetrics(metrics),
 	}, nil
 }

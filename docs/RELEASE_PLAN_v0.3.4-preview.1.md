@@ -44,6 +44,7 @@ go run ./cmd/opskit web --output ./.tmp/opskit-demo --listen 127.0.0.1:18080
 - 将 `acceptance-consistency-*.json` 纳入 artifacts 索引
 - accept 报告中增加 consistency 摘要块
 - 增加跨文件一致性回归测试（state/artifacts/report）
+- 当前进度：已完成
 
 验收：
 
@@ -56,6 +57,7 @@ GOCACHE=$PWD/.gocache go test ./internal/stages ./internal/state ./internal/repo
 - 修复/优化 `load_average` 在非 Linux 环境解析策略
 - 为 `dns_resolve` 增加参数开关（可选跳过受限网络调用）
 - 增加 check 级降级原因标准化指标
+- 当前进度：已完成（含回归测试）
 
 验收：
 
@@ -67,6 +69,7 @@ GOCACHE=$PWD/.gocache go test ./internal/plugins/checks
 
 - `release-check` 输出阶段统计与耗时
 - 文档增加“快速判定发布可用”的读法
+- 当前进度：已完成（脚本已输出步骤耗时与总耗时）
 
 验收：
 

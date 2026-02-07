@@ -37,6 +37,7 @@ type StageResult struct {
 	Checks       []schema.CheckState
 	StepStatuses []schema.Status
 	Report       string
+	Reports      []schema.ArtifactRef
 	Bundles      []schema.ArtifactRef
 }
 

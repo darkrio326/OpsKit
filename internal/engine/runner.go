@@ -81,6 +81,9 @@ func (r *Runner) Execute(ctx context.Context, rt *Runtime) ([]StageResult, error
 			rel := filepath.Join("reports", res.Report)
 			artifacts.Reports = append(artifacts.Reports, schema.ArtifactRef{ID: stringsLowerStage(res.StageID), Path: rel})
 		}
+		if len(res.Reports) > 0 {
+			artifacts.Reports = append(artifacts.Reports, res.Reports...)
+		}
 		if len(res.Bundles) > 0 {
 			artifacts.Bundles = append(artifacts.Bundles, res.Bundles...)
 		}

@@ -39,7 +39,14 @@ func (c *timeDriftCheck) Run(ctx context.Context, req Request) (Result, error) {
 			Message:  "time drift unknown: " + detail,
 			Advice:   "install chrony/ntp tooling or verify time sync manually",
 		}
-		return Result{CheckID: req.ID, Status: schema.StatusWarn, Severity: schema.SeverityWarn, Message: issue.Message, Issue: issue, Metrics: metrics}, nil
+		return Result{
+			CheckID:  req.ID,
+			Status:   schema.StatusWarn,
+			Severity: schema.SeverityWarn,
+			Message:  issue.Message,
+			Issue:    issue,
+			Metrics:  withDegradedMetrics(metrics, "time_offset_probe_unavailable"),
+		}, nil
 	}
 
 	if offsetMS <= maxOffsetMS {
@@ -48,13 +55,20 @@ func (c *timeDriftCheck) Run(ctx context.Context, req Request) (Result, error) {
 			Status:   schema.StatusPassed,
 			Severity: schema.SeverityInfo,
 			Message:  fmt.Sprintf("time drift %.3fms within threshold %.3fms", offsetMS, maxOffsetMS),
-			Metrics:  metrics,
+			Metrics:  withHealthyMetrics(metrics),
 		}, nil
 	}
 
 	msg := fmt.Sprintf("time drift %.3fms exceeds threshold %.3fms", offsetMS, maxOffsetMS)
 	issue := &schema.Issue{ID: req.ID, Severity: sev, Message: msg, Advice: "check NTP sync and host clock source"}
-	return Result{CheckID: req.ID, Status: statusFromSeverity(sev), Severity: sev, Message: msg, Issue: issue, Metrics: metrics}, nil
+	return Result{
+		CheckID:  req.ID,
+		Status:   statusFromSeverity(sev),
+		Severity: sev,
+		Message:  msg,
+		Issue:    issue,
+		Metrics:  withHealthyMetrics(metrics),
+	}, nil
 }
 
 func detectTimeOffsetMS(ctx context.Context, req Request) (float64, string, string) {

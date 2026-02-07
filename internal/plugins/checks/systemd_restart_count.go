@@ -32,7 +32,16 @@ func (c *systemdRestartCountCheck) Run(ctx context.Context, req Request) (Result
 	out, err := req.Exec.Run(ctx, executil.Spec{Name: "systemctl", Args: []string{"show", unit, "--property", "NRestarts", "--value"}, Timeout: 8 * time.Second})
 	if err != nil {
 		issue := &schema.Issue{ID: req.ID, Severity: schema.SeverityWarn, Message: "systemd restart count degraded: " + err.Error(), Advice: "run on systemd host or install systemctl"}
-		return Result{CheckID: req.ID, Status: schema.StatusWarn, Severity: schema.SeverityWarn, Message: issue.Message, Issue: issue}, nil
+		return Result{
+			CheckID:  req.ID,
+			Status:   schema.StatusWarn,
+			Severity: schema.SeverityWarn,
+			Message:  issue.Message,
+			Issue:    issue,
+			Metrics: withDegradedMetrics([]schema.Metric{
+				{Label: "restart_unit", Value: unit},
+			}, "systemctl_query_failed"),
+		}, nil
 	}
 	if out.ExitCode != 0 {
 		detail := strings.TrimSpace(out.Stderr)
@@ -40,14 +49,32 @@ func (c *systemdRestartCountCheck) Run(ctx context.Context, req Request) (Result
 			detail = "systemctl show returned non-zero"
 		}
 		issue := &schema.Issue{ID: req.ID, Severity: schema.SeverityWarn, Message: "systemd restart count degraded: " + detail, Advice: "verify unit name and systemd status"}
-		return Result{CheckID: req.ID, Status: schema.StatusWarn, Severity: schema.SeverityWarn, Message: issue.Message, Issue: issue}, nil
+		return Result{
+			CheckID:  req.ID,
+			Status:   schema.StatusWarn,
+			Severity: schema.SeverityWarn,
+			Message:  issue.Message,
+			Issue:    issue,
+			Metrics: withDegradedMetrics([]schema.Metric{
+				{Label: "restart_unit", Value: unit},
+			}, "systemctl_nonzero"),
+		}, nil
 	}
 
 	nRestartsText := strings.TrimSpace(out.Stdout)
 	nRestarts, parseErr := strconv.Atoi(nRestartsText)
 	if parseErr != nil {
 		issue := &schema.Issue{ID: req.ID, Severity: schema.SeverityWarn, Message: "systemd restart count parse failed: " + parseErr.Error(), Advice: "inspect systemctl output format"}
-		return Result{CheckID: req.ID, Status: schema.StatusWarn, Severity: schema.SeverityWarn, Message: issue.Message, Issue: issue}, nil
+		return Result{
+			CheckID:  req.ID,
+			Status:   schema.StatusWarn,
+			Severity: schema.SeverityWarn,
+			Message:  issue.Message,
+			Issue:    issue,
+			Metrics: withDegradedMetrics([]schema.Metric{
+				{Label: "restart_unit", Value: unit},
+			}, "parse_error"),
+		}, nil
 	}
 
 	metrics := []schema.Metric{
@@ -61,7 +88,7 @@ func (c *systemdRestartCountCheck) Run(ctx context.Context, req Request) (Result
 			Status:   schema.StatusPassed,
 			Severity: schema.SeverityInfo,
 			Message:  fmt.Sprintf("systemd restart count within threshold: %s (%d/%d)", unit, nRestarts, maxRestarts),
-			Metrics:  metrics,
+			Metrics:  withHealthyMetrics(metrics),
 		}, nil
 	}
 
@@ -73,6 +100,6 @@ func (c *systemdRestartCountCheck) Run(ctx context.Context, req Request) (Result
 		Severity: sev,
 		Message:  msg,
 		Issue:    issue,
-		Metrics:  metrics,
+		Metrics:  withHealthyMetrics(metrics),
 	}, nil
 }

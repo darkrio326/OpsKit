@@ -57,14 +57,8 @@ func executeEvidenceStage(ctx context.Context, rt *engine.Runtime, stageID strin
 		}
 	}
 
-	reportPayload, _ := json.MarshalIndent(map[string]any{
-		"stage":    stageID,
-		"status":   result.Status,
-		"evidence": evidenceRows,
-		"issues":   issues,
-	}, "", "  ")
 	reportName := engine.ReportName(stageID)
-	if err := rt.Store.WriteReportStub(reportName, reportTitle, string(reportPayload)); err != nil {
+	if err := rt.Store.WriteReportStub(reportName, reportTitle, buildAcceptReportBody(stageID, result.Status, evidenceRows, issues, nil)); err != nil {
 		return engine.StageResult{}, err
 	}
 	reportAbs := filepath.Join(rt.Store.Paths().ReportsDir, reportName)
@@ -116,6 +110,7 @@ func executeEvidenceStage(ctx context.Context, rt *engine.Runtime, stageID strin
 	if err := writeJSON(consistencyPath, consistency); err != nil {
 		return engine.StageResult{}, err
 	}
+	consistencyRel := filepath.Join("evidence", filepath.Base(consistencyPath))
 
 	consistencyStatus := schema.StatusPassed
 	consistencyMessage := "acceptance bundle consistency check passed"
@@ -130,12 +125,34 @@ func executeEvidenceStage(ctx context.Context, rt *engine.Runtime, stageID strin
 		})
 		result.Status = schema.StatusFailed
 	}
+	stepStatuses = append(stepStatuses, consistencyStatus)
 	evidenceRows = append(evidenceRows, map[string]any{
 		"evidenceId": "f.acceptance_consistency",
 		"status":     consistencyStatus,
 		"message":    consistencyMessage,
-		"path":       consistencyPath,
+		"path":       consistencyRel,
 	})
+	result.Reports = append(result.Reports, schema.ArtifactRef{
+		ID:   "acceptance-consistency",
+		Path: consistencyRel,
+	})
+
+	if err := rt.Store.WriteReportStub(
+		reportName,
+		reportTitle,
+		buildAcceptReportBody(stageID, result.Status, evidenceRows, issues, map[string]any{
+			"path": consistencyRel,
+			"ok":   consistency.OK,
+			"summary": map[string]any{
+				"missingRequiredState": len(consistency.MissingRequiredState),
+				"hashMismatch":         len(consistency.HashMismatch),
+				"missingInManifest":    len(consistency.MissingInManifest),
+				"missingInHashes":      len(consistency.MissingInHashes),
+			},
+		}),
+	); err != nil {
+		return engine.StageResult{}, err
+	}
 	result.Bundles = append(result.Bundles, schema.ArtifactRef{ID: "acceptance", Path: filepath.Join("bundles", bundleName)})
 
 	result.Metrics = append(metrics,
@@ -165,6 +182,20 @@ func writeJSON(path string, v any) error {
 		return err
 	}
 	return os.WriteFile(path, b, 0o644)
+}
+
+func buildAcceptReportBody(stageID string, status schema.Status, evidenceRows []map[string]any, issues []schema.Issue, consistency any) string {
+	payload := map[string]any{
+		"stage":    stageID,
+		"status":   status,
+		"evidence": evidenceRows,
+		"issues":   issues,
+	}
+	if consistency != nil {
+		payload["consistency"] = consistency
+	}
+	b, _ := json.MarshalIndent(payload, "", "  ")
+	return string(b)
 }
 
 func boolMetric(ok bool) string {

@@ -10,14 +10,22 @@
 - 新增 `docs/RELEASE_NOTES_v0.3.4-preview.1.md`（下一版发布文案草稿）
 - UI 新增阶段 summary 展示（`total/pass/warn/fail/skip`）
 - UI artifacts 高亮新增 latest acceptance consistency 入口
+- Accept 阶段新增 `acceptance-consistency` 报告索引写入 `artifacts.json`
+- 新增回归测试：accept consistency 索引、跨文件一致性、`load_average` 跨平台回退、`dns_resolve` 跳网参数
 
 ### Changed
 
 - `README.md` / `README.zh-CN.md` / `ROADMAP.md` / `docs/GITHUB_RELEASE.md` 滚动到 `v0.3.3-preview.1`
+- `scripts/release-check.sh` 新增步骤耗时与总耗时汇总输出
+- `dns_resolve` 新增 `skip_network_query` 参数（受限网络可跳过外部查询）
+- check 降级结果统一输出指标：`check_degraded` / `check_degraded_reason`
+- `load_average` 解析链路增强（`/proc/loadavg` -> `uptime` -> `sysctl vm.loadavg`）
 
 ### Fixed
 
-- 无
+- 修复 acceptance consistency 结果未纳入 artifacts 索引的问题
+- 修复 `load_average` 在非 Linux 环境容易误降级的问题
+- 修复 `dns_resolve` 在受限网络场景误报问题
 
 ## [v0.3.3-preview.1] - 2026-02-07
 

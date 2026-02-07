@@ -30,6 +30,9 @@ func (c *defaultRouteCheck) Run(ctx context.Context, req Request) (Result, error
 			Severity: schema.SeverityWarn,
 			Message:  issue.Message,
 			Issue:    issue,
+			Metrics: withDegradedMetrics([]schema.Metric{
+				{Label: "default_route", Value: "unknown"},
+			}, "route_probe_failed"),
 		}, nil
 	}
 	if ok {
@@ -38,7 +41,7 @@ func (c *defaultRouteCheck) Run(ctx context.Context, req Request) (Result, error
 			Status:   schema.StatusPassed,
 			Severity: schema.SeverityInfo,
 			Message:  "default route present (" + source + ")",
-			Metrics:  []schema.Metric{{Label: "default_route", Value: "present"}},
+			Metrics:  withHealthyMetrics([]schema.Metric{{Label: "default_route", Value: "present"}}),
 		}, nil
 	}
 
@@ -50,7 +53,7 @@ func (c *defaultRouteCheck) Run(ctx context.Context, req Request) (Result, error
 		Severity: sev,
 		Message:  msg,
 		Issue:    issue,
-		Metrics:  []schema.Metric{{Label: "default_route", Value: "missing"}},
+		Metrics:  withHealthyMetrics([]schema.Metric{{Label: "default_route", Value: "missing"}}),
 	}, nil
 }
 

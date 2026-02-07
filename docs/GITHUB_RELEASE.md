@@ -72,6 +72,13 @@ scripts/release.sh --version v0.3.0-preview.1 --clean
 - 更新 `CHANGELOG.md` 对应版本条目
 - 如发布二进制，确保 `checksums.txt` 已生成并随附件上传
 
+### 6.1 `release-check` 结果快速判读
+
+- 出现 `release-check passed` 且退出码为 `0`：门禁通过
+- `release-check summary` 中 `steps` 与各步骤耗时可用于定位慢步骤
+- dry-run 阶段输出中的 `checks/actions/evidence` 计数可用于确认模板执行计划未异常漂移
+- 如任一步骤失败，脚本立即退出；先修复失败项，再重新执行整套门禁
+
 ## 7. Release 文案模板
 
 - 可直接使用：`docs/RELEASE_NOTES_v0.3.0-preview.1.md`

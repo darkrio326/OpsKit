@@ -25,10 +25,24 @@ func (c *systemdAvailableCheck) Run(ctx context.Context, req Request) (Result, e
 		if errors.Is(err, exec.ErrNotFound) {
 			msg := "systemctl not found"
 			issue := &schema.Issue{ID: req.ID, Severity: sev, Message: msg, Advice: "install systemd tooling or adjust host baseline"}
-			return Result{CheckID: req.ID, Status: statusFromSeverity(sev), Severity: sev, Message: msg, Issue: issue}, nil
+			return Result{
+				CheckID:  req.ID,
+				Status:   statusFromSeverity(sev),
+				Severity: sev,
+				Message:  msg,
+				Issue:    issue,
+				Metrics:  withHealthyMetrics([]schema.Metric{{Label: "systemd", Value: "not_found"}}),
+			}, nil
 		}
 		issue := &schema.Issue{ID: req.ID, Severity: schema.SeverityWarn, Message: "systemctl check degraded: " + err.Error(), Advice: "verify systemd status manually"}
-		return Result{CheckID: req.ID, Status: schema.StatusWarn, Severity: schema.SeverityWarn, Message: issue.Message, Issue: issue}, nil
+		return Result{
+			CheckID:  req.ID,
+			Status:   schema.StatusWarn,
+			Severity: schema.SeverityWarn,
+			Message:  issue.Message,
+			Issue:    issue,
+			Metrics:  withDegradedMetrics([]schema.Metric{{Label: "systemd", Value: "unknown"}}, "systemctl_probe_failed"),
+		}, nil
 	}
 	if out.ExitCode != 0 {
 		msg := strings.TrimSpace(out.Stderr)
@@ -36,13 +50,20 @@ func (c *systemdAvailableCheck) Run(ctx context.Context, req Request) (Result, e
 			msg = "systemctl returned non-zero"
 		}
 		issue := &schema.Issue{ID: req.ID, Severity: sev, Message: msg, Advice: "check init system and systemd service state"}
-		return Result{CheckID: req.ID, Status: statusFromSeverity(sev), Severity: sev, Message: msg, Issue: issue}, nil
+		return Result{
+			CheckID:  req.ID,
+			Status:   statusFromSeverity(sev),
+			Severity: sev,
+			Message:  msg,
+			Issue:    issue,
+			Metrics:  withHealthyMetrics([]schema.Metric{{Label: "systemd", Value: "unavailable"}}),
+		}, nil
 	}
 	return Result{
 		CheckID:  req.ID,
 		Status:   schema.StatusPassed,
 		Severity: schema.SeverityInfo,
 		Message:  "systemd available",
-		Metrics:  []schema.Metric{{Label: "systemd", Value: "available"}},
+		Metrics:  withHealthyMetrics([]schema.Metric{{Label: "systemd", Value: "available"}}),
 	}, nil
 }
