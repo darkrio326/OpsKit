@@ -17,6 +17,7 @@
 2. 下载以下文件（按服务器架构选择二进制）：
    - `opskit-v0.3.4-preview.1-linux-amd64` 或 `opskit-v0.3.4-preview.1-linux-arm64`
    - `checksums.txt`
+   - `release-metadata.json`
 
 可选：在联网机器先校验哈希（推荐）
 
@@ -31,6 +32,8 @@ sha256sum -c checksums.txt
 # 手动比对 checksums.txt 中对应行
 shasum -a 256 opskit-v0.3.4-preview.1-linux-amd64
 ```
+
+可选：查看 `release-metadata.json`，确认 `gitCommit/goVersion/generatedAt` 与发布说明一致。
 
 ## 3. 传输到离线麒麟服务器并安装
 

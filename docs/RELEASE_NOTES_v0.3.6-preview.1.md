@@ -18,7 +18,8 @@
 - 新增通用检查：`fs_readonly`、`disk_inodes`、`clock_skew`
 - `assets/templates/demo-server-audit.json` D 阶段接入上述 3 个检查
 - `opskit status --json` 增加 `health` 字段（`ok|warn|fail`）
-- 发布资产 metadata 与 checksum 一致性自检（计划）
+- `scripts/release.sh` 增加 `release-metadata.json`（`gitCommit/buildTime/goVersion`）
+- `scripts/release.sh` 自动校验 `checksums.txt` 与二进制一致性
 
 ### Changed
 

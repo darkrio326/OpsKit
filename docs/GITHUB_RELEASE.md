@@ -28,7 +28,8 @@
 
 - `opskit-linux-arm64`
 - `opskit-linux-amd64`
-- （可选）`checksums.txt`
+- `checksums.txt`
+- `release-metadata.json`
 
 示例构建命令：
 
@@ -44,22 +45,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/opskit-linux-amd64 ./cmd/
 scripts/release.sh --version v0.3.6-preview.1 --clean
 ```
 
-生成 `checksums.txt`（二选一）：
-
-```bash
-# Linux
-(cd dist && sha256sum opskit-linux-arm64 opskit-linux-amd64 > checksums.txt)
-
-# macOS
-(cd dist && shasum -a 256 opskit-linux-arm64 opskit-linux-amd64 > checksums.txt)
-```
-
-校验示例：
-
-```bash
-# Linux
-(cd dist && sha256sum -c checksums.txt)
-```
+说明：`scripts/release.sh` 会自动生成并校验 `checksums.txt`，同时生成 `release-metadata.json`（含 `gitCommit/buildTime/goVersion`）。
 
 ## 6. 发布前检查清单
 
@@ -72,7 +58,7 @@ scripts/release.sh --version v0.3.6-preview.1 --clean
 - 对“环境应全部健康”的发布，可使用严格模式：`scripts/release-check.sh --with-offline-validate --offline-strict-exit`
 - 建议完成一次麒麟 V10 Docker e2e（`make -C examples/generic-manage docker-kylin-e2e`）
 - 更新 `CHANGELOG.md` 对应版本条目
-- 如发布二进制，确保 `checksums.txt` 已生成并随附件上传
+- 如发布二进制，确保 `checksums.txt` 与 `release-metadata.json` 已生成并随附件上传
 
 ### 6.1 `release-check` 结果快速判读
 
@@ -97,6 +83,7 @@ gh release create v0.3.6-preview.1 \
   dist/opskit-v0.3.6-preview.1-linux-arm64 \
   dist/opskit-v0.3.6-preview.1-linux-amd64 \
   dist/checksums.txt \
+  dist/release-metadata.json \
   --title "OpsKit v0.3.6-preview.1" \
   --notes-file docs/RELEASE_NOTES_v0.3.6-preview.1.md \
   --prerelease
