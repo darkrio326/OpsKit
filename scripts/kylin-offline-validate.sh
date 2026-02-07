@@ -10,7 +10,7 @@ Usage:
 
 Options:
   -b, --bin <path>        OpsKit binary path or command name (default: opskit)
-  -o, --output <dir>      Output directory (default: /data/opskit-regression-v034)
+  -o, --output <dir>      Output directory (default: /data/opskit-regression)
   -t, --template <id>     Template id/path (default: generic-manage-v1)
       --json-status-file <path>
                            Save `opskit status --json` output to this file
@@ -56,7 +56,7 @@ bool_json() {
 }
 
 BIN="${BIN:-opskit}"
-OUTPUT="${OUTPUT:-/data/opskit-regression-v034}"
+OUTPUT="${OUTPUT:-/data/opskit-regression}"
 TEMPLATE="${TEMPLATE:-generic-manage-v1}"
 JSON_STATUS_FILE=""
 SUMMARY_JSON_FILE=""

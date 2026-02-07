@@ -99,6 +99,12 @@ rg -n "v0.3.6-preview.1|offline-validate|release-check|generic-readiness-check|s
 - demo 模板 `run A/D/accept` 与 `status --json` 跑通
 - 发布文档、release notes、changelog 无版本漂移
 
+### 4.1 strict 使用策略（本版决策）
+
+- 默认放行口径：`0/1/3`（non-strict），用于确认通用链路可运行、产物可复核。
+- `strict` 作为可选门禁，不作为离线首轮回归阻断条件。
+- 在标准服务器完成基线治理（挂载/服务/时间同步等）后，补跑 strict 并以“全绿”为目标。
+
 ## 5. 建议时间盒
 
 - Day 1：A + C

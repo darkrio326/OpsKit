@@ -33,6 +33,11 @@ scripts/kylin-offline-validate.sh \
   --clean
 ```
 
+说明：
+
+- 默认回归口径是 `run A/D/accept/status` 允许 `0/1/3`，用于离线通用场景验证“链路可运行、产物可复核”。
+- `--strict-exit` 仅建议在目标环境基线已收敛、预期所有检查均应健康时启用。
+
 若需手工执行，可使用：
 
 ```bash

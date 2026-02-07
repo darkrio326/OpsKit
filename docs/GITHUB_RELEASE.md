@@ -58,6 +58,8 @@ scripts/release.sh --version v0.3.6-preview.1 --clean
 - 对“环境应全部健康”的发布，可使用严格模式：`scripts/release-check.sh --with-offline-validate --offline-strict-exit`
 - 在进入真实服务器验证前，建议执行统一门禁：`scripts/generic-readiness-check.sh --clean`
 - 如需严格放行，可执行：`scripts/generic-readiness-check.sh --generic-strict --offline-strict --clean`
+- 当前策略：strict 为可选门禁；默认以 non-strict（允许 `0/1/3`）验证链路与产物闭环
+- 标准服务器完成基线治理后，再执行 strict 全绿校验
 - 建议完成一次麒麟 V10 Docker e2e（`make -C examples/generic-manage docker-kylin-e2e`）
 - 更新 `CHANGELOG.md` 对应版本条目
 - 如发布二进制，确保 `checksums.txt` 与 `release-metadata.json` 已生成并随附件上传

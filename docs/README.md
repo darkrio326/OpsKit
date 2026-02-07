@@ -41,7 +41,8 @@ Repository-level release history: `CHANGELOG.md`
 
 - `docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
 - `docs/GITHUB_RELEASE.md`
-- `docs/RELEASE_NOTES_v0.3.0-preview.1.md`
+- `docs/RELEASE_NOTES_v0.3.6-preview.1.md`
+- `docs/RELEASE_PLAN_v0.3.6-preview.1.md`
 
 ## Examples
 

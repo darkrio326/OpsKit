@@ -39,8 +39,10 @@
 - `scripts/release-check.sh` 汇总新增 `recommended action`（continue_release/block_release）
 - 离线回归文档补充 `summary.json` 产物与校验口径
 - 离线部署/验证文档补充 `status.json health` 与退出码映射口径
+- 离线回归与发布文档明确 strict 策略：默认 non-strict 放行，基线治理后再做 strict 全绿校验
 - `assets/templates/demo-server-audit.json` D 阶段接入 inode/只读挂载/时钟偏移检查
 - `scripts/release.sh` 自动生成并校验 `checksums.txt`
+- `scripts/kylin-offline-validate.sh` 默认输出目录改为版本无关路径（`/data/opskit-regression`）
 - `docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md` 示例版本与路径口径同步到 `v0.3.6`/`v036`
 - demo 模板 README 补充“最低可运行变量集”与“常见失败”
 - `docs/examples/generic-manage/README*.md` 补充 strict 模式与 `status.json` 产物说明
