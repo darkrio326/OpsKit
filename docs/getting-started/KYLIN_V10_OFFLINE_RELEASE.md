@@ -128,10 +128,11 @@ echo "status exit=$?"
 回归通过建议至少满足：
 
 - `opskit status` 退出码为 `0/1/3`（`1` 代表存在 FAIL，`3` 代表存在 WARN）
+- `status.json` 中 `health` 与退出码匹配：`ok=0`、`warn=3`、`fail=1`
 - `state/lifecycle.json` 含 `summary(total/pass/warn/fail/skip)` 字段
 - `state/artifacts.json` 存在 `acceptance-consistency-*.json` 报告索引
 - `reports/accept-*.html` 可打开并看到 consistency 摘要
-- `status.json` 存在且包含 `command/schemaVersion/exitCode`
+- `status.json` 存在且包含 `command/schemaVersion/exitCode/health`
 
 可选检查命令（系统有 `grep` 即可）：
 
@@ -141,6 +142,7 @@ grep -R "acceptance-consistency-" "$OPSKIT_OUT/state/artifacts.json"
 grep -R "\"consistency\"" "$OPSKIT_OUT/reports"/accept-*.html
 grep -R "\"schemaVersion\"" "$OPSKIT_OUT/status.json"
 grep -R "\"exitCode\"" "$OPSKIT_OUT/status.json"
+grep -R "\"health\"" "$OPSKIT_OUT/status.json"
 ```
 
 ## 5. 启动 Web UI 查看状态

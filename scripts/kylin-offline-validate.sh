@@ -163,6 +163,16 @@ is_allowed_stage_rc() {
   [[ "${rc}" == "0" || "${rc}" == "1" || "${rc}" == "3" ]]
 }
 
+expected_health_for_rc() {
+  local rc="$1"
+  case "${rc}" in
+    0) echo "ok" ;;
+    3) echo "warn" ;;
+    1) echo "fail" ;;
+    *) echo "unknown" ;;
+  esac
+}
+
 run_expect_zero() {
   local name="$1"
   shift
@@ -258,6 +268,13 @@ run_status_json_expect_stage_rc() {
   if ! grep -q "\"exitCode\"[[:space:]]*:[[:space:]]*${rc}" "${json_file}"; then
     echo "    failed: status json exitCode mismatch (${json_file})" >&2
     add_failure "status_json_invalid" "status json exitCode mismatch"
+    HARD_FAIL=1
+  fi
+  local expected_health
+  expected_health="$(expected_health_for_rc "${rc}")"
+  if ! grep -q "\"health\"[[:space:]]*:[[:space:]]*\"${expected_health}\"" "${json_file}"; then
+    echo "    failed: status json health mismatch (${json_file}) expected=${expected_health}" >&2
+    add_failure "status_json_invalid" "status json health mismatch expected=${expected_health}"
     HARD_FAIL=1
   fi
   echo "    json: ${json_file}"
@@ -412,6 +429,7 @@ require_grep '"summary"' "${OUTPUT}/state/lifecycle.json"
 require_grep 'acceptance-consistency-' "${OUTPUT}/state/artifacts.json"
 require_grep '"schemaVersion"[[:space:]]*:[[:space:]]*"v1"' "${JSON_STATUS_FILE}"
 require_grep '"command"[[:space:]]*:[[:space:]]*"opskit status"' "${JSON_STATUS_FILE}"
+require_grep '"health"[[:space:]]*:' "${JSON_STATUS_FILE}"
 
 latest_accept="$(ls -1t "${OUTPUT}"/reports/accept-*.html 2>/dev/null | head -n1 || true)"
 if [[ -z "${latest_accept}" ]]; then

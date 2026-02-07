@@ -10,6 +10,7 @@
 - 新增 `docs/RELEASE_NOTES_v0.3.6-preview.1.md`（下一版发布文案草稿）
 - `scripts/kylin-offline-validate.sh` 新增 `--summary-json-file`（结构化回归摘要）
 - 新增检查插件：`fs_readonly`、`disk_inodes`、`clock_skew`
+- `opskit status --json` 新增 `health` 字段（`ok|warn|fail`）
 - 新增 `docs/RELEASE_PLAN_v0.3.4-preview.1.md`（下一版可执行任务清单）
 - 新增 `docs/RELEASE_NOTES_v0.3.4-preview.1.md`（下一版发布文案草稿）
 - 新增 `docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md`（麒麟离线用户侧回归清单）
@@ -31,7 +32,9 @@
 - `ROADMAP.md` 最新发布/进行中版本滚动到 `v0.3.5` / `v0.3.6-preview.1`
 - `docs/GITHUB_RELEASE.md` 发布文案模板与命令滚动到 `v0.3.6-preview.1`
 - `scripts/release-check.sh` 新增 `--offline-summary-json-file` 透传
+- `scripts/release-check.sh` 汇总新增 `recommended action`（continue_release/block_release）
 - 离线回归文档补充 `summary.json` 产物与校验口径
+- 离线部署/验证文档补充 `status.json health` 与退出码映射口径
 - `assets/templates/demo-server-audit.json` D 阶段接入 inode/只读挂载/时钟偏移检查
 - `README.md` / `README.zh-CN.md` 当前版本标记同步到 `v0.3.5-preview.1`
 - `README.md` / `README.zh-CN.md` / `ROADMAP.md` / `docs/GITHUB_RELEASE.md` 滚动到 `v0.3.3-preview.1`

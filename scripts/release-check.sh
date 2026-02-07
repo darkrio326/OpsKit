@@ -1,6 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+RECOMMENDED_ACTION="continue_release"
+
+on_error() {
+  local rc=$?
+  RECOMMENDED_ACTION="block_release"
+  echo ""
+  echo "release-check failed"
+  echo "- recommended action: ${RECOMMENDED_ACTION}"
+  exit "${rc}"
+}
+
+trap on_error ERR
+
 usage() {
   cat <<'USAGE'
 Run OpsKit release readiness checks.
@@ -178,6 +191,7 @@ for line in "${STEP_LINES[@]}"; do
 done
 echo "- total duration: ${TOTAL_SECONDS}s"
 echo "- output: ${OUTPUT_DIR}"
+echo "- recommended action: ${RECOMMENDED_ACTION}"
 if [[ "${WITH_OFFLINE_VALIDATE}" == "1" ]]; then
   echo "- offline output: ${OFFLINE_OUTPUT}"
   echo "- offline status json: ${OFFLINE_JSON_STATUS_FILE}"

@@ -30,6 +30,7 @@ opskit status --output /data/opskit-demo --json
 
 - `command`：固定 `opskit status`
 - `exitCode`：与该次命令退出码一致（`0|1|3`）
+- `health`：状态汇总（`ok|warn|fail`）
 - `schemaVersion`：当前固定 `v1`
 - `generatedAt`：状态生成时间（ISO8601）
 - `overall`：等价 `state/overall.json`
@@ -43,6 +44,7 @@ opskit status --output /data/opskit-demo --json
 {
   "command": "opskit status",
   "exitCode": 1,
+  "health": "fail",
   "schemaVersion": "v1",
   "generatedAt": "2026-02-07T18:01:45+08:00",
   "overall": {
@@ -63,5 +65,6 @@ opskit status --output /data/opskit-demo --json
 ## 6. 调用方建议
 
 - 优先以 `exitCode` 与进程退出码交叉校验
+- 推荐同时校验 `health` 与 `exitCode`：`0->ok`、`3->warn`、`1->fail`
 - 对 `generatedAt` 做新鲜度判断，避免读取过旧状态
 - 若退出码为 `1`，不应直接判定“程序不可用”，应结合 `lifecycle` 与 `artifacts` 判断是否已生成可用证据

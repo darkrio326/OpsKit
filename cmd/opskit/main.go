@@ -36,6 +36,7 @@ const (
 type statusJSONPayload struct {
 	Command       string                `json:"command"`
 	ExitCode      int                   `json:"exitCode"`
+	Health        string                `json:"health"`
 	SchemaVersion string                `json:"schemaVersion"`
 	GeneratedAt   string                `json:"generatedAt"`
 	Overall       schema.OverallState   `json:"overall"`
@@ -433,12 +434,26 @@ func buildStatusJSONPayload(overall schema.OverallState, lifecycle schema.Lifecy
 	return statusJSONPayload{
 		Command:       statusJSONCommand,
 		ExitCode:      exitCode,
+		Health:        statusHealth(exitCode),
 		SchemaVersion: statusJSONSchemaVersion,
 		GeneratedAt:   generatedAt,
 		Overall:       overall,
 		Lifecycle:     lifecycle,
 		Services:      services,
 		Artifacts:     artifacts,
+	}
+}
+
+func statusHealth(exitCode int) string {
+	switch exitCode {
+	case exitcode.Success:
+		return "ok"
+	case exitcode.PartialSuccess:
+		return "warn"
+	case exitcode.Failure:
+		return "fail"
+	default:
+		return "unknown"
 	}
 }
 

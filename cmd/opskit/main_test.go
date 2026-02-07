@@ -104,6 +104,9 @@ func TestCmdStatus_JSONOutputContract(t *testing.T) {
 	if payload.ExitCode != exit {
 		t.Fatalf("unexpected exitCode: %d", payload.ExitCode)
 	}
+	if payload.Health != "ok" {
+		t.Fatalf("unexpected health: %s", payload.Health)
+	}
 	if strings.TrimSpace(payload.GeneratedAt) == "" {
 		t.Fatalf("generatedAt should not be empty")
 	}
@@ -112,6 +115,56 @@ func TestCmdStatus_JSONOutputContract(t *testing.T) {
 	}
 	if len(payload.Lifecycle.Stages) != 6 {
 		t.Fatalf("expected 6 lifecycle stages, got %d", len(payload.Lifecycle.Stages))
+	}
+}
+
+func TestCmdStatus_JSONHealthByLifecycle(t *testing.T) {
+	tmp := t.TempDir()
+	store := state.NewStore(state.NewPaths(tmp))
+	if err := store.InitStateIfMissing("demo"); err != nil {
+		t.Fatalf("init state: %v", err)
+	}
+
+	tests := []struct {
+		name         string
+		stageStatus  schema.Status
+		wantExitCode int
+		wantHealth   string
+	}{
+		{name: "ok", stageStatus: schema.StatusPassed, wantExitCode: exitcode.Success, wantHealth: "ok"},
+		{name: "warn", stageStatus: schema.StatusWarn, wantExitCode: exitcode.PartialSuccess, wantHealth: "warn"},
+		{name: "fail", stageStatus: schema.StatusFailed, wantExitCode: exitcode.Failure, wantHealth: "fail"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lifecycle := state.DefaultLifecycle()
+			for i := range lifecycle.Stages {
+				lifecycle.Stages[i].Status = schema.StatusPassed
+			}
+			lifecycle.Stages[0].Status = tt.stageStatus
+			if err := store.WriteLifecycle(lifecycle); err != nil {
+				t.Fatalf("write lifecycle: %v", err)
+			}
+
+			exit, stdout := captureStdout(t, func() int {
+				return cmdStatus([]string{"--output", tmp, "--json"})
+			})
+			if exit != tt.wantExitCode {
+				t.Fatalf("expected exit=%d, got %d", tt.wantExitCode, exit)
+			}
+
+			var payload statusJSONPayload
+			if err := json.Unmarshal([]byte(strings.TrimSpace(stdout)), &payload); err != nil {
+				t.Fatalf("json unmarshal failed: %v, output=%q", err, stdout)
+			}
+			if payload.ExitCode != tt.wantExitCode {
+				t.Fatalf("expected payload exitCode=%d, got %d", tt.wantExitCode, payload.ExitCode)
+			}
+			if payload.Health != tt.wantHealth {
+				t.Fatalf("expected health=%s, got %s", tt.wantHealth, payload.Health)
+			}
+		})
 	}
 }
 

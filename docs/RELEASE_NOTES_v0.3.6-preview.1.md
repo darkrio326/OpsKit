@@ -17,6 +17,7 @@
 - 离线回归 `summary.json` 增加 `result/reasonCode/stageResults/durationSeconds`
 - 新增通用检查：`fs_readonly`、`disk_inodes`、`clock_skew`
 - `assets/templates/demo-server-audit.json` D 阶段接入上述 3 个检查
+- `opskit status --json` 增加 `health` 字段（`ok|warn|fail`）
 - 发布资产 metadata 与 checksum 一致性自检（计划）
 
 ### Changed
@@ -25,6 +26,7 @@
 - `ROADMAP.md` 当前进行中版本滚动到 `v0.3.6-preview.1`
 - `docs/GITHUB_RELEASE.md` 下一版文案与发版命令滚动到 `v0.3.6-preview.1`
 - `scripts/release-check.sh` 增加 `--offline-summary-json-file` 透传
+- `scripts/release-check.sh` summary 增加 `recommended action`
 - `docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md` / `docs/getting-started/GETSTART.md` 增加 `summary.json` 用法
 
 ### Fixed

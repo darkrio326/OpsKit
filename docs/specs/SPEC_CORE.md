@@ -48,6 +48,7 @@
 
 - `command`：当前固定 `opskit status`
 - `exitCode`：与该次 status 命令退出码一致（`0|1|3`）
+- `health`：状态汇总（`ok|warn|fail`，分别对应 `0|3|1`）
 - `schemaVersion`：当前固定 `v1`
 - `generatedAt`：本次状态刷新时间（ISO8601）
 - `overall` / `lifecycle` / `services` / `artifacts`：对应状态对象

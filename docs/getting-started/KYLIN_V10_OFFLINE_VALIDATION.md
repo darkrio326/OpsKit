@@ -58,7 +58,7 @@ opskit status --output "$OPSKIT_OUT"
 - 存在 `state/overall.json`
 - 存在 `state/lifecycle.json` 且各阶段有 `summary(total/pass/warn/fail/skip)`
 - 存在 `state/artifacts.json`
-- 存在 `status.json`，且含 `command/schemaVersion/exitCode`
+- 存在 `status.json`，且含 `command/schemaVersion/exitCode/health`
 - 存在 `summary.json`，且含 `result/reasonCode/stageResults`
 
 3. 报告与证据层
@@ -75,6 +75,7 @@ grep -R "acceptance-consistency-" "$OPSKIT_OUT/state/artifacts.json"
 grep -R "\"consistency\"" "$OPSKIT_OUT/reports"/accept-*.html
 grep -R "\"schemaVersion\"" "$OPSKIT_OUT/status.json"
 grep -R "\"exitCode\"" "$OPSKIT_OUT/status.json"
+grep -R "\"health\"" "$OPSKIT_OUT/status.json"
 grep -R "\"result\"" "$OPSKIT_OUT/summary.json"
 grep -R "\"reasonCode\"" "$OPSKIT_OUT/summary.json"
 ```
@@ -94,6 +95,7 @@ opskit web --output "$OPSKIT_OUT" --listen 127.0.0.1:18080
 ## 6. 失败判定与处理
 
 - `exit=4`：同一输出目录有并发任务；等待或切换 `--output`
+- `status.json health` 与退出码对照：`ok=0`、`warn=3`、`fail=1`
 - `template not found`：离线机仅有二进制时用内置模板 ID（`generic-manage-v1`）
 - 无 `acceptance-consistency`：确认执行过 `accept`，并使用相同输出目录执行 `status`/`web`
 - UI 空白：确认 `--output` 指向已产生 `state/*.json` 的目录
