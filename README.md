@@ -85,13 +85,13 @@ web/ui/                    # 开发态 UI 资源
 - 规格与安全：`docs/specs/README.md`
 - 产品设计（整理版）：`docs/product-design/README.md`
 - GitHub 发布说明：`docs/GITHUB_RELEASE.md`
-- 下一版发布计划：`docs/RELEASE_PLAN_v0.3.5-preview.1.md`
+- 下一版发布计划：`docs/RELEASE_PLAN_v0.3.6-preview.1.md`
 - 版本变更记录：`CHANGELOG.md`
 - 安全边界：`SECURITY.md`
 - 开源许可证：`LICENSE`（Apache-2.0）
 - 中文扩展说明：`README.zh-CN.md`
 
-## 发布前门禁（v0.3.5）
+## 发布前门禁（v0.3.6 预演）
 
 常规门禁（建议默认）：
 
@@ -108,7 +108,7 @@ scripts/release-check.sh --with-offline-validate --offline-strict-exit
 构建发布资产：
 
 ```bash
-scripts/release.sh --version v0.3.5-preview.1 --clean
+scripts/release.sh --version v0.3.6-preview.1 --clean
 ```
 
 ## 免责声明

@@ -116,9 +116,9 @@ IMAGE=kylinv10/kylin:b09 DOCKER_PLATFORM=linux/amd64 DRY_RUN=1 make -C examples/
 详细部署与验证说明见：`docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
 
 版本变更记录见：`CHANGELOG.md`
-下一版发布计划：`docs/RELEASE_PLAN_v0.3.5-preview.1.md`
+下一版发布计划：`docs/RELEASE_PLAN_v0.3.6-preview.1.md`
 
-## 发布前门禁（v0.3.5）
+## 发布前门禁（v0.3.6 预演）
 
 常规门禁（推荐）：
 
@@ -135,5 +135,5 @@ scripts/release-check.sh --with-offline-validate --offline-strict-exit
 构建发布资产：
 
 ```bash
-scripts/release.sh --version v0.3.5-preview.1 --clean
+scripts/release.sh --version v0.3.6-preview.1 --clean
 ```
