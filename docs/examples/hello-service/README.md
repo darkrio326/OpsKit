@@ -5,6 +5,26 @@ Chinese doc: `README.zh-CN.md`
 This folder helps verify the deploy template flow:
 `sha256_verify -> untar -> render unit -> install unit -> daemon-reload -> enable/start`.
 
+## Template validate (JSON mode)
+
+Success example:
+
+```bash
+go run ./cmd/opskit template validate --json templates/builtin/single-service-deploy.json
+```
+
+Failure example:
+
+```bash
+go run ./cmd/opskit template validate --json /no/such/template.json
+```
+
+Expected failure fields:
+
+- `valid=false`
+- `errorCount>0`
+- `issues[0].code=template_file_not_found`
+
 ## 1) Build offline tar.gz and SHA256
 
 ```bash

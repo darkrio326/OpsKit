@@ -14,6 +14,32 @@ It runs:
 5. accept
 6. handover
 
+## Template validate (JSON mode)
+
+Success example:
+
+```bash
+go run ./cmd/opskit template validate --json assets/templates/demo-server-audit.json --vars-file examples/vars/demo-server-audit.json
+```
+
+Failure example (for CI assertion):
+
+```bash
+go run ./cmd/opskit template validate --json /no/such/template.json
+```
+
+Expected failure fields:
+
+- `valid=false`
+- `errorCount>0`
+- `issues[0].code=template_file_not_found`
+
+CI gate script:
+
+```bash
+scripts/template-validate-check.sh --clean
+```
+
 ## Quick start
 
 ```bash

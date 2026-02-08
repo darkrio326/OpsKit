@@ -11,6 +11,32 @@
 5. accept
 6. handover
 
+## 模板校验（JSON 模式）
+
+成功示例：
+
+```bash
+go run ./cmd/opskit template validate --json assets/templates/demo-server-audit.json --vars-file examples/vars/demo-server-audit.json
+```
+
+失败示例（用于 CI 断言）：
+
+```bash
+go run ./cmd/opskit template validate --json /no/such/template.json
+```
+
+建议校验字段：
+
+- `valid=false`
+- `errorCount>0`
+- `issues[0].code=template_file_not_found`
+
+CI 门禁脚本：
+
+```bash
+scripts/template-validate-check.sh --clean
+```
+
 ## 快速开始
 
 ```bash

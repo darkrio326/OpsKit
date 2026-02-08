@@ -25,6 +25,7 @@
 - `template validate` 类型错误增强（array/object 提供 JSON 示例和解析原因）
 - `docs/specs/SPEC_TEST_ACCEPTANCE.md` 门禁双轨策略用于模板接入前置验收
 - demo 模板 README 增加 `template validate --json` 用法和常见错误码指引
+- `docs/examples/*` 中英文示例增加 `template validate --json` 成功/失败样例与 CI 判读字段
 
 ### Out of Scope
 

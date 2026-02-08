@@ -38,6 +38,7 @@
 - `template validate` 错误提示增强为路径化 + 修复建议（兼容原文本模式）
 - `template validate` 类型错误提示增强（array/object 提供 JSON 示例与解析原因）
 - demo 模板 README 补充 `template validate --json` 用法与常见错误码说明
+- `docs/examples/*` 中英文示例补充 `template validate --json` 成功/失败样例与 CI 校验字段
 - `README.md` / `README.zh-CN.md` 下一版计划入口滚动到 `v0.3.6-preview.1`
 - `ROADMAP.md` 最新发布/进行中版本滚动到 `v0.3.5` / `v0.3.6-preview.1`
 - `docs/GITHUB_RELEASE.md` 发布文案模板与命令滚动到 `v0.3.6-preview.1`

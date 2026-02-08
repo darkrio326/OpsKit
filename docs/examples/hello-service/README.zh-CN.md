@@ -3,6 +3,26 @@
 该目录用于验证 deploy 模板链路：
 `sha256_verify -> untar -> render unit -> install unit -> daemon-reload -> enable/start`。
 
+## 模板校验（JSON 模式）
+
+成功示例：
+
+```bash
+go run ./cmd/opskit template validate --json templates/builtin/single-service-deploy.json
+```
+
+失败示例：
+
+```bash
+go run ./cmd/opskit template validate --json /no/such/template.json
+```
+
+建议校验字段：
+
+- `valid=false`
+- `errorCount>0`
+- `issues[0].code=template_file_not_found`
+
 ## 1) 构建离线 tar.gz 与 SHA256
 
 ```bash
