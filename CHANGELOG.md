@@ -11,6 +11,7 @@
 - 新增 `docs/specs/SPEC_RELEASE_CHECK_JSON.md`（`release-check summary.json` 契约）
 - 新增 `scripts/release-check-json-contract.sh`（`release-check summary.json` 契约门禁）
 - `scripts/generic-readiness-check.sh` 新增 `--with-release-json-contract`（可选接入契约门禁）
+- 新增版本规划规范：`docs/RELEASE_PLANNING_GUIDE.md`
 - 新增 `opskit template validate --json` 机器可读输出（`issues.path/code/message/advice`）
 - 新增 `docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`（模板校验 JSON 契约）
 - 新增 `scripts/template-validate-check.sh`（CI 脚本化验收）
@@ -44,6 +45,7 @@
 - `scripts/release-check.sh` 的 `stepResults[].reasonCode` 语义调整为成功 `ok`、失败为步骤失败码
 - `scripts/generic-readiness-check.sh` 新增 `release-check/summary.json` 契约校验
 - `scripts/generic-readiness-check.sh` `summary.json` 新增 `releaseCheckOutput/genericOutput/releaseJsonContractOutput`
+- `docs/RELEASE_PLAN_v0.4.0-preview.1.md` 扩展为可执行规划（交付物/风险回滚/容量/决策点）
 - `template validate` 错误提示增强为路径化 + 修复建议（兼容原文本模式）
 - `template validate` 类型错误提示增强（array/object 提供 JSON 示例与解析原因）
 - demo 模板 README 补充 `template validate --json` 用法与常见错误码说明

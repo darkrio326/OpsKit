@@ -92,6 +92,7 @@ web/ui/                    # 开发态 UI 资源
 - 规格与安全：`docs/specs/README.md`
 - 产品设计（整理版）：`docs/product-design/README.md`
 - GitHub 发布说明：`docs/GITHUB_RELEASE.md`
+- 版本规划规范：`docs/RELEASE_PLANNING_GUIDE.md`
 - 当前版本发布说明：`docs/RELEASE_NOTES_v0.3.7.md`
 - 下一版发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.1.md`
 - 版本变更记录：`CHANGELOG.md`
