@@ -9,6 +9,7 @@
 - `scripts/release-check.sh` 默认接入 `template-validate-check` 门禁，并新增 `--skip-template-json-contract`（可选）
 - `scripts/release-check.sh` 新增 `--summary-json-file`，并输出 machine-readable `summary.json`
 - 新增 `docs/specs/SPEC_RELEASE_CHECK_JSON.md`（`release-check summary.json` 契约）
+- 新增 `scripts/release-check-json-contract.sh`（`release-check summary.json` 契约门禁）
 - 新增 `opskit template validate --json` 机器可读输出（`issues.path/code/message/advice`）
 - 新增 `docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`（模板校验 JSON 契约）
 - 新增 `scripts/template-validate-check.sh`（CI 脚本化验收）

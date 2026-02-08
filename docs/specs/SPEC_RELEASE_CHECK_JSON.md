@@ -135,3 +135,8 @@ scripts/release-check.sh --with-offline-validate --summary-json-file ./.tmp/rele
   - `result=pass`
   - `reasonCode=ok`
   - `recommendedAction=continue_release`
+- 推荐直接执行契约门禁脚本：
+
+```bash
+scripts/release-check-json-contract.sh --clean
+```

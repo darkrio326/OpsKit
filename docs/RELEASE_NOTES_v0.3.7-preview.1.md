@@ -19,6 +19,7 @@
 - 新增 `docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`（模板校验 JSON 契约）
 - 新增 `docs/specs/SPEC_RELEASE_CHECK_JSON.md`（`release-check summary.json` 契约）
 - 新增 `scripts/template-validate-check.sh`（CI 脚本化验收）
+- 新增 `scripts/release-check-json-contract.sh`（`release-check summary.json` 契约门禁）
 - `scripts/release-check.sh` 默认接入模板 JSON 契约门禁，并支持 `--skip-template-json-contract`（可选跳过）
 
 ### Changed

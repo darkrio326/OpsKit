@@ -81,6 +81,7 @@
 env GOCACHE=$PWD/.gocache go test ./...
 go run ./cmd/opskit template validate --json assets/templates/demo-server-audit.json --vars-file examples/vars/demo-server-audit.json
 scripts/template-validate-check.sh --clean
+scripts/release-check-json-contract.sh --clean
 scripts/release-check.sh --with-offline-validate
 scripts/generic-readiness-check.sh --clean
 ```
