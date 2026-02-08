@@ -11,6 +11,20 @@
 ./opskit status --output ./.tmp/opskit-demo
 ```
 
+## 模板校验（建议）
+
+文本模式：
+
+```bash
+./opskit template validate assets/templates/demo-server-audit.json --vars-file examples/vars/demo-server-audit.json
+```
+
+机器可读模式（用于脚本/CI）：
+
+```bash
+./opskit template validate --json assets/templates/demo-server-audit.json --vars-file examples/vars/demo-server-audit.json
+```
+
 ## 可选变量
 
 模板内已声明 `vars` 校验，默认变量即可通过验证，必要时可覆盖：
@@ -58,3 +72,4 @@
 - `run D -> FAILED`：`fs_readonly` 检查命中只读挂载（检查挂载参数或调整模板阈值）
 - `status=1`：存在 FAIL 检查项，不代表程序不可用；优先确认 `state/` 与 `reports/` 已生成
 - 输出目录写入失败：更换 `--output` 到可写路径（如 `/data/...` 或 `./.tmp/...`）
+- `template validate --json` 返回 `template_unresolved_var`：补齐变量并通过 `--vars` / `--vars-file` 传入

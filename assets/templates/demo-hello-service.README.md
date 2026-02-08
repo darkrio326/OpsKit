@@ -12,6 +12,20 @@
 ./opskit accept --template assets/templates/demo-hello-service.json --output ./.tmp/opskit-hello
 ```
 
+## 模板校验（建议）
+
+文本模式：
+
+```bash
+./opskit template validate assets/templates/demo-hello-service.json --vars-file examples/vars/demo-hello-service.json
+```
+
+机器可读模式（用于脚本/CI）：
+
+```bash
+./opskit template validate --json assets/templates/demo-hello-service.json --vars-file examples/vars/demo-hello-service.json
+```
+
 ## 常用变量
 
 模板内已声明 `vars` 校验，缺少必填变量会直接报错。
@@ -67,3 +81,4 @@ examples/vars/demo-hello-service.json
 - `template validate` 报缺少变量：补齐 `INSTALL_ROOT` / `CONF_DIR` 或改用 `--vars-file`
 - `run C` 写文件失败：检查 `INSTALL_ROOT`、`CONF_DIR` 是否可写
 - `run D` 没有 systemd/端口检查结果：该模板默认关闭对应占位检查（属预期行为）
+- `template validate --json` 返回 `template_var_type_mismatch`：变量类型与 schema 不一致（例如 `array/object` 需传合法 JSON）

@@ -21,6 +21,7 @@
 
 - `template validate` 错误提示结构化增强（路径化 + 修复建议）
 - `docs/specs/SPEC_TEST_ACCEPTANCE.md` 门禁双轨策略用于模板接入前置验收
+- demo 模板 README 增加 `template validate --json` 用法和常见错误码指引
 
 ### Out of Scope
 
