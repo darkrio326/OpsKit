@@ -5,11 +5,13 @@
 - `demo-server-audit.json`：仅 A/D/F 审计与证据链
 - `demo-hello-service.json`：轻量 hello-service 模板演示
 - `demo-runtime-baseline.json`：运行时基线检查模板（A/D/F）
+- `demo-blackbox-middleware-manage.json`：黑箱中间件服务器 Manage 模板
 
 配套说明：
 
 - `demo-server-audit.README.md`
 - `demo-hello-service.README.md`
 - `demo-runtime-baseline.README.md`
+- `demo-blackbox-middleware-manage.README.md`
 
 注意：此目录不包含任何生产级部署模板或客户环境信息。

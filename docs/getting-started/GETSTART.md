@@ -20,6 +20,7 @@ go build -o opskit ./cmd/opskit
 ./opskit template validate generic-manage-v1
 ./opskit template validate --vars-file examples/vars/demo-server-audit.json --json assets/templates/demo-server-audit.json
 ./opskit template validate --vars-file examples/vars/demo-runtime-baseline.json --json assets/templates/demo-runtime-baseline.json
+./opskit template validate --vars-file examples/vars/demo-blackbox-middleware-manage.json --json assets/templates/demo-blackbox-middleware-manage.json
 ```
 
 失败样例（用于断言）：

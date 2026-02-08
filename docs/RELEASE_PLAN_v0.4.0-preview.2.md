@@ -55,6 +55,7 @@ rg -n "\"group\"|template.vars|变量分组" assets/templates docs/specs
 ### 功能点 3（完成）：新增去生产化 demo 模板
 
 - 新增 `demo-runtime-baseline`（A/D/F）
+- 新增 `demo-blackbox-middleware-manage`（A~F，黑箱中间件 Manage）
 - 补齐模板说明与 vars 示例
 - 维持“无生产中间件脚本”边界
 

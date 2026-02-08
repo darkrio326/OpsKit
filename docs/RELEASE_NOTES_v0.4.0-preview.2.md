@@ -14,8 +14,11 @@
 
 - 新增发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.2.md`
 - 新增 demo 模板：`assets/templates/demo-runtime-baseline.json`
+- 新增 demo 模板：`assets/templates/demo-blackbox-middleware-manage.json`（黑箱中间件 Manage）
 - 新增 vars 示例：`examples/vars/demo-runtime-baseline.json`
 - 新增 vars 示例：`examples/vars/demo-runtime-baseline.env`
+- 新增 vars 示例：`examples/vars/demo-blackbox-middleware-manage.json`
+- 新增 vars 示例：`examples/vars/demo-blackbox-middleware-manage.env`
 
 ### Changed
 
@@ -23,8 +26,11 @@
 - `template validate` 增强：支持模板路径前后均可传 `--vars/--vars-file/--json`
 - `executil.SystemRunner` 增强：补齐超时/取消语义（超时 `124`、取消 `130`）与执行耗时输出字段
 - `scripts/template-validate-check.sh` 新增变量类型错误负例断言
+- `scripts/template-validate-check.sh` 默认新增黑箱中间件模板正向校验
 - `scripts/template-validate-check.sh` 默认新增 `generic-manage-v1` 正向校验
+- `scripts/release-check.sh` 默认新增黑箱中间件模板校验步骤
 - `scripts/release-check.sh` 默认新增 `generic-manage-v1` 模板校验步骤
+- `scripts/release-check.sh` dry-run 增加黑箱中间件模板的 A/D 计划校验
 - `scripts/release-check.sh` dry-run 增加 `generic-manage-v1` 的 A/D 计划校验
 - `docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md` 补齐错误码清单
 - `docs/specs/SPEC_CORE.md` 补齐模板变量字段约束
