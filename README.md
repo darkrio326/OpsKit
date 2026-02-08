@@ -114,6 +114,12 @@ scripts/release-check.sh --with-offline-validate
 scripts/generic-readiness-check.sh --clean
 ```
 
+如需附加 `release-check summary.json` 契约门禁：
+
+```bash
+scripts/generic-readiness-check.sh --with-release-json-contract --clean
+```
+
 严格模式（通用链路 + 离线回归都要求 exit=0）：
 
 ```bash

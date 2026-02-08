@@ -130,6 +130,15 @@ bool_json() {
   fi
 }
 
+json_string_or_null() {
+  local value="$1"
+  if [[ -z "${value}" ]]; then
+    printf 'null'
+  else
+    printf '"%s"' "$(json_escape "${value}")"
+  fi
+}
+
 add_verify_failure() {
   local msg="$1"
   VERIFY_FAILURES+=("${msg}")
@@ -203,6 +212,9 @@ write_summary_json() {
     echo "  \"strictGeneric\": $(bool_json "${GENERIC_STRICT}"),"
     echo "  \"strictOffline\": $(bool_json "${OFFLINE_STRICT}"),"
     echo "  \"withReleaseJsonContract\": $(bool_json "${WITH_RELEASE_JSON_CONTRACT}"),"
+    echo "  \"releaseCheckOutput\": \"$(json_escape "${RELEASE_OUT}")\","
+    echo "  \"genericOutput\": \"$(json_escape "${GENERIC_OUT}")\","
+    echo "  \"releaseJsonContractOutput\": $(json_string_or_null "${RELEASE_JSON_CONTRACT_OUT}"),"
     echo "  \"steps\": ${STEP_COUNT},"
     echo "  \"totalDurationSeconds\": ${TOTAL_SECONDS},"
     echo "  \"verifyFailCount\": ${VERIFY_FAIL_COUNT},"
@@ -247,6 +259,7 @@ fi
 
 RELEASE_OUT="${OUTPUT_DIR}/release-check"
 GENERIC_OUT="${OUTPUT_DIR}/generic-manage"
+RELEASE_JSON_CONTRACT_OUT=""
 GENERIC_STATUS_JSON="${GENERIC_OUT}/status.json"
 GENERIC_SUMMARY_JSON="${GENERIC_OUT}/summary.json"
 SUMMARY_JSON="${OUTPUT_DIR}/summary.json"
@@ -281,12 +294,13 @@ if [[ "${SKIP_RELEASE}" == "0" ]]; then
 fi
 
 if [[ "${WITH_RELEASE_JSON_CONTRACT}" == "1" ]]; then
-  run_step "release-check json contract gate" env GO_CACHE_DIR="${GO_CACHE_DIR}" ./scripts/release-check-json-contract.sh --output "${OUTPUT_DIR}/release-check-json-contract" --clean
-  require_file "${OUTPUT_DIR}/release-check-json-contract/summary.json"
-  require_grep '"schemaVersion"[[:space:]]*:[[:space:]]*"v1"' "${OUTPUT_DIR}/release-check-json-contract/summary.json"
-  require_grep '"result"[[:space:]]*:[[:space:]]*"pass"' "${OUTPUT_DIR}/release-check-json-contract/summary.json"
-  require_grep '"reasonCode"[[:space:]]*:[[:space:]]*"ok"' "${OUTPUT_DIR}/release-check-json-contract/summary.json"
-  require_grep '"recommendedAction"[[:space:]]*:[[:space:]]*"continue_ci"' "${OUTPUT_DIR}/release-check-json-contract/summary.json"
+  RELEASE_JSON_CONTRACT_OUT="${OUTPUT_DIR}/release-check-json-contract"
+  run_step "release-check json contract gate" env GO_CACHE_DIR="${GO_CACHE_DIR}" ./scripts/release-check-json-contract.sh --output "${RELEASE_JSON_CONTRACT_OUT}" --clean
+  require_file "${RELEASE_JSON_CONTRACT_OUT}/summary.json"
+  require_grep '"schemaVersion"[[:space:]]*:[[:space:]]*"v1"' "${RELEASE_JSON_CONTRACT_OUT}/summary.json"
+  require_grep '"result"[[:space:]]*:[[:space:]]*"pass"' "${RELEASE_JSON_CONTRACT_OUT}/summary.json"
+  require_grep '"reasonCode"[[:space:]]*:[[:space:]]*"ok"' "${RELEASE_JSON_CONTRACT_OUT}/summary.json"
+  require_grep '"recommendedAction"[[:space:]]*:[[:space:]]*"continue_ci"' "${RELEASE_JSON_CONTRACT_OUT}/summary.json"
 fi
 
 if [[ "${SKIP_GENERIC}" == "0" ]]; then
@@ -330,6 +344,9 @@ echo "- recommended action: ${RECOMMENDED_ACTION}"
 echo "- summary json: ${SUMMARY_JSON}"
 echo "- release-check output: ${RELEASE_OUT}"
 echo "- generic output: ${GENERIC_OUT}"
+if [[ "${WITH_RELEASE_JSON_CONTRACT}" == "1" ]]; then
+  echo "- release-check json contract output: ${RELEASE_JSON_CONTRACT_OUT}"
+fi
 
 if [[ "${FINAL_RESULT}" == "fail" ]]; then
   exit 1

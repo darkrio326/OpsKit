@@ -43,6 +43,7 @@
 - `scripts/release-check.sh` 每个步骤新增 `reasonCode`，失败时写入 `summary.json` 后退出
 - `scripts/release-check.sh` 的 `stepResults[].reasonCode` 语义调整为成功 `ok`、失败为步骤失败码
 - `scripts/generic-readiness-check.sh` 新增 `release-check/summary.json` 契约校验
+- `scripts/generic-readiness-check.sh` `summary.json` 新增 `releaseCheckOutput/genericOutput/releaseJsonContractOutput`
 - `template validate` 错误提示增强为路径化 + 修复建议（兼容原文本模式）
 - `template validate` 类型错误提示增强（array/object 提供 JSON 示例与解析原因）
 - demo 模板 README 补充 `template validate --json` 用法与常见错误码说明
