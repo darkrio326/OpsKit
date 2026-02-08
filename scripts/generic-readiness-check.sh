@@ -15,6 +15,8 @@ Options:
       --skip-tests        Skip go test ./...
       --skip-release      Skip scripts/release-check.sh gate
       --skip-generic      Skip examples/generic-manage/run-af.sh gate
+      --with-release-json-contract
+                           Run scripts/release-check-json-contract.sh gate
       --offline-strict    Pass --offline-strict-exit to release-check
       --generic-strict    Require generic-manage stage/status exit code = 0
   -h, --help              Show help
@@ -24,6 +26,7 @@ Environment:
 
 Examples:
   scripts/generic-readiness-check.sh --clean
+  scripts/generic-readiness-check.sh --with-release-json-contract --clean
   scripts/generic-readiness-check.sh --generic-strict --offline-strict --clean
 USAGE
 }
@@ -35,6 +38,7 @@ CLEAN=0
 SKIP_TESTS=0
 SKIP_RELEASE=0
 SKIP_GENERIC=0
+WITH_RELEASE_JSON_CONTRACT=0
 OFFLINE_STRICT=0
 GENERIC_STRICT=0
 GO_CACHE_DIR="${GO_CACHE_DIR:-${ROOT_DIR}/.tmp/gocache-generic-readiness}"
@@ -74,6 +78,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-generic)
       SKIP_GENERIC=1
+      shift
+      ;;
+    --with-release-json-contract)
+      WITH_RELEASE_JSON_CONTRACT=1
       shift
       ;;
     --offline-strict)
@@ -194,6 +202,7 @@ write_summary_json() {
     echo "  \"goCacheDir\": \"$(json_escape "${GO_CACHE_DIR}")\"," 
     echo "  \"strictGeneric\": $(bool_json "${GENERIC_STRICT}"),"
     echo "  \"strictOffline\": $(bool_json "${OFFLINE_STRICT}"),"
+    echo "  \"withReleaseJsonContract\": $(bool_json "${WITH_RELEASE_JSON_CONTRACT}"),"
     echo "  \"steps\": ${STEP_COUNT},"
     echo "  \"totalDurationSeconds\": ${TOTAL_SECONDS},"
     echo "  \"verifyFailCount\": ${VERIFY_FAIL_COUNT},"
@@ -269,6 +278,15 @@ if [[ "${SKIP_RELEASE}" == "0" ]]; then
   require_grep '"result"[[:space:]]*:[[:space:]]*"pass"' "${RELEASE_OUT}/summary.json"
   require_grep '"reasonCode"[[:space:]]*:[[:space:]]*"ok"' "${RELEASE_OUT}/summary.json"
   require_grep '"recommendedAction"[[:space:]]*:[[:space:]]*"continue_release"' "${RELEASE_OUT}/summary.json"
+fi
+
+if [[ "${WITH_RELEASE_JSON_CONTRACT}" == "1" ]]; then
+  run_step "release-check json contract gate" env GO_CACHE_DIR="${GO_CACHE_DIR}" ./scripts/release-check-json-contract.sh --output "${OUTPUT_DIR}/release-check-json-contract" --clean
+  require_file "${OUTPUT_DIR}/release-check-json-contract/summary.json"
+  require_grep '"schemaVersion"[[:space:]]*:[[:space:]]*"v1"' "${OUTPUT_DIR}/release-check-json-contract/summary.json"
+  require_grep '"result"[[:space:]]*:[[:space:]]*"pass"' "${OUTPUT_DIR}/release-check-json-contract/summary.json"
+  require_grep '"reasonCode"[[:space:]]*:[[:space:]]*"ok"' "${OUTPUT_DIR}/release-check-json-contract/summary.json"
+  require_grep '"recommendedAction"[[:space:]]*:[[:space:]]*"continue_ci"' "${OUTPUT_DIR}/release-check-json-contract/summary.json"
 fi
 
 if [[ "${SKIP_GENERIC}" == "0" ]]; then

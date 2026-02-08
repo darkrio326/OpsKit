@@ -59,6 +59,7 @@ scripts/release.sh --version v0.3.6 --clean
 - 建议在发版前增加离线门禁：`scripts/release-check.sh --with-offline-validate`
 - 对“环境应全部健康”的发布，可使用严格模式：`scripts/release-check.sh --with-offline-validate --offline-strict-exit`
 - 在进入真实服务器验证前，建议执行统一门禁：`scripts/generic-readiness-check.sh --clean`
+- 如需附加 `release-check summary.json` 契约门禁，可执行：`scripts/generic-readiness-check.sh --with-release-json-contract --clean`
 - 如需严格放行，可执行：`scripts/generic-readiness-check.sh --generic-strict --offline-strict --clean`
 - 当前策略：strict 为可选门禁；默认以 non-strict（允许 `0/1/3`）验证链路与产物闭环
 - 标准服务器完成基线治理后，再执行 strict 全绿校验
@@ -85,6 +86,7 @@ scripts/release.sh --version v0.3.6 --clean
 - `result=warn`（通常在 non-strict 下出现）可继续，但应先审阅 `generic-manage/summary.json`
 - `result=fail` 或 `recommendedAction=block_real_server_validation`：先修复再进真实服务器
 - 输出目录默认 `./.tmp/generic-readiness-check`，重点检查 `summary.json` 与 `generic-manage/status.json`
+- 启用 `--with-release-json-contract` 后，会额外执行 `release-check-json-contract` 并校验其 `summary.json`
 
 ## 7. Release 文案模板
 

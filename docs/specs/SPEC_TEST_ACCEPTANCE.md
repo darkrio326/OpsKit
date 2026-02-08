@@ -83,6 +83,7 @@ go run ./cmd/opskit template validate --json assets/templates/demo-server-audit.
 scripts/template-validate-check.sh --clean
 scripts/release-check-json-contract.sh --clean
 scripts/release-check.sh --with-offline-validate
+scripts/generic-readiness-check.sh --with-release-json-contract --clean
 scripts/generic-readiness-check.sh --clean
 ```
 
