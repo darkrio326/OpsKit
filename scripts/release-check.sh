@@ -24,6 +24,8 @@ Usage:
 Options:
   -o, --output <dir>    Output root for dry-run execution (default: ./.tmp/release-check)
       --skip-tests      Skip go test
+      --skip-template-json-contract
+                         Skip template validate --json contract gate
       --skip-run        Skip run A/D/accept dry-run checks
       --with-offline-validate
                          Run offline validation script as an extra gate
@@ -48,6 +50,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT_DIR="${ROOT_DIR}/.tmp/release-check"
 GO_CACHE_DIR="${GO_CACHE_DIR:-${ROOT_DIR}/.tmp/gocache-release-check}"
 SKIP_TESTS=0
+SKIP_TEMPLATE_JSON_CONTRACT=0
 SKIP_RUN=0
 WITH_OFFLINE_VALIDATE=0
 OFFLINE_BIN=""
@@ -68,6 +71,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-tests)
       SKIP_TESTS=1
+      shift
+      ;;
+    --skip-template-json-contract)
+      SKIP_TEMPLATE_JSON_CONTRACT=1
       shift
       ;;
     --skip-run)
@@ -157,6 +164,10 @@ fi
 
 run_step "template validate demo-server-audit" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json
 run_step "template validate demo-hello-service" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate assets/templates/demo-hello-service.json --vars-file ./examples/vars/demo-hello-service.env
+
+if [[ "${SKIP_TEMPLATE_JSON_CONTRACT}" == "0" ]]; then
+  run_step "template validate json contract" env GO_CACHE_DIR="${GO_CACHE_DIR}" ./scripts/template-validate-check.sh --output "${OUTPUT_DIR}/template-validate-check" --clean
+fi
 
 if [[ "${SKIP_RUN}" == "0" ]]; then
   DEMO_OUT="${OUTPUT_DIR}/demo-audit"

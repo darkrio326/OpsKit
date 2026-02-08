@@ -6,6 +6,7 @@
 
 ### Added
 
+- `scripts/release-check.sh` 默认接入 `template-validate-check` 门禁，并新增 `--skip-template-json-contract`（可选）
 - 新增 `opskit template validate --json` 机器可读输出（`issues.path/code/message/advice`）
 - 新增 `docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`（模板校验 JSON 契约）
 - 新增 `scripts/template-validate-check.sh`（CI 脚本化验收）

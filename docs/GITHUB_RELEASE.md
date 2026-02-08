@@ -53,9 +53,9 @@ scripts/release.sh --version v0.3.6 --clean
 - 删除/排除真实环境产物：`.tmp/`、日志、证据包
 - 检查文档无客户信息与敏感数据
 - 验证 demo 模板可通过 `template validate`
-- 建议执行模板 JSON 契约门禁：`scripts/template-validate-check.sh --clean`
 - 至少完成一次 `run A`、`run D`、`accept` 验证流程
-- 优先执行 `scripts/release-check.sh` 一键回归
+- 优先执行 `scripts/release-check.sh` 一键回归（默认已包含模板 JSON 契约门禁）
+- 如需单独验证模板 JSON 契约：`scripts/template-validate-check.sh --clean`
 - 建议在发版前增加离线门禁：`scripts/release-check.sh --with-offline-validate`
 - 对“环境应全部健康”的发布，可使用严格模式：`scripts/release-check.sh --with-offline-validate --offline-strict-exit`
 - 在进入真实服务器验证前，建议执行统一门禁：`scripts/generic-readiness-check.sh --clean`
@@ -72,6 +72,7 @@ scripts/release.sh --version v0.3.6 --clean
 - `release-check summary` 中 `steps` 与各步骤耗时可用于定位慢步骤
 - `recommended action: continue_release`：可继续发布；`block_release`：应阻断并修复
 - dry-run 阶段输出中的 `checks/actions/evidence` 计数可用于确认模板执行计划未异常漂移
+- 如仅想跳过模板 JSON 契约门禁（不推荐）：`--skip-template-json-contract`
 - 如任一步骤失败，脚本立即退出；先修复失败项，再重新执行整套门禁
 
 ### 6.2 `generic-readiness-check` 结果快速判读
