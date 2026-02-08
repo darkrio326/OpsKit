@@ -70,6 +70,7 @@
 - 退出码符合规范（0/1/2/3/4）
 - `status --json` 满足契约（至少包含 `command/schemaVersion/exitCode/health`）
 - `acceptance-consistency` 报告可在 `artifacts.json` 中被索引
+- `release-check` 的 `summary.json` 满足契约（至少包含 `result/reasonCode/recommendedAction/stepResults`）
 
 ## 6. 验收命令（最小集合）
 

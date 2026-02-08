@@ -264,6 +264,11 @@ if [[ "${SKIP_RELEASE}" == "0" ]]; then
     release_args+=(--offline-strict-exit)
   fi
   run_step "release-check gate" ./scripts/release-check.sh "${release_args[@]}"
+  require_file "${RELEASE_OUT}/summary.json"
+  require_grep '"schemaVersion"[[:space:]]*:[[:space:]]*"v1"' "${RELEASE_OUT}/summary.json"
+  require_grep '"result"[[:space:]]*:[[:space:]]*"pass"' "${RELEASE_OUT}/summary.json"
+  require_grep '"reasonCode"[[:space:]]*:[[:space:]]*"ok"' "${RELEASE_OUT}/summary.json"
+  require_grep '"recommendedAction"[[:space:]]*:[[:space:]]*"continue_release"' "${RELEASE_OUT}/summary.json"
 fi
 
 if [[ "${SKIP_GENERIC}" == "0" ]]; then

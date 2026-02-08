@@ -24,6 +24,8 @@
 
 - `template validate` 错误提示结构化增强（路径化 + 修复建议）
 - `template validate` 类型错误增强（array/object 提供 JSON 示例和解析原因）
+- `scripts/release-check.sh` 增强为 machine-readable 输出（`summary.json` + step-level `reasonCode`）
+- `scripts/generic-readiness-check.sh` 新增对 `release-check/summary.json` 的契约校验
 - `docs/specs/SPEC_TEST_ACCEPTANCE.md` 门禁双轨策略用于模板接入前置验收
 - demo 模板 README 增加 `template validate --json` 用法和常见错误码指引
 - `docs/examples/*` 中英文示例增加 `template validate --json` 成功/失败样例与 CI 判读字段
