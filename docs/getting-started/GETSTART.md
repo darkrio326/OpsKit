@@ -14,6 +14,24 @@ go build -o opskit ./cmd/opskit
 ./opskit template validate templates/builtin/default-manage.json
 ```
 
+机器可读校验（推荐用于脚本/CI）：
+
+```bash
+./opskit template validate --json assets/templates/demo-server-audit.json --vars-file examples/vars/demo-server-audit.json
+```
+
+失败样例（用于断言）：
+
+```bash
+./opskit template validate --json /no/such/template.json
+```
+
+建议校验字段：
+
+- `valid=false`
+- `errorCount>0`
+- `issues[0].code=template_file_not_found`
+
 ## 3) 本地 dry-run 跑通 A~F
 
 ```bash
@@ -57,10 +75,16 @@ IMAGE=kylinv10/kylin:b09 DOCKER_PLATFORM=linux/amd64 DRY_RUN=1 make -C examples/
 ```bash
 scripts/kylin-offline-validate.sh \
   --bin /usr/local/bin/opskit \
-  --output /data/opskit-regression-v036 \
-  --json-status-file /data/opskit-regression-v036/status.json \
-  --summary-json-file /data/opskit-regression-v036/summary.json \
+  --output /data/opskit-regression \
+  --json-status-file /data/opskit-regression/status.json \
+  --summary-json-file /data/opskit-regression/summary.json \
   --clean
+```
+
+模板 JSON 契约门禁（建议一起执行）：
+
+```bash
+scripts/template-validate-check.sh --clean
 ```
 
 ## 8) 进入真实服务器前统一门禁（建议）

@@ -51,6 +51,24 @@ opskit accept --template generic-manage-v1 --output "$OPSKIT_OUT"
 opskit status --output "$OPSKIT_OUT"
 ```
 
+模板 JSON 校验（推荐）：
+
+```bash
+opskit template validate --json generic-manage-v1
+```
+
+失败样例（用于自动化断言）：
+
+```bash
+opskit template validate --json /no/such/template.json
+```
+
+建议校验字段：
+
+- `valid=false`
+- `errorCount>0`
+- `issues[0].code=template_file_not_found`
+
 ## 3. 验收点（必须满足）
 
 1. 命令执行层
@@ -83,6 +101,12 @@ grep -R "\"exitCode\"" "$OPSKIT_OUT/status.json"
 grep -R "\"health\"" "$OPSKIT_OUT/status.json"
 grep -R "\"result\"" "$OPSKIT_OUT/summary.json"
 grep -R "\"reasonCode\"" "$OPSKIT_OUT/summary.json"
+```
+
+可选：模板 JSON 契约门禁（在仓库目录执行）
+
+```bash
+scripts/template-validate-check.sh --clean
 ```
 
 ## 5. UI 验证

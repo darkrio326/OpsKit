@@ -26,6 +26,7 @@
 - `docs/specs/SPEC_TEST_ACCEPTANCE.md` 门禁双轨策略用于模板接入前置验收
 - demo 模板 README 增加 `template validate --json` 用法和常见错误码指引
 - `docs/examples/*` 中英文示例增加 `template validate --json` 成功/失败样例与 CI 判读字段
+- `docs/getting-started/*` 增加 `template validate --json` 成功/失败样例、关键断言字段与 `scripts/template-validate-check.sh --clean` 门禁命令
 
 ### Out of Scope
 
