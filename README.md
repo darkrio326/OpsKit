@@ -94,8 +94,8 @@ web/ui/                    # 开发态 UI 资源
 - GitHub 发布说明：`docs/GITHUB_RELEASE.md`
 - 版本规划规范：`docs/RELEASE_PLANNING_GUIDE.md`
 - 当前稳定版发布说明：`docs/releases/notes/RELEASE_NOTES_v0.3.7.md`
-- 下一版发布说明：`docs/RELEASE_NOTES_v0.4.0-preview.2.md`
-- 下一版发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.2.md`
+- 下一版发布说明：`docs/RELEASE_NOTES_v0.4.0-preview.3.md`
+- 下一版发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.3.md`
 - 版本变更记录：`CHANGELOG.md`
 - 安全边界：`SECURITY.md`
 - 开源许可证：`LICENSE`（Apache-2.0）

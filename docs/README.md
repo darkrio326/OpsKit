@@ -45,8 +45,8 @@ Repository-level release history: `CHANGELOG.md`
 - `docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
 - `docs/GITHUB_RELEASE.md`
 - `docs/RELEASE_PLANNING_GUIDE.md`
-- 当前版本发布说明：`docs/RELEASE_NOTES_v0.4.0-preview.2.md`
-- 当前版本发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.2.md`
+- 当前版本发布说明：`docs/RELEASE_NOTES_v0.4.0-preview.3.md`
+- 当前版本发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.3.md`
 - 历史发布文档索引：`docs/releases/README.md`
 
 ## Examples

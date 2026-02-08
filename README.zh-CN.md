@@ -120,8 +120,8 @@ IMAGE=kylinv10/kylin:b09 DOCKER_PLATFORM=linux/amd64 DRY_RUN=1 make -C examples/
 版本变更记录见：`CHANGELOG.md`
 版本规划规范：`docs/RELEASE_PLANNING_GUIDE.md`
 当前稳定版发布说明：`docs/releases/notes/RELEASE_NOTES_v0.3.7.md`
-下一版发布说明：`docs/RELEASE_NOTES_v0.4.0-preview.2.md`
-下一版发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.2.md`
+下一版发布说明：`docs/RELEASE_NOTES_v0.4.0-preview.3.md`
+下一版发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.3.md`
 
 ## 发布前门禁（v0.3.7）
 

@@ -6,8 +6,8 @@
 
 ### Added
 
-- 新增 `docs/RELEASE_PLAN_v0.4.0-preview.2.md`（M4 五功能点收口计划）
-- 新增 `docs/RELEASE_NOTES_v0.4.0-preview.2.md`（M4 收口版发布说明）
+- 新增 `docs/RELEASE_PLAN_v0.4.0-preview.3.md`（M4 补齐版发布计划）
+- 新增 `docs/RELEASE_NOTES_v0.4.0-preview.3.md`（M4 补齐版发布说明）
 - 新增去生产化模板：`assets/templates/demo-runtime-baseline.json`（A/D/F）
 - 新增去生产化模板：`assets/templates/demo-blackbox-middleware-manage.json`（黑箱中间件 Manage）
 - 新增模板说明：`assets/templates/demo-runtime-baseline.README.md`
