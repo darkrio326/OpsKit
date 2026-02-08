@@ -368,6 +368,61 @@ func TestCmdTemplate_UnresolvedVar_JSON(t *testing.T) {
 	}
 }
 
+func TestCmdTemplate_VarTypeMismatch_Array_JSON(t *testing.T) {
+	tmp := t.TempDir()
+	tplPath := filepath.Join(tmp, "type-mismatch-array.json")
+	varsPath := filepath.Join(tmp, "vars.json")
+	tpl := `{
+  "id": "type-mismatch-array",
+  "name": "type-mismatch-array",
+  "mode": "manage",
+  "vars": {
+    "PORTS": { "type": "array", "required": true }
+  },
+  "stages": {
+    "A": {
+      "checks": [
+        { "id": "a.system_info", "kind": "system_info", "params": { "ports": "${PORTS}" } }
+      ]
+    }
+  }
+}`
+	vars := `{"PORTS":"oops"}`
+	if err := os.WriteFile(tplPath, []byte(tpl), 0o644); err != nil {
+		t.Fatalf("write template: %v", err)
+	}
+	if err := os.WriteFile(varsPath, []byte(vars), 0o644); err != nil {
+		t.Fatalf("write vars: %v", err)
+	}
+
+	exit, stdout := captureStdout(t, func() int {
+		return cmdTemplate([]string{"validate", "--json", "--vars-file", varsPath, tplPath})
+	})
+	if exit != exitcode.Precondition {
+		t.Fatalf("expected precondition exit code, got %d", exit)
+	}
+
+	var payload templateValidateJSONPayload
+	if err := json.Unmarshal([]byte(strings.TrimSpace(stdout)), &payload); err != nil {
+		t.Fatalf("json unmarshal failed: %v, output=%q", err, stdout)
+	}
+	if payload.ErrorCount != 1 || len(payload.Issues) != 1 {
+		t.Fatalf("expected one issue, got errorCount=%d issues=%d", payload.ErrorCount, len(payload.Issues))
+	}
+	if payload.Issues[0].Code != "template_var_type_mismatch" {
+		t.Fatalf("unexpected issue code: %s", payload.Issues[0].Code)
+	}
+	if payload.Issues[0].Path != "template.vars.PORTS" {
+		t.Fatalf("unexpected issue path: %s", payload.Issues[0].Path)
+	}
+	if !strings.Contains(payload.Issues[0].Message, "expects json array") {
+		t.Fatalf("unexpected issue message: %s", payload.Issues[0].Message)
+	}
+	if !strings.Contains(payload.Issues[0].Advice, "JSON array") {
+		t.Fatalf("unexpected issue advice: %s", payload.Issues[0].Advice)
+	}
+}
+
 func TestCmdInstall_DryRun(t *testing.T) {
 	tmp := t.TempDir()
 	got := cmdInstall([]string{"--template", "generic-manage-v1", "--dry-run", "--no-systemd", "--output", tmp})

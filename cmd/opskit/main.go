@@ -229,7 +229,7 @@ func diagnoseTemplateValidateError(err error) templateValidateIssue {
 			issue.Advice = "pass the required var via --vars or --vars-file"
 		} else if strings.Contains(msg, "expects ") {
 			issue.Code = "template_var_type_mismatch"
-			issue.Advice = "fix var value type (int/number/bool/json array/json object)"
+			issue.Advice = typeMismatchAdvice(msg)
 		} else if strings.Contains(msg, "invalid value") || strings.Contains(msg, "default not in enum") {
 			issue.Code = "template_var_enum_mismatch"
 			issue.Advice = "use one of allowed enum values declared in template.vars"
@@ -238,24 +238,38 @@ func diagnoseTemplateValidateError(err error) templateValidateIssue {
 	return issue
 }
 
+func typeMismatchAdvice(msg string) string {
+	switch {
+	case strings.Contains(msg, "expects json array"):
+		return "pass valid JSON array via --vars-file (recommended), e.g. [80,443]"
+	case strings.Contains(msg, "expects json object"):
+		return "pass valid JSON object via --vars-file (recommended), e.g. {\"key\":\"value\"}"
+	case strings.Contains(msg, "expects bool"):
+		return "use true/false (or 1/0 when supported by bool parser)"
+	case strings.Contains(msg, "expects int"):
+		return "use integer value, e.g. 18080"
+	case strings.Contains(msg, "expects number"):
+		return "use numeric value, e.g. 0.75"
+	default:
+		return "fix var value type (int/number/bool/json array/json object)"
+	}
+}
+
 func extractTemplatePath(msg string) string {
-	prefixes := []string{"template.", "template"}
-	delims := []string{":", " is ", " must ", " invalid ", " expects ", " contains ", " default "}
-	for _, p := range prefixes {
-		if !strings.HasPrefix(msg, p) {
+	if !strings.HasPrefix(msg, "template") {
+		return ""
+	}
+	stop := len(msg)
+	for i, r := range msg {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '.' || r == '[' || r == ']' {
 			continue
 		}
-		candidate := msg
-		for _, d := range delims {
-			if idx := strings.Index(candidate, d); idx > 0 {
-				candidate = candidate[:idx]
-				break
-			}
-		}
-		candidate = strings.TrimSpace(candidate)
-		if candidate != "" {
-			return candidate
-		}
+		stop = i
+		break
+	}
+	path := strings.TrimSpace(msg[:stop])
+	if path != "" {
+		return path
 	}
 	return ""
 }

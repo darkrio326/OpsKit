@@ -144,6 +144,7 @@ func validateVarType(name, typ string) error {
 }
 
 func validateVarValue(name string, spec VarSpec, val string) error {
+	raw := strings.TrimSpace(val)
 	if len(spec.Enum) > 0 && !containsString(spec.Enum, val) {
 		return fmt.Errorf("template.vars.%s invalid value: %s", name, val)
 	}
@@ -151,26 +152,26 @@ func validateVarValue(name string, spec VarSpec, val string) error {
 	case "", "string":
 		return nil
 	case "int", "integer":
-		if _, err := strconv.Atoi(strings.TrimSpace(val)); err != nil {
-			return fmt.Errorf("template.vars.%s expects int", name)
+		if _, err := strconv.Atoi(raw); err != nil {
+			return fmt.Errorf("template.vars.%s expects int (got: %q)", name, raw)
 		}
 	case "number", "float":
-		if _, err := strconv.ParseFloat(strings.TrimSpace(val), 64); err != nil {
-			return fmt.Errorf("template.vars.%s expects number", name)
+		if _, err := strconv.ParseFloat(raw, 64); err != nil {
+			return fmt.Errorf("template.vars.%s expects number (got: %q)", name, raw)
 		}
 	case "bool", "boolean":
-		if _, err := strconv.ParseBool(strings.TrimSpace(val)); err != nil {
-			return fmt.Errorf("template.vars.%s expects bool", name)
+		if _, err := strconv.ParseBool(raw); err != nil {
+			return fmt.Errorf("template.vars.%s expects bool (got: %q)", name, raw)
 		}
 	case "array":
 		var out []any
-		if err := json.Unmarshal([]byte(strings.TrimSpace(val)), &out); err != nil {
-			return fmt.Errorf("template.vars.%s expects json array", name)
+		if err := json.Unmarshal([]byte(raw), &out); err != nil {
+			return fmt.Errorf("template.vars.%s expects json array (example: [80,443]): %v", name, err)
 		}
 	case "object", "map":
 		var out map[string]any
-		if err := json.Unmarshal([]byte(strings.TrimSpace(val)), &out); err != nil {
-			return fmt.Errorf("template.vars.%s expects json object", name)
+		if err := json.Unmarshal([]byte(raw), &out); err != nil {
+			return fmt.Errorf("template.vars.%s expects json object (example: {\"k\":\"v\"}): %v", name, err)
 		}
 	default:
 		return fmt.Errorf("template.vars.%s invalid type: %s", name, spec.Type)
