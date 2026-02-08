@@ -17,7 +17,9 @@ go build -o opskit ./cmd/opskit
 机器可读校验（推荐用于脚本/CI）：
 
 ```bash
-./opskit template validate --json assets/templates/demo-server-audit.json --vars-file examples/vars/demo-server-audit.json
+./opskit template validate generic-manage-v1
+./opskit template validate --vars-file examples/vars/demo-server-audit.json --json assets/templates/demo-server-audit.json
+./opskit template validate --vars-file examples/vars/demo-runtime-baseline.json --json assets/templates/demo-runtime-baseline.json
 ```
 
 失败样例（用于断言）：

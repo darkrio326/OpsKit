@@ -19,7 +19,7 @@ It runs:
 Success example:
 
 ```bash
-go run ./cmd/opskit template validate --json assets/templates/demo-server-audit.json --vars-file examples/vars/demo-server-audit.json
+go run ./cmd/opskit template validate --vars-file examples/vars/demo-server-audit.json --json assets/templates/demo-server-audit.json
 ```
 
 Failure example (for CI assertion):

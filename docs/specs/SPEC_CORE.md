@@ -65,6 +65,25 @@
 模板校验 JSON 契约见：`docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`
 发布门禁 summary 契约见：`docs/specs/SPEC_RELEASE_CHECK_JSON.md`
 
+### 2.5 模板变量约定（v1 追加）
+
+`template.vars.<NAME>` 支持以下常用字段：
+
+- `type`：`string|int|number|bool|array|object`
+- `required`：是否必填
+- `default`：默认值（需满足 `type/enum`）
+- `example`：示例值（需满足 `type/enum`）
+- `enum`：允许值集合
+- `group`：变量分组（可选）
+- `description`：变量说明
+
+`group` 校验规则：
+
+- 可选；为空表示未分组
+- 若填写，需满足正则 `^[a-z][a-z0-9_]{0,31}$`
+- 推荐组名：`service`、`paths`、`runtime`、`network`、`security`、`evidence`
+- 为保证兼容性，`v1` 不限制固定枚举组名，仅限制格式
+
 ## 3. 状态模型规范
 
 ### 3.1 基本原则

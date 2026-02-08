@@ -53,6 +53,7 @@ scripts/release.sh --version v0.3.7 --clean
 - 删除/排除真实环境产物：`.tmp/`、日志、证据包
 - 检查文档无客户信息与敏感数据
 - 验证 demo 模板可通过 `template validate`
+- 验证通用模板 `generic-manage-v1` 可通过 `template validate`
 - 至少完成一次 `run A`、`run D`、`accept` 验证流程
 - 优先执行 `scripts/release-check.sh` 一键回归（默认已包含模板 JSON 契约门禁）
 - 如需单独验证模板 JSON 契约：`scripts/template-validate-check.sh --clean`
@@ -91,8 +92,8 @@ scripts/release.sh --version v0.3.7 --clean
 ## 7. Release 文案模板
 
 - 当前稳定版：`docs/RELEASE_NOTES_v0.3.7.md`
-- 下一版草稿：`docs/RELEASE_NOTES_v0.4.0-preview.1.md`
-- 下一版任务单：`docs/RELEASE_PLAN_v0.4.0-preview.1.md`
+- 下一版草稿：`docs/RELEASE_NOTES_v0.4.0-preview.2.md`
+- 下一版任务单：`docs/RELEASE_PLAN_v0.4.0-preview.2.md`
 
 ## 8. v0.3.7 正式发布命令（建议）
 

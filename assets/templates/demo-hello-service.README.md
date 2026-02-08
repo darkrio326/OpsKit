@@ -17,13 +17,13 @@
 文本模式：
 
 ```bash
-./opskit template validate assets/templates/demo-hello-service.json --vars-file examples/vars/demo-hello-service.json
+./opskit template validate --vars-file examples/vars/demo-hello-service.json assets/templates/demo-hello-service.json
 ```
 
 机器可读模式（用于脚本/CI）：
 
 ```bash
-./opskit template validate --json assets/templates/demo-hello-service.json --vars-file examples/vars/demo-hello-service.json
+./opskit template validate --vars-file examples/vars/demo-hello-service.json --json assets/templates/demo-hello-service.json
 ```
 
 ## 常用变量

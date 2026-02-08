@@ -37,8 +37,8 @@
 
 ```bash
 GOCACHE=$PWD/.gocache go test ./...
-go run ./cmd/opskit template validate assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json
-go run ./cmd/opskit template validate assets/templates/demo-hello-service.json --vars-file ./examples/vars/demo-hello-service.env
+go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-server-audit.json assets/templates/demo-server-audit.json
+go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-hello-service.env assets/templates/demo-hello-service.json
 scripts/release.sh --version v0.3.2 --clean
 ```
 

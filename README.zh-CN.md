@@ -73,7 +73,7 @@ go build -o opskit ./cmd/opskit
 - 统一 state JSON：`overall/lifecycle/services/artifacts`
 - 原子写：所有状态文件以原子方式落盘
 - 模板机制：支持模板加载、变量渲染、执行计划构建
-- 模板变量校验：必填/类型/枚举/默认值
+- 模板变量校验：必填/类型/枚举/默认值/示例值/变量分组
 - 插件机制：checks/actions/evidence 统一注册入口
 - 最小 UI：静态页面读取 JSON，展示 A~F 状态与产物入口
 
@@ -120,7 +120,8 @@ IMAGE=kylinv10/kylin:b09 DOCKER_PLATFORM=linux/amd64 DRY_RUN=1 make -C examples/
 版本变更记录见：`CHANGELOG.md`
 版本规划规范：`docs/RELEASE_PLANNING_GUIDE.md`
 当前版本发布说明：`docs/RELEASE_NOTES_v0.3.7.md`
-下一版发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.1.md`
+下一版发布说明：`docs/RELEASE_NOTES_v0.4.0-preview.2.md`
+下一版发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.2.md`
 
 ## 发布前门禁（v0.3.7）
 

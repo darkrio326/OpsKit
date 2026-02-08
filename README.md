@@ -10,7 +10,7 @@
 - 可复核证据包：`accept` 生成 manifest + hashes + reports + snapshots
 - UI 状态页：读取 `state/*.json` 展示 overall、阶段状态与产物入口
 - 模板驱动：支持模板 + 变量渲染（内置与外部模板）
-- 模板变量校验：必填/类型/枚举/默认值
+- 模板变量校验：必填/类型/枚举/默认值/示例值/变量分组
 - 统一执行器：`executil` 统一外部命令执行与审计入口
 - 并发安全：全局锁防并发执行冲突（冲突返回退出码 `4`）
 
@@ -45,7 +45,7 @@ go build -o opskit ./cmd/opskit
 `template validate` 机器可读输出（模板接入前建议）：
 
 ```bash
-./opskit template validate --json assets/templates/demo-server-audit.json --vars-file examples/vars/demo-server-audit.json
+./opskit template validate --vars-file examples/vars/demo-server-audit.json --json assets/templates/demo-server-audit.json
 ```
 
 3) 启动 UI 查看状态
@@ -94,7 +94,8 @@ web/ui/                    # 开发态 UI 资源
 - GitHub 发布说明：`docs/GITHUB_RELEASE.md`
 - 版本规划规范：`docs/RELEASE_PLANNING_GUIDE.md`
 - 当前版本发布说明：`docs/RELEASE_NOTES_v0.3.7.md`
-- 下一版发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.1.md`
+- 下一版发布说明：`docs/RELEASE_NOTES_v0.4.0-preview.2.md`
+- 下一版发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.2.md`
 - 版本变更记录：`CHANGELOG.md`
 - 安全边界：`SECURITY.md`
 - 开源许可证：`LICENSE`（Apache-2.0）

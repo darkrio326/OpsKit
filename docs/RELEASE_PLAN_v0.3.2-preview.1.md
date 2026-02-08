@@ -34,7 +34,7 @@
 验收：
 
 ```bash
-./opskit template validate assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json
+./opskit template validate --vars-file ./examples/vars/demo-server-audit.json assets/templates/demo-server-audit.json
 ```
 
 ### B. 变量类型系统（最小支持）

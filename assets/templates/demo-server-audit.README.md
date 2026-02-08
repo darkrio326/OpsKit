@@ -16,13 +16,13 @@
 文本模式：
 
 ```bash
-./opskit template validate assets/templates/demo-server-audit.json --vars-file examples/vars/demo-server-audit.json
+./opskit template validate --vars-file examples/vars/demo-server-audit.json assets/templates/demo-server-audit.json
 ```
 
 机器可读模式（用于脚本/CI）：
 
 ```bash
-./opskit template validate --json assets/templates/demo-server-audit.json --vars-file examples/vars/demo-server-audit.json
+./opskit template validate --vars-file examples/vars/demo-server-audit.json --json assets/templates/demo-server-audit.json
 ```
 
 ## 可选变量

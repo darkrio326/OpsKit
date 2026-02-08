@@ -16,7 +16,7 @@
 成功示例：
 
 ```bash
-go run ./cmd/opskit template validate --json assets/templates/demo-server-audit.json --vars-file examples/vars/demo-server-audit.json
+go run ./cmd/opskit template validate --vars-file examples/vars/demo-server-audit.json --json assets/templates/demo-server-audit.json
 ```
 
 失败示例（用于 CI 断言）：

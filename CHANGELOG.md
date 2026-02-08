@@ -6,6 +6,11 @@
 
 ### Added
 
+- 新增 `docs/RELEASE_PLAN_v0.4.0-preview.2.md`（M4 五功能点收口计划）
+- 新增 `docs/RELEASE_NOTES_v0.4.0-preview.2.md`（M4 收口版发布说明）
+- 新增去生产化模板：`assets/templates/demo-runtime-baseline.json`（A/D/F）
+- 新增模板说明：`assets/templates/demo-runtime-baseline.README.md`
+- 新增 vars 示例：`examples/vars/demo-runtime-baseline.json`、`examples/vars/demo-runtime-baseline.env`
 - `scripts/release-check.sh` 默认接入 `template-validate-check` 门禁，并新增 `--skip-template-json-contract`（可选）
 - `scripts/release-check.sh` 新增 `--summary-json-file`，并输出 machine-readable `summary.json`
 - 新增 `docs/specs/SPEC_RELEASE_CHECK_JSON.md`（`release-check summary.json` 契约）
@@ -41,11 +46,22 @@
 
 ### Changed
 
+- `scripts/template-validate-check.sh` 默认新增 `generic-manage-v1` 正向校验
+- `scripts/release-check.sh` 默认新增 `generic-manage-v1` 模板校验步骤
+- `scripts/release-check.sh` dry-run 增加 `generic-manage-v1` 的 A/D 计划校验
+- `cmd/opskit template validate` 支持模板路径后置 flags（`--vars/--vars-file/--json`）
+- `template.vars` 新增 `group` 元数据，并纳入 `template validate` 命名格式校验
+- demo 模板变量补充 `group` 分组字段（service/paths/runtime/network）
+- `scripts/template-validate-check.sh` 增加变量类型错误负例断言（`template_var_type_mismatch`）
+- `scripts/release-check.sh` 默认新增 `demo-runtime-baseline` 模板校验步骤
+- `docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md` 补齐 `template validate --json` 错误码清单
+- `docs/specs/SPEC_CORE.md` 新增模板变量字段约定（含 `group` 兼容策略）
 - `scripts/release-check.sh` 每个步骤新增 `reasonCode`，失败时写入 `summary.json` 后退出
 - `scripts/release-check.sh` 的 `stepResults[].reasonCode` 语义调整为成功 `ok`、失败为步骤失败码
 - `scripts/generic-readiness-check.sh` 新增 `release-check/summary.json` 契约校验
 - `scripts/generic-readiness-check.sh` `summary.json` 新增 `releaseCheckOutput/genericOutput/releaseJsonContractOutput`
 - `docs/RELEASE_PLAN_v0.4.0-preview.1.md` 扩展为可执行规划（交付物/风险回滚/容量/决策点）
+- `template.vars` 新增 `example` 元数据，并纳入 `template validate` 类型/枚举校验
 - `template validate` 错误提示增强为路径化 + 修复建议（兼容原文本模式）
 - `template validate` 类型错误提示增强（array/object 提供 JSON 示例与解析原因）
 - demo 模板 README 补充 `template validate --json` 用法与常见错误码说明
