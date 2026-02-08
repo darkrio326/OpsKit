@@ -56,6 +56,7 @@ rg -n "\"group\"|template.vars|变量分组" assets/templates docs/specs
 
 - 新增 `demo-runtime-baseline`（A/D/F）
 - 新增 `demo-blackbox-middleware-manage`（A~F，黑箱中间件 Manage）
+- `demo-blackbox-middleware-manage` 提供三套预设 vars（default / FCS / Kingdee）
 - 补齐模板说明与 vars 示例
 - 维持“无生产中间件脚本”边界
 

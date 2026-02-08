@@ -2,7 +2,7 @@
 
 ## 1. 每个版本计划建议包含的固定内容
 
-每个 `docs/RELEASE_PLAN_*.md` 建议至少包含以下 10 项：
+每个发布计划文档（当前版位于 `docs/RELEASE_PLAN_*.md`，历史版归档在 `docs/releases/plans/`）建议至少包含以下 10 项：
 
 1. 版本目标（1~3 条，必须可衡量）
 2. 范围边界（In Scope / Out of Scope）

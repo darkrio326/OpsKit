@@ -23,10 +23,12 @@
 - `ROOT_MOUNT`：根挂载检查目标（默认 `/`）
 - `RECOVER_TRIGGER`：E 阶段恢复触发来源标签
 
-推荐直接使用变量文件：
+推荐直接使用变量文件（模板名固定，变量文件可分预设）：
 
 ```bash
-examples/vars/demo-blackbox-middleware-manage.json
+examples/vars/demo-blackbox-middleware-manage.json              # default 预设
+examples/vars/demo-blackbox-middleware-manage-fcs.json          # FCS 预设
+examples/vars/demo-blackbox-middleware-manage-kingdee.json      # 金蝶预设
 ```
 
 ## 模板校验
@@ -35,21 +37,38 @@ examples/vars/demo-blackbox-middleware-manage.json
 
 ```bash
 ./opskit template validate --vars-file examples/vars/demo-blackbox-middleware-manage.json assets/templates/demo-blackbox-middleware-manage.json
+./opskit template validate --vars-file examples/vars/demo-blackbox-middleware-manage-fcs.json assets/templates/demo-blackbox-middleware-manage.json
+./opskit template validate --vars-file examples/vars/demo-blackbox-middleware-manage-kingdee.json assets/templates/demo-blackbox-middleware-manage.json
 ```
 
 机器可读模式（脚本/CI 推荐）：
 
 ```bash
 ./opskit template validate --json --vars-file examples/vars/demo-blackbox-middleware-manage.json assets/templates/demo-blackbox-middleware-manage.json
+./opskit template validate --json --vars-file examples/vars/demo-blackbox-middleware-manage-fcs.json assets/templates/demo-blackbox-middleware-manage.json
+./opskit template validate --json --vars-file examples/vars/demo-blackbox-middleware-manage-kingdee.json assets/templates/demo-blackbox-middleware-manage.json
 ```
 
 ## 执行示例（可选）
 
 ```bash
-./opskit run A --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage.json --output ./.tmp/opskit-blackbox
-./opskit run D --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage.json --output ./.tmp/opskit-blackbox
-./opskit accept --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage.json --output ./.tmp/opskit-blackbox
+# default 示例
+./opskit run A --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage.json --output ./.tmp/opskit-blackbox-default
+./opskit run D --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage.json --output ./.tmp/opskit-blackbox-default
+./opskit accept --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage.json --output ./.tmp/opskit-blackbox-default
+./opskit status --output ./.tmp/opskit-blackbox-default
+
+# FCS 示例
+./opskit run A --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage-fcs.json --output ./.tmp/opskit-blackbox
+./opskit run D --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage-fcs.json --output ./.tmp/opskit-blackbox
+./opskit accept --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage-fcs.json --output ./.tmp/opskit-blackbox
 ./opskit status --output ./.tmp/opskit-blackbox
+
+# 金蝶示例
+./opskit run A --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage-kingdee.json --output ./.tmp/opskit-kingdee-blackbox
+./opskit run D --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage-kingdee.json --output ./.tmp/opskit-kingdee-blackbox
+./opskit accept --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage-kingdee.json --output ./.tmp/opskit-kingdee-blackbox
+./opskit status --output ./.tmp/opskit-kingdee-blackbox
 ```
 
 说明：

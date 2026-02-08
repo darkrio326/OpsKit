@@ -263,7 +263,9 @@ fi
 run_step "template validate demo-server-audit" "step_failed_template_validate_demo_server_audit" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-server-audit.json assets/templates/demo-server-audit.json
 run_step "template validate demo-hello-service" "step_failed_template_validate_demo_hello_service" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-hello-service.env assets/templates/demo-hello-service.json
 run_step "template validate demo-runtime-baseline" "step_failed_template_validate_demo_runtime_baseline" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-runtime-baseline.json assets/templates/demo-runtime-baseline.json
-run_step "template validate demo-blackbox-middleware-manage" "step_failed_template_validate_demo_blackbox_middleware_manage" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-blackbox-middleware-manage.json assets/templates/demo-blackbox-middleware-manage.json
+run_step "template validate demo-blackbox-middleware-manage-default" "step_failed_template_validate_demo_blackbox_middleware_manage_default" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-blackbox-middleware-manage.json assets/templates/demo-blackbox-middleware-manage.json
+run_step "template validate demo-blackbox-middleware-manage-fcs" "step_failed_template_validate_demo_blackbox_middleware_manage_fcs" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-blackbox-middleware-manage-fcs.json assets/templates/demo-blackbox-middleware-manage.json
+run_step "template validate demo-blackbox-middleware-manage-kingdee" "step_failed_template_validate_demo_blackbox_middleware_manage_kingdee" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-blackbox-middleware-manage-kingdee.json assets/templates/demo-blackbox-middleware-manage.json
 run_step "template validate generic-manage-v1" "step_failed_template_validate_generic_manage_v1" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate generic-manage-v1
 
 if [[ "${SKIP_TEMPLATE_JSON_CONTRACT}" == "0" ]]; then
@@ -279,9 +281,15 @@ if [[ "${SKIP_RUN}" == "0" ]]; then
   MANAGE_OUT="${OUTPUT_DIR}/generic-manage"
   run_step "generic-manage run A dry-run" "step_failed_generic_manage_run_a_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run A --template generic-manage-v1 --output "${MANAGE_OUT}" --dry-run
   run_step "generic-manage run D dry-run" "step_failed_generic_manage_run_d_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run D --template generic-manage-v1 --output "${MANAGE_OUT}" --dry-run
-  BLACKBOX_OUT="${OUTPUT_DIR}/blackbox-manage"
-  run_step "blackbox-manage run A dry-run" "step_failed_blackbox_manage_run_a_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run A --template assets/templates/demo-blackbox-middleware-manage.json --vars-file ./examples/vars/demo-blackbox-middleware-manage.json --output "${BLACKBOX_OUT}" --dry-run
-  run_step "blackbox-manage run D dry-run" "step_failed_blackbox_manage_run_d_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run D --template assets/templates/demo-blackbox-middleware-manage.json --vars-file ./examples/vars/demo-blackbox-middleware-manage.json --output "${BLACKBOX_OUT}" --dry-run
+  BLACKBOX_DEFAULT_OUT="${OUTPUT_DIR}/blackbox-manage-default"
+  run_step "blackbox-manage-default run A dry-run" "step_failed_blackbox_manage_default_run_a_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run A --template assets/templates/demo-blackbox-middleware-manage.json --vars-file ./examples/vars/demo-blackbox-middleware-manage.json --output "${BLACKBOX_DEFAULT_OUT}" --dry-run
+  run_step "blackbox-manage-default run D dry-run" "step_failed_blackbox_manage_default_run_d_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run D --template assets/templates/demo-blackbox-middleware-manage.json --vars-file ./examples/vars/demo-blackbox-middleware-manage.json --output "${BLACKBOX_DEFAULT_OUT}" --dry-run
+  BLACKBOX_OUT="${OUTPUT_DIR}/blackbox-manage-fcs"
+  run_step "blackbox-manage-fcs run A dry-run" "step_failed_blackbox_manage_fcs_run_a_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run A --template assets/templates/demo-blackbox-middleware-manage.json --vars-file ./examples/vars/demo-blackbox-middleware-manage-fcs.json --output "${BLACKBOX_OUT}" --dry-run
+  run_step "blackbox-manage-fcs run D dry-run" "step_failed_blackbox_manage_fcs_run_d_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run D --template assets/templates/demo-blackbox-middleware-manage.json --vars-file ./examples/vars/demo-blackbox-middleware-manage-fcs.json --output "${BLACKBOX_OUT}" --dry-run
+  BLACKBOX_KINGDEE_OUT="${OUTPUT_DIR}/blackbox-manage-kingdee"
+  run_step "blackbox-manage-kingdee run A dry-run" "step_failed_blackbox_manage_kingdee_run_a_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run A --template assets/templates/demo-blackbox-middleware-manage.json --vars-file ./examples/vars/demo-blackbox-middleware-manage-kingdee.json --output "${BLACKBOX_KINGDEE_OUT}" --dry-run
+  run_step "blackbox-manage-kingdee run D dry-run" "step_failed_blackbox_manage_kingdee_run_d_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run D --template assets/templates/demo-blackbox-middleware-manage.json --vars-file ./examples/vars/demo-blackbox-middleware-manage-kingdee.json --output "${BLACKBOX_KINGDEE_OUT}" --dry-run
 fi
 
 if [[ "${WITH_OFFLINE_VALIDATE}" == "1" ]]; then

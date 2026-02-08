@@ -1,0 +1,16 @@
+{
+  "STACK_ID": "fcs-blackbox",
+  "SERVICE_NAME": "fcs-server",
+  "SERVICE_UNIT": "fcs.service",
+  "PROCESS_MATCH": "fcs",
+  "SERVICE_PORT": "18080",
+  "HEALTH_HOST": "localhost",
+  "APP_DIR": "/opt/fcs",
+  "DATA_DIR": "/data/fcs",
+  "LOG_DIR": "/logs/fcs",
+  "INSTALL_ROOT": "/data/opskit-fcs",
+  "EVIDENCE_DIR": "/data/opskit-fcs/evidence",
+  "MAX_RESTARTS": "3",
+  "ROOT_MOUNT": "/",
+  "RECOVER_TRIGGER": "fcs_blackbox_monitor"
+}

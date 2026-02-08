@@ -178,7 +178,9 @@ run_json_validate_fail_with_vars() {
 AUDIT_JSON="${OUTPUT_DIR}/demo-server-audit.json.out"
 HELLO_JSON="${OUTPUT_DIR}/demo-hello-service.json.out"
 RUNTIME_JSON="${OUTPUT_DIR}/demo-runtime-baseline.json.out"
-BLACKBOX_JSON="${OUTPUT_DIR}/demo-blackbox-middleware-manage.json.out"
+BLACKBOX_DEFAULT_JSON="${OUTPUT_DIR}/demo-blackbox-middleware-manage.json.out"
+BLACKBOX_FCS_JSON="${OUTPUT_DIR}/demo-blackbox-middleware-manage-fcs.json.out"
+BLACKBOX_KINGDEE_JSON="${OUTPUT_DIR}/demo-blackbox-middleware-manage-kingdee.json.out"
 MANAGE_JSON="${OUTPUT_DIR}/generic-manage-v1.json.out"
 NEG_JSON="${OUTPUT_DIR}/missing-template.json.out"
 NEG_VARS_JSON="${OUTPUT_DIR}/invalid-vars.json.out"
@@ -203,10 +205,22 @@ run_json_validate_ok \
   "${RUNTIME_JSON}"
 
 run_json_validate_ok \
-  "demo-blackbox-middleware-manage" \
+  "demo-blackbox-middleware-manage-default" \
   "${ROOT_DIR}/assets/templates/demo-blackbox-middleware-manage.json" \
   "${ROOT_DIR}/examples/vars/demo-blackbox-middleware-manage.json" \
-  "${BLACKBOX_JSON}"
+  "${BLACKBOX_DEFAULT_JSON}"
+
+run_json_validate_ok \
+  "demo-blackbox-middleware-manage-fcs" \
+  "${ROOT_DIR}/assets/templates/demo-blackbox-middleware-manage.json" \
+  "${ROOT_DIR}/examples/vars/demo-blackbox-middleware-manage-fcs.json" \
+  "${BLACKBOX_FCS_JSON}"
+
+run_json_validate_ok \
+  "demo-blackbox-middleware-manage-kingdee" \
+  "${ROOT_DIR}/assets/templates/demo-blackbox-middleware-manage.json" \
+  "${ROOT_DIR}/examples/vars/demo-blackbox-middleware-manage-kingdee.json" \
+  "${BLACKBOX_KINGDEE_JSON}"
 
 run_json_validate_ok_no_vars \
   "generic-manage-v1" \
@@ -255,7 +269,9 @@ fi
   echo "    \"${AUDIT_JSON}\","
   echo "    \"${HELLO_JSON}\","
   echo "    \"${RUNTIME_JSON}\","
-  echo "    \"${BLACKBOX_JSON}\","
+  echo "    \"${BLACKBOX_DEFAULT_JSON}\","
+  echo "    \"${BLACKBOX_FCS_JSON}\","
+  echo "    \"${BLACKBOX_KINGDEE_JSON}\","
   echo "    \"${MANAGE_JSON}\","
   echo "    \"${NEG_JSON}\","
   echo "    \"${NEG_VARS_JSON}\""

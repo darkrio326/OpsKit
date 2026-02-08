@@ -14,6 +14,8 @@
 - 新增模板说明：`assets/templates/demo-blackbox-middleware-manage.README.md`
 - 新增 vars 示例：`examples/vars/demo-runtime-baseline.json`、`examples/vars/demo-runtime-baseline.env`
 - 新增 vars 示例：`examples/vars/demo-blackbox-middleware-manage.json`、`examples/vars/demo-blackbox-middleware-manage.env`
+- 新增 vars 示例：`examples/vars/demo-blackbox-middleware-manage-fcs.json`、`examples/vars/demo-blackbox-middleware-manage-fcs.env`
+- 新增 vars 示例：`examples/vars/demo-blackbox-middleware-manage-kingdee.json`、`examples/vars/demo-blackbox-middleware-manage-kingdee.env`
 - `scripts/release-check.sh` 默认接入 `template-validate-check` 门禁，并新增 `--skip-template-json-contract`（可选）
 - `scripts/release-check.sh` 新增 `--summary-json-file`，并输出 machine-readable `summary.json`
 - 新增 `docs/specs/SPEC_RELEASE_CHECK_JSON.md`（`release-check summary.json` 契约）
@@ -51,9 +53,9 @@
 
 - `internal/core/executil/SystemRunner` 增强：超时优先返回 `124`，取消返回 `130`，并新增 `Result.Duration/Result.TimedOut`
 - 新增 `internal/core/executil` 单元测试，覆盖成功/非零退出/超时/取消/空命令/nil context 场景
-- `scripts/template-validate-check.sh` 默认新增黑箱中间件模板校验
+- `scripts/template-validate-check.sh` 默认新增黑箱中间件模板（default/FCS/Kingdee）校验
 - `scripts/template-validate-check.sh` 默认新增 `generic-manage-v1` 正向校验
-- `scripts/release-check.sh` 默认新增黑箱中间件模板校验与 A/D dry-run
+- `scripts/release-check.sh` 默认新增黑箱中间件模板（default/FCS/Kingdee）校验与 A/D dry-run
 - `scripts/release-check.sh` 默认新增 `generic-manage-v1` 模板校验步骤
 - `scripts/release-check.sh` dry-run 增加 `generic-manage-v1` 的 A/D 计划校验
 - `cmd/opskit template validate` 支持模板路径后置 flags（`--vars/--vars-file/--json`）

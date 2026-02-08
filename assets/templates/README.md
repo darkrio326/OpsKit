@@ -5,7 +5,7 @@
 - `demo-server-audit.json`：仅 A/D/F 审计与证据链
 - `demo-hello-service.json`：轻量 hello-service 模板演示
 - `demo-runtime-baseline.json`：运行时基线检查模板（A/D/F）
-- `demo-blackbox-middleware-manage.json`：黑箱中间件服务器 Manage 模板
+- `demo-blackbox-middleware-manage.json`：黑箱中间件服务器 Manage 模板（vars 可选 default/FCS/Kingdee 预设）
 
 配套说明：
 

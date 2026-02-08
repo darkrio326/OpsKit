@@ -1,0 +1,16 @@
+{
+  "STACK_ID": "kingdee-blackbox",
+  "SERVICE_NAME": "kingdee-middleware",
+  "SERVICE_UNIT": "kingdee.service",
+  "PROCESS_MATCH": "kingdee",
+  "SERVICE_PORT": "18081",
+  "HEALTH_HOST": "localhost",
+  "APP_DIR": "/opt/kingdee",
+  "DATA_DIR": "/data/kingdee",
+  "LOG_DIR": "/logs/kingdee",
+  "INSTALL_ROOT": "/data/opskit-kingdee",
+  "EVIDENCE_DIR": "/data/opskit-kingdee/evidence",
+  "MAX_RESTARTS": "3",
+  "ROOT_MOUNT": "/",
+  "RECOVER_TRIGGER": "kingdee_blackbox_monitor"
+}
