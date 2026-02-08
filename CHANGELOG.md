@@ -79,6 +79,27 @@
 - 修复 `load_average` 在非 Linux 环境容易误降级的问题
 - 修复 `dns_resolve` 在受限网络场景误报问题
 
+## [v0.3.7] - 2026-02-08
+
+### Added
+
+- 新增模板校验 JSON 契约：`docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`
+- 新增发布门禁 summary 契约：`docs/specs/SPEC_RELEASE_CHECK_JSON.md`
+- 新增模板契约门禁：`scripts/template-validate-check.sh`
+- 新增发布契约门禁：`scripts/release-check-json-contract.sh`
+
+### Changed
+
+- `release-check` 默认接入模板 JSON 契约门禁，并支持 `--summary-json-file`
+- `release-check` 失败时先写 `summary.json` 后退出
+- `release-check` 步骤 `reasonCode` 语义统一为成功 `ok`、失败为步骤失败码
+- `generic-readiness-check` 新增 `--with-release-json-contract` 可选门禁
+- `generic-readiness-check` summary 新增路径字段：`releaseCheckOutput/genericOutput/releaseJsonContractOutput`
+
+### Fixed
+
+- 修复门禁结果仅依赖终端输出、缺少稳定 machine-readable 入口的问题
+
 ## [v0.3.6] - 2026-02-07
 
 ### Added

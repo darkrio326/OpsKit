@@ -2,7 +2,7 @@
 
 一句话定位：**面向离线/信创环境的服务器全生命周期运维与验收工具**（A~F 阶段：Preflight/Baseline/Deploy/Operate/Recover/Accept-Handover）。
 
-当前版本：`v0.3.6`（通用能力正式版，模板接入前基线版）
+当前版本：`v0.3.7`（模板接入前置增强版，Milestone 4 预备）
 
 ## 当前能力（Milestone 3）
 
@@ -92,14 +92,14 @@ web/ui/                    # 开发态 UI 资源
 - 规格与安全：`docs/specs/README.md`
 - 产品设计（整理版）：`docs/product-design/README.md`
 - GitHub 发布说明：`docs/GITHUB_RELEASE.md`
-- 当前版本发布说明：`docs/RELEASE_NOTES_v0.3.6.md`
-- 下一版发布计划：`docs/RELEASE_PLAN_v0.3.7-preview.1.md`
+- 当前版本发布说明：`docs/RELEASE_NOTES_v0.3.7.md`
+- 下一版发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.1.md`
 - 版本变更记录：`CHANGELOG.md`
 - 安全边界：`SECURITY.md`
 - 开源许可证：`LICENSE`（Apache-2.0）
 - 中文扩展说明：`README.zh-CN.md`
 
-## 发布前门禁（v0.3.6 正式版）
+## 发布前门禁（v0.3.7）
 
 常规门禁（建议默认）：
 
@@ -135,11 +135,11 @@ scripts/release-check.sh --with-offline-validate --offline-strict-exit
 构建发布资产：
 
 ```bash
-scripts/release.sh --version v0.3.6 --clean
+scripts/release.sh --version v0.3.7 --clean
 ```
 
 发布资产会包含：二进制（amd64/arm64）、`checksums.txt`、`release-metadata.json`。
 
 ## 免责声明
 
-本项目当前版本（`v0.3.6`）用于**内网/离线场景的通用能力验证与验收**。生产环境使用前请完成安全、稳定性与合规评估。
+本项目当前版本（`v0.3.7`）用于**内网/离线场景的通用能力验证与验收**。生产环境使用前请完成安全、稳定性与合规评估。
