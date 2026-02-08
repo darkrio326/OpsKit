@@ -114,7 +114,20 @@ run_json_validate_ok() {
   local vars_file="$3"
   local out_file="$4"
   echo "==> validate ${name}"
-  "${BIN_PATH}" template validate --json "${template}" --vars-file "${vars_file}" > "${out_file}"
+  "${BIN_PATH}" template validate --json --vars-file "${vars_file}" "${template}" > "${out_file}"
+  require_pattern "${out_file}" '"command"[[:space:]]*:[[:space:]]*"opskit template validate"' "${name}:missing_command"
+  require_pattern "${out_file}" '"schemaVersion"[[:space:]]*:[[:space:]]*"v1"' "${name}:missing_schema_version"
+  require_pattern "${out_file}" '"template"[[:space:]]*:[[:space:]]*".*"' "${name}:missing_template"
+  require_pattern "${out_file}" '"valid"[[:space:]]*:[[:space:]]*true' "${name}:expected_valid_true"
+  require_pattern "${out_file}" '"errorCount"[[:space:]]*:[[:space:]]*0' "${name}:expected_error_count_zero"
+}
+
+run_json_validate_ok_no_vars() {
+  local name="$1"
+  local template="$2"
+  local out_file="$3"
+  echo "==> validate ${name}"
+  "${BIN_PATH}" template validate --json "${template}" > "${out_file}"
   require_pattern "${out_file}" '"command"[[:space:]]*:[[:space:]]*"opskit template validate"' "${name}:missing_command"
   require_pattern "${out_file}" '"schemaVersion"[[:space:]]*:[[:space:]]*"v1"' "${name}:missing_schema_version"
   require_pattern "${out_file}" '"template"[[:space:]]*:[[:space:]]*".*"' "${name}:missing_template"
@@ -140,9 +153,34 @@ run_json_validate_fail() {
   require_pattern "${out_file}" '"code"[[:space:]]*:[[:space:]]*"template_file_not_found"' "${name}:expected_file_not_found_code"
 }
 
+run_json_validate_fail_with_vars() {
+  local name="$1"
+  local template="$2"
+  local vars_file="$3"
+  local out_file="$4"
+  local expected_code="$5"
+  local expected_path="$6"
+  echo "==> validate ${name} (negative vars)"
+  set +e
+  "${BIN_PATH}" template validate --json --vars-file "${vars_file}" "${template}" > "${out_file}"
+  local rc=$?
+  set -e
+  if [[ "${rc}" == "0" ]]; then
+    add_failure "${name}:expected_non_zero_exit"
+    return 0
+  fi
+  require_pattern "${out_file}" '"valid"[[:space:]]*:[[:space:]]*false' "${name}:expected_valid_false"
+  require_pattern "${out_file}" '"errorCount"[[:space:]]*:[[:space:]]*[1-9][0-9]*' "${name}:expected_error_count_positive"
+  require_pattern "${out_file}" "\"code\"[[:space:]]*:[[:space:]]*\"${expected_code}\"" "${name}:expected_code_${expected_code}"
+  require_pattern "${out_file}" "\"path\"[[:space:]]*:[[:space:]]*\"${expected_path}\"" "${name}:expected_path_${expected_path}"
+}
+
 AUDIT_JSON="${OUTPUT_DIR}/demo-server-audit.json.out"
 HELLO_JSON="${OUTPUT_DIR}/demo-hello-service.json.out"
+RUNTIME_JSON="${OUTPUT_DIR}/demo-runtime-baseline.json.out"
+MANAGE_JSON="${OUTPUT_DIR}/generic-manage-v1.json.out"
 NEG_JSON="${OUTPUT_DIR}/missing-template.json.out"
+NEG_VARS_JSON="${OUTPUT_DIR}/invalid-vars.json.out"
 SUMMARY_JSON="${OUTPUT_DIR}/summary.json"
 
 run_json_validate_ok \
@@ -157,10 +195,41 @@ run_json_validate_ok \
   "${ROOT_DIR}/examples/vars/demo-hello-service.json" \
   "${HELLO_JSON}"
 
+run_json_validate_ok \
+  "demo-runtime-baseline" \
+  "${ROOT_DIR}/assets/templates/demo-runtime-baseline.json" \
+  "${ROOT_DIR}/examples/vars/demo-runtime-baseline.json" \
+  "${RUNTIME_JSON}"
+
+run_json_validate_ok_no_vars \
+  "generic-manage-v1" \
+  "generic-manage-v1" \
+  "${MANAGE_JSON}"
+
 run_json_validate_fail \
   "missing-template" \
   "${OUTPUT_DIR}/missing-template.json" \
   "${NEG_JSON}"
+
+INVALID_VARS_FILE="${OUTPUT_DIR}/invalid-vars.json"
+cat > "${INVALID_VARS_FILE}" <<'EOF'
+{
+  "SERVICE_NAME": "hello-service",
+  "SERVICE_PORT": "oops",
+  "SERVICE_UNIT": "hello-service.service",
+  "PROCESS_MATCH": "hello-service",
+  "INSTALL_ROOT": "/data/opskit-demo",
+  "CONF_DIR": "/etc/opskit"
+}
+EOF
+
+run_json_validate_fail_with_vars \
+  "invalid-vars-type" \
+  "${ROOT_DIR}/assets/templates/demo-hello-service.json" \
+  "${INVALID_VARS_FILE}" \
+  "${NEG_VARS_JSON}" \
+  "template_var_type_mismatch" \
+  "template.vars.SERVICE_PORT"
 
 if [[ "${FAIL_COUNT}" -gt 0 ]]; then
   RESULT="fail"
@@ -178,7 +247,10 @@ fi
   echo "  \"outputs\": ["
   echo "    \"${AUDIT_JSON}\","
   echo "    \"${HELLO_JSON}\","
-  echo "    \"${NEG_JSON}\""
+  echo "    \"${RUNTIME_JSON}\","
+  echo "    \"${MANAGE_JSON}\","
+  echo "    \"${NEG_JSON}\","
+  echo "    \"${NEG_VARS_JSON}\""
   echo "  ],"
   echo "  \"failures\": ["
   for i in "${!FAIL_REASONS[@]}"; do

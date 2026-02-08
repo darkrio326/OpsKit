@@ -10,8 +10,10 @@ type Template struct {
 
 type VarSpec struct {
 	Type        string   `json:"type,omitempty"`
+	Group       string   `json:"group,omitempty"`
 	Required    bool     `json:"required,omitempty"`
 	Default     string   `json:"default,omitempty"`
+	Example     string   `json:"example,omitempty"`
 	Enum        []string `json:"enum,omitempty"`
 	Description string   `json:"description,omitempty"`
 }

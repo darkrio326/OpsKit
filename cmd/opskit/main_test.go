@@ -281,6 +281,10 @@ func TestCmdTemplate_VarsFile(t *testing.T) {
 	if got != exitcode.Success {
 		t.Fatalf("expected success, got %d", got)
 	}
+	got = cmdTemplate([]string{"validate", tplPath, "--vars-file", varsPath})
+	if got != exitcode.Success {
+		t.Fatalf("expected success with post-template flags, got %d", got)
+	}
 }
 
 func TestCmdTemplate_VarRequired_JSON(t *testing.T) {
@@ -420,6 +424,22 @@ func TestCmdTemplate_VarTypeMismatch_Array_JSON(t *testing.T) {
 	}
 	if !strings.Contains(payload.Issues[0].Advice, "JSON array") {
 		t.Fatalf("unexpected issue advice: %s", payload.Issues[0].Advice)
+	}
+
+	exit, stdout = captureStdout(t, func() int {
+		return cmdTemplate([]string{"validate", "--json", tplPath, "--vars-file", varsPath})
+	})
+	if exit != exitcode.Precondition {
+		t.Fatalf("expected precondition exit code with post-template flags, got %d", exit)
+	}
+	if err := json.Unmarshal([]byte(strings.TrimSpace(stdout)), &payload); err != nil {
+		t.Fatalf("json unmarshal failed: %v, output=%q", err, stdout)
+	}
+	if payload.ErrorCount != 1 || len(payload.Issues) != 1 {
+		t.Fatalf("expected one issue, got errorCount=%d issues=%d", payload.ErrorCount, len(payload.Issues))
+	}
+	if payload.Issues[0].Code != "template_var_type_mismatch" {
+		t.Fatalf("unexpected issue code with post-template flags: %s", payload.Issues[0].Code)
 	}
 }
 

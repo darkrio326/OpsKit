@@ -1,6 +1,9 @@
 package schema
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestValidateTemplate_UnresolvedVar(t *testing.T) {
 	tpl := Template{
@@ -94,5 +97,78 @@ func TestValidateLifecycleState_Summary(t *testing.T) {
 	lifecycle.Stages[0].Summary.Total = 2
 	if err := ValidateLifecycleState(lifecycle); err == nil {
 		t.Fatalf("expected summary total mismatch error")
+	}
+}
+
+func TestValidateTemplate_VarExample(t *testing.T) {
+	valid := Template{
+		ID:   "valid-example",
+		Name: "valid-example",
+		Mode: "manage",
+		Vars: map[string]VarSpec{
+			"PORT": {
+				Type:     "int",
+				Group:    "runtime",
+				Required: true,
+				Example:  "18080",
+			},
+		},
+		Stages: map[string]TemplateStageSpec{
+			"A": {},
+		},
+	}
+	if err := ValidateTemplate(valid); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	invalid := valid
+	invalid.Vars = map[string]VarSpec{
+		"PORT": {
+			Type:     "int",
+			Required: true,
+			Example:  "oops",
+		},
+	}
+	err := ValidateTemplate(invalid)
+	if err == nil {
+		t.Fatalf("expected invalid example error")
+	}
+	if !strings.Contains(err.Error(), "template.vars.PORT example invalid") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateTemplate_VarGroup(t *testing.T) {
+	valid := Template{
+		ID:   "valid-group",
+		Name: "valid-group",
+		Mode: "manage",
+		Vars: map[string]VarSpec{
+			"SERVICE_PORT": {
+				Type:  "int",
+				Group: "service_runtime",
+			},
+		},
+		Stages: map[string]TemplateStageSpec{
+			"A": {},
+		},
+	}
+	if err := ValidateTemplate(valid); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	invalid := valid
+	invalid.Vars = map[string]VarSpec{
+		"SERVICE_PORT": {
+			Type:  "int",
+			Group: "Service Runtime",
+		},
+	}
+	err := ValidateTemplate(invalid)
+	if err == nil {
+		t.Fatalf("expected invalid group error")
+	}
+	if !strings.Contains(err.Error(), "template.vars.SERVICE_PORT invalid group") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

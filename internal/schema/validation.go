@@ -9,6 +9,7 @@ import (
 )
 
 var templateVarRef = regexp.MustCompile(`\$\{[A-Za-z0-9_]+\}`)
+var templateVarGroupRef = regexp.MustCompile(`^[a-z][a-z0-9_]{0,31}$`)
 
 func ValidateTemplate(t Template) error {
 	if t.ID == "" {
@@ -103,6 +104,9 @@ func validateVarSpecs(specs map[string]VarSpec) error {
 		if err := validateVarType(name, spec.Type); err != nil {
 			return err
 		}
+		if err := validateVarGroup(name, spec.Group); err != nil {
+			return err
+		}
 		if len(spec.Enum) > 0 {
 			seen := map[string]struct{}{}
 			for _, v := range spec.Enum {
@@ -126,6 +130,11 @@ func validateVarSpecs(specs map[string]VarSpec) error {
 				return fmt.Errorf("template.vars.%s default invalid: %w", name, err)
 			}
 		}
+		if spec.Example != "" {
+			if err := validateVarValue(name, spec, spec.Example); err != nil {
+				return fmt.Errorf("template.vars.%s example invalid: %w", name, err)
+			}
+		}
 	}
 	return nil
 }
@@ -141,6 +150,17 @@ func validateVarType(name, typ string) error {
 	default:
 		return fmt.Errorf("template.vars.%s invalid type: %s", name, typ)
 	}
+}
+
+func validateVarGroup(name, group string) error {
+	group = strings.TrimSpace(group)
+	if group == "" {
+		return nil
+	}
+	if templateVarGroupRef.MatchString(group) {
+		return nil
+	}
+	return fmt.Errorf("template.vars.%s invalid group: %s (expect ^[a-z][a-z0-9_]{0,31}$)", name, group)
 }
 
 func validateVarValue(name string, spec VarSpec, val string) error {

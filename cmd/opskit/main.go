@@ -106,7 +106,7 @@ func cmdTemplate(args []string) int {
 	varsFile := fs.String("vars-file", "", "vars file (json or key=value lines)")
 	output := fs.String("output", defaultOutputRoot(), "output root")
 	jsonOutput := fs.Bool("json", false, "json output")
-	if err := fs.Parse(args[1:]); err != nil {
+	if err := fs.Parse(normalizeTemplateValidateArgs(args[1:])); err != nil {
 		return exitcode.Precondition
 	}
 	if fs.NArg() < 1 {
@@ -134,6 +134,43 @@ func cmdTemplate(args []string) int {
 	}
 	fmt.Printf("template valid: %s\n", ref)
 	return exitcode.Success
+}
+
+func normalizeTemplateValidateArgs(raw []string) []string {
+	if len(raw) == 0 {
+		return raw
+	}
+	boolFlags := map[string]struct{}{
+		"--json": {},
+	}
+	valueFlags := map[string]struct{}{
+		"--vars":      {},
+		"--vars-file": {},
+		"--output":    {},
+	}
+	flags := make([]string, 0, len(raw))
+	positionals := make([]string, 0, len(raw))
+	for i := 0; i < len(raw); i++ {
+		token := raw[i]
+		name := token
+		if eq := strings.Index(token, "="); eq >= 0 {
+			name = token[:eq]
+		}
+		if _, ok := boolFlags[name]; ok {
+			flags = append(flags, token)
+			continue
+		}
+		if _, ok := valueFlags[name]; ok {
+			flags = append(flags, token)
+			if strings.Index(token, "=") < 0 && i+1 < len(raw) {
+				flags = append(flags, raw[i+1])
+				i++
+			}
+			continue
+		}
+		positionals = append(positionals, token)
+	}
+	return append(flags, positionals...)
 }
 
 func printTemplateValidateJSON(ref string, valid bool, issues []templateValidateIssue) {

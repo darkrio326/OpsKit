@@ -1,0 +1,7 @@
+{
+  "INSTALL_ROOT": "/data/opskit-demo",
+  "EVIDENCE_DIR": "/data/opskit-demo/evidence",
+  "ROOT_MOUNT": "/",
+  "DNS_HOST": "localhost",
+  "PROFILE": "baseline"
+}

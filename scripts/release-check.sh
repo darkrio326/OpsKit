@@ -260,8 +260,10 @@ if [[ "${SKIP_TESTS}" == "0" ]]; then
   run_step "go test ./..." "step_failed_go_test" env GOCACHE="${GO_CACHE_DIR}" go test ./...
 fi
 
-run_step "template validate demo-server-audit" "step_failed_template_validate_demo_server_audit" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json
-run_step "template validate demo-hello-service" "step_failed_template_validate_demo_hello_service" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate assets/templates/demo-hello-service.json --vars-file ./examples/vars/demo-hello-service.env
+run_step "template validate demo-server-audit" "step_failed_template_validate_demo_server_audit" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-server-audit.json assets/templates/demo-server-audit.json
+run_step "template validate demo-hello-service" "step_failed_template_validate_demo_hello_service" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-hello-service.env assets/templates/demo-hello-service.json
+run_step "template validate demo-runtime-baseline" "step_failed_template_validate_demo_runtime_baseline" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-runtime-baseline.json assets/templates/demo-runtime-baseline.json
+run_step "template validate generic-manage-v1" "step_failed_template_validate_generic_manage_v1" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate generic-manage-v1
 
 if [[ "${SKIP_TEMPLATE_JSON_CONTRACT}" == "0" ]]; then
   run_step "template validate json contract" "step_failed_template_validate_json_contract" env GO_CACHE_DIR="${GO_CACHE_DIR}" ./scripts/template-validate-check.sh --output "${OUTPUT_DIR}/template-validate-check" --clean
@@ -273,6 +275,9 @@ if [[ "${SKIP_RUN}" == "0" ]]; then
   run_step "run D dry-run" "step_failed_run_d_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run D --template assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json --output "${DEMO_OUT}" --dry-run
   run_step "accept dry-run" "step_failed_accept_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit accept --template assets/templates/demo-server-audit.json --vars-file ./examples/vars/demo-server-audit.json --output "${DEMO_OUT}" --dry-run
   run_step "status refresh" "step_failed_status_refresh" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit status --output "${DEMO_OUT}"
+  MANAGE_OUT="${OUTPUT_DIR}/generic-manage"
+  run_step "generic-manage run A dry-run" "step_failed_generic_manage_run_a_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run A --template generic-manage-v1 --output "${MANAGE_OUT}" --dry-run
+  run_step "generic-manage run D dry-run" "step_failed_generic_manage_run_d_dry_run" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit run D --template generic-manage-v1 --output "${MANAGE_OUT}" --dry-run
 fi
 
 if [[ "${WITH_OFFLINE_VALIDATE}" == "1" ]]; then

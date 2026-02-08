@@ -1,6 +1,6 @@
 {
-  "id": "demo-server-audit-v1",
-  "name": "Demo Server Audit v1",
+  "id": "demo-runtime-baseline-v1",
+  "name": "Demo Runtime Baseline v1",
   "mode": "manage",
   "vars": {
     "INSTALL_ROOT": {
@@ -16,6 +16,30 @@
       "required": true,
       "example": "/data/opskit-demo/evidence",
       "description": "evidence directory root"
+    },
+    "ROOT_MOUNT": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "/",
+      "example": "/",
+      "description": "target mount for runtime checks"
+    },
+    "DNS_HOST": {
+      "type": "string",
+      "group": "network",
+      "required": true,
+      "default": "localhost",
+      "example": "localhost",
+      "description": "host used in dns_resolve check"
+    },
+    "PROFILE": {
+      "type": "string",
+      "group": "runtime",
+      "required": false,
+      "default": "baseline",
+      "example": "baseline",
+      "description": "profile label for generated evidence filenames"
     }
   },
   "stages": {
@@ -27,36 +51,20 @@
           "enabled": true
         },
         {
+          "id": "a.mount_check",
+          "kind": "mount_check",
+          "params": {
+            "required_mounts": ["${ROOT_MOUNT}"]
+          },
+          "enabled": true
+        },
+        {
           "id": "a.time_sync_status",
           "kind": "time_sync_status",
           "params": {
             "severity": "warn"
           },
           "enabled": true
-        },
-        {
-          "id": "a.mount_check",
-          "kind": "mount_check",
-          "params": {
-            "required_mounts": ["/"]
-          },
-          "enabled": true
-        },
-        {
-          "id": "a.port_conflict",
-          "kind": "port_conflict",
-          "params": {
-            "reserved_ports": [22, 80, 443]
-          },
-          "enabled": true
-        },
-        {
-          "id": "a.systemd_available_placeholder",
-          "kind": "systemd_available",
-          "params": {
-            "severity": "warn"
-          },
-          "enabled": false
         }
       ]
     },
@@ -66,28 +74,9 @@
           "id": "d.disk_usage_root",
           "kind": "disk_usage",
           "params": {
-            "mount": "/",
+            "mount": "${ROOT_MOUNT}",
             "max_used_percent": 90,
             "severity": "warn"
-          },
-          "enabled": true
-        },
-        {
-          "id": "d.disk_inodes_root",
-          "kind": "disk_inodes",
-          "params": {
-            "mount": "/",
-            "max_iused_percent": 90,
-            "severity": "warn"
-          },
-          "enabled": true
-        },
-        {
-          "id": "d.fs_readonly",
-          "kind": "fs_readonly",
-          "params": {
-            "mounts": ["/"],
-            "severity": "fail"
           },
           "enabled": true
         },
@@ -118,42 +107,14 @@
           "enabled": true
         },
         {
-          "id": "d.clock_skew",
-          "kind": "clock_skew",
-          "params": {
-            "max_skew_ms": 2000,
-            "severity": "warn"
-          },
-          "enabled": true
-        },
-        {
-          "id": "d.dns_resolve_localhost",
+          "id": "d.dns_resolve",
           "kind": "dns_resolve",
           "params": {
-            "host": "localhost",
+            "host": "${DNS_HOST}",
             "min_records": 1,
             "severity": "warn"
           },
           "enabled": true
-        },
-        {
-          "id": "d.restart_count_placeholder",
-          "kind": "systemd_restart_count",
-          "params": {
-            "unit": "demo-placeholder.service",
-            "max_restarts": 3,
-            "severity": "warn"
-          },
-          "enabled": false
-        },
-        {
-          "id": "d.service_check_placeholder",
-          "kind": "systemd_unit_active",
-          "params": {
-            "unit": "demo-placeholder.service",
-            "severity": "warn"
-          },
-          "enabled": false
         }
       ]
     },
@@ -164,7 +125,7 @@
           "kind": "file_hash",
           "params": {
             "file": "${INSTALL_ROOT}/state/overall.json",
-            "output": "${EVIDENCE_DIR}/overall-json-hash.json"
+            "output": "${EVIDENCE_DIR}/${PROFILE}-overall-json-hash.json"
           },
           "enabled": true
         },
@@ -173,17 +134,17 @@
           "kind": "dir_hash",
           "params": {
             "dir": "${INSTALL_ROOT}/state",
-            "output": "${EVIDENCE_DIR}/state-dir-hash.json"
+            "output": "${EVIDENCE_DIR}/${PROFILE}-state-dir-hash.json"
           },
           "enabled": true
         },
         {
-          "id": "f.uname_snapshot",
+          "id": "f.date_snapshot",
           "kind": "command_output",
           "params": {
-            "name": "uname",
-            "args": ["-a"],
-            "output": "${EVIDENCE_DIR}/uname-a.json"
+            "name": "date",
+            "args": ["-u", "+%Y-%m-%dT%H:%M:%SZ"],
+            "output": "${EVIDENCE_DIR}/${PROFILE}-utc-date.json"
           },
           "enabled": true
         }
