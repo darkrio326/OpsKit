@@ -34,6 +34,9 @@ Repository-level release history: `CHANGELOG.md`
 
 - `docs/specs/README.md`
 - `docs/specs/SPEC_CORE.md`
+- `docs/specs/SPEC_STATUS_JSON.md`
+- `docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`
+- `docs/specs/SPEC_RELEASE_CHECK_JSON.md`
 - `docs/specs/SPEC_OPS_SECURITY.md`
 - `docs/specs/SPEC_TEST_ACCEPTANCE.md`
 

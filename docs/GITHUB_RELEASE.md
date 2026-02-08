@@ -72,6 +72,7 @@ scripts/release.sh --version v0.3.6 --clean
 - `release-check summary` 中 `steps` 与各步骤耗时可用于定位慢步骤
 - 默认输出 `summary.json`（`<output>/summary.json`），可用 `--summary-json-file` 指定路径
 - `summary.json` 关键字段：`result/reasonCode/recommendedAction/stepResults[]`
+- 字段与兼容策略详见：`docs/specs/SPEC_RELEASE_CHECK_JSON.md`
 - `recommended action: continue_release`：可继续发布；`block_release`：应阻断并修复
 - dry-run 阶段输出中的 `checks/actions/evidence` 计数可用于确认模板执行计划未异常漂移
 - 如仅想跳过模板 JSON 契约门禁（不推荐）：`--skip-template-json-contract`

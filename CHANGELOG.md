@@ -8,6 +8,7 @@
 
 - `scripts/release-check.sh` 默认接入 `template-validate-check` 门禁，并新增 `--skip-template-json-contract`（可选）
 - `scripts/release-check.sh` 新增 `--summary-json-file`，并输出 machine-readable `summary.json`
+- 新增 `docs/specs/SPEC_RELEASE_CHECK_JSON.md`（`release-check summary.json` 契约）
 - 新增 `opskit template validate --json` 机器可读输出（`issues.path/code/message/advice`）
 - 新增 `docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`（模板校验 JSON 契约）
 - 新增 `scripts/template-validate-check.sh`（CI 脚本化验收）
@@ -38,6 +39,7 @@
 ### Changed
 
 - `scripts/release-check.sh` 每个步骤新增 `reasonCode`，失败时写入 `summary.json` 后退出
+- `scripts/release-check.sh` 的 `stepResults[].reasonCode` 语义调整为成功 `ok`、失败为步骤失败码
 - `scripts/generic-readiness-check.sh` 新增 `release-check/summary.json` 契约校验
 - `template validate` 错误提示增强为路径化 + 修复建议（兼容原文本模式）
 - `template validate` 类型错误提示增强（array/object 提供 JSON 示例与解析原因）

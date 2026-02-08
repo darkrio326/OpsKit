@@ -17,6 +17,7 @@
 - 新增 `opskit template validate --json`（机器可读模板校验输出）
 - 模板校验错误新增统一结构：`path/code/message/advice`
 - 新增 `docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`（模板校验 JSON 契约）
+- 新增 `docs/specs/SPEC_RELEASE_CHECK_JSON.md`（`release-check summary.json` 契约）
 - 新增 `scripts/template-validate-check.sh`（CI 脚本化验收）
 - `scripts/release-check.sh` 默认接入模板 JSON 契约门禁，并支持 `--skip-template-json-contract`（可选跳过）
 
@@ -26,6 +27,7 @@
 - `template validate` 类型错误增强（array/object 提供 JSON 示例和解析原因）
 - `scripts/release-check.sh` 增强为 machine-readable 输出（`summary.json` + step-level `reasonCode`）
 - `scripts/generic-readiness-check.sh` 新增对 `release-check/summary.json` 的契约校验
+- `scripts/release-check.sh` 的 `stepResults[].reasonCode` 语义修正为：成功 `ok`，失败为步骤失败码
 - `docs/specs/SPEC_TEST_ACCEPTANCE.md` 门禁双轨策略用于模板接入前置验收
 - demo 模板 README 增加 `template validate --json` 用法和常见错误码指引
 - `docs/examples/*` 中英文示例增加 `template validate --json` 成功/失败样例与 CI 判读字段

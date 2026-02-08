@@ -198,7 +198,7 @@ run_step() {
   local reason="$2"
   shift
   shift
-  local rc started ended elapsed
+  local rc started ended elapsed effective_reason
   started="$(now_s)"
   echo "==> ${label}"
   set +e
@@ -209,7 +209,11 @@ run_step() {
   elapsed=$((ended - started))
   STEP_COUNT=$((STEP_COUNT + 1))
   TOTAL_SECONDS=$((TOTAL_SECONDS + elapsed))
-  STEP_LINES+=("${label}|${elapsed}|${rc}|${reason}")
+  effective_reason="ok"
+  if [[ "${rc}" != "0" ]]; then
+    effective_reason="${reason}"
+  fi
+  STEP_LINES+=("${label}|${elapsed}|${rc}|${effective_reason}")
   if [[ "${rc}" == "0" ]]; then
     echo "    done: ${elapsed}s"
     return 0

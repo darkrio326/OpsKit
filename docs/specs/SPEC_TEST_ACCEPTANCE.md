@@ -71,6 +71,7 @@
 - `status --json` 满足契约（至少包含 `command/schemaVersion/exitCode/health`）
 - `acceptance-consistency` 报告可在 `artifacts.json` 中被索引
 - `release-check` 的 `summary.json` 满足契约（至少包含 `result/reasonCode/recommendedAction/stepResults`）
+- `release-check` JSON 详细字段与兼容性策略见：`docs/specs/SPEC_RELEASE_CHECK_JSON.md`
 
 ## 6. 验收命令（最小集合）
 
