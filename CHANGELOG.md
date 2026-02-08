@@ -46,6 +46,8 @@
 
 ### Changed
 
+- `internal/core/executil/SystemRunner` 增强：超时优先返回 `124`，取消返回 `130`，并新增 `Result.Duration/Result.TimedOut`
+- 新增 `internal/core/executil` 单元测试，覆盖成功/非零退出/超时/取消/空命令/nil context 场景
 - `scripts/template-validate-check.sh` 默认新增 `generic-manage-v1` 正向校验
 - `scripts/release-check.sh` 默认新增 `generic-manage-v1` 模板校验步骤
 - `scripts/release-check.sh` dry-run 增加 `generic-manage-v1` 的 A/D 计划校验

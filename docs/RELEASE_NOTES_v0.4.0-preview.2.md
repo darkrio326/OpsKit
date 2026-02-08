@@ -21,6 +21,7 @@
 
 - `template.vars` 增强：新增 `group` 元数据并校验格式
 - `template validate` 增强：支持模板路径前后均可传 `--vars/--vars-file/--json`
+- `executil.SystemRunner` 增强：补齐超时/取消语义（超时 `124`、取消 `130`）与执行耗时输出字段
 - `scripts/template-validate-check.sh` 新增变量类型错误负例断言
 - `scripts/template-validate-check.sh` 默认新增 `generic-manage-v1` 正向校验
 - `scripts/release-check.sh` 默认新增 `generic-manage-v1` 模板校验步骤
