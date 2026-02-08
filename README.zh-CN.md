@@ -126,6 +126,7 @@ IMAGE=kylinv10/kylin:b09 DOCKER_PLATFORM=linux/amd64 DRY_RUN=1 make -C examples/
 常规门禁（推荐）：
 
 ```bash
+scripts/template-validate-check.sh --clean
 scripts/release-check.sh --with-offline-validate
 ```
 

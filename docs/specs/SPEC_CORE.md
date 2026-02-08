@@ -61,6 +61,7 @@
 - `overall` / `lifecycle` / `services` / `artifacts`：对应状态对象
 
 详细契约见：`docs/specs/SPEC_STATUS_JSON.md`
+模板校验 JSON 契约见：`docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`
 
 ## 3. 状态模型规范
 

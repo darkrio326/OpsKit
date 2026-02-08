@@ -7,6 +7,8 @@
 ### Added
 
 - 新增 `opskit template validate --json` 机器可读输出（`issues.path/code/message/advice`）
+- 新增 `docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`（模板校验 JSON 契约）
+- 新增 `scripts/template-validate-check.sh`（CI 脚本化验收）
 - 新增 `docs/RELEASE_PLAN_v0.3.6-preview.1.md`（下一版扩展任务清单）
 - 新增 `docs/RELEASE_NOTES_v0.3.6-preview.1.md`（下一版发布文案草稿）
 - `scripts/kylin-offline-validate.sh` 新增 `--summary-json-file`（结构化回归摘要）

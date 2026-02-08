@@ -104,6 +104,7 @@ web/ui/                    # 开发态 UI 资源
 常规门禁（建议默认）：
 
 ```bash
+scripts/template-validate-check.sh --clean
 scripts/release-check.sh --with-offline-validate
 ```
 

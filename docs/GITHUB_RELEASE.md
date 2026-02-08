@@ -53,6 +53,7 @@ scripts/release.sh --version v0.3.6 --clean
 - 删除/排除真实环境产物：`.tmp/`、日志、证据包
 - 检查文档无客户信息与敏感数据
 - 验证 demo 模板可通过 `template validate`
+- 建议执行模板 JSON 契约门禁：`scripts/template-validate-check.sh --clean`
 - 至少完成一次 `run A`、`run D`、`accept` 验证流程
 - 优先执行 `scripts/release-check.sh` 一键回归
 - 建议在发版前增加离线门禁：`scripts/release-check.sh --with-offline-validate`

@@ -2,7 +2,7 @@
 
 > 主线：在 `v0.3.6` 通用能力正式版基础上，进入模板接入前置增强（不引入生产模板）。
 
-> 进度：A 已完成，B 已开始（demo 模板 README 补充 `--json` 校验与错误码说明），C 进行中。
+> 进度：A 已完成，B 已开始（demo 模板 README 补充 `--json` 校验与错误码说明），C 已完成（新增 JSON 契约 spec 与 CI 验收脚本）。
 
 ## 1. 版本目标
 
@@ -54,11 +54,14 @@ rg -n "最低可运行变量集|常见失败|expected outputs|vars-file" assets/
 
 - `SPEC_TEST_ACCEPTANCE` 保持 non-strict/strict 双轨一致
 - 发布说明同步模板接入前置策略
+- 新增 `SPEC_TEMPLATE_VALIDATE_JSON` 契约规范
+- 新增 `scripts/template-validate-check.sh` 供 CI 直接判读
 
 验收：
 
 ```bash
 rg -n "non-strict|strict|0/1/3|offline-strict-exit|generic-readiness-check" docs/specs/*.md docs/GITHUB_RELEASE.md
+scripts/template-validate-check.sh --clean
 ```
 
 ## 4. 发布准入（Go/No-Go）

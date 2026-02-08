@@ -8,6 +8,8 @@
   覆盖 CLI、状态模型、设计冻结范围。
 - `docs/specs/SPEC_STATUS_JSON.md`  
   覆盖 `opskit status --json` 机器可读输出契约。
+- `docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`  
+  覆盖 `opskit template validate --json` 机器可读输出契约。
 - `docs/specs/SPEC_OPS_SECURITY.md`  
   覆盖安装交付、运行边界、安全与脱敏规则。
 - `docs/specs/SPEC_TEST_ACCEPTANCE.md`  

@@ -16,6 +16,8 @@
 - 模板验收示例命令与最小变量集说明（按 demo 模板补齐）
 - 新增 `opskit template validate --json`（机器可读模板校验输出）
 - 模板校验错误新增统一结构：`path/code/message/advice`
+- 新增 `docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`（模板校验 JSON 契约）
+- 新增 `scripts/template-validate-check.sh`（CI 脚本化验收）
 
 ### Changed
 
