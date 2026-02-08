@@ -40,6 +40,7 @@ go build -o opskit ./cmd/opskit
 ./opskit handover [--output dir]
 ./opskit web [--output dir] [--listen :18080]
 ./opskit template validate <file>
+./opskit template validate --json <file>
 ```
 
 ## vars-file 示例

@@ -42,6 +42,12 @@ go build -o opskit ./cmd/opskit
 ./opskit status --output ./.tmp/opskit-demo --json
 ```
 
+`template validate` 机器可读输出（模板接入前建议）：
+
+```bash
+./opskit template validate --json assets/templates/demo-server-audit.json --vars-file examples/vars/demo-server-audit.json
+```
+
 3) 启动 UI 查看状态
 
 ```bash

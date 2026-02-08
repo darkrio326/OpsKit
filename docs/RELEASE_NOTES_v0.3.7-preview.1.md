@@ -14,10 +14,12 @@
 
 - 新增 `docs/RELEASE_PLAN_v0.3.7-preview.1.md`
 - 模板验收示例命令与最小变量集说明（按 demo 模板补齐）
+- 新增 `opskit template validate --json`（机器可读模板校验输出）
+- 模板校验错误新增统一结构：`path/code/message/advice`
 
 ### Changed
 
-- `template validate` 错误提示结构化增强（计划中）
+- `template validate` 错误提示结构化增强（路径化 + 修复建议）
 - `docs/specs/SPEC_TEST_ACCEPTANCE.md` 门禁双轨策略用于模板接入前置验收
 
 ### Out of Scope

@@ -18,7 +18,7 @@
 - `opskit status`
 - `opskit accept`
 - `opskit handover`
-- `opskit template validate <file>`
+- `opskit template validate <file> [--json]`
 - `opskit web`
 
 ### 2.2 通用参数
@@ -47,6 +47,7 @@
 
 - `stdout`：人类可读摘要
 - `opskit status --json`：机器可读 JSON（稳定顶层字段）
+- `opskit template validate --json`：模板校验机器可读 JSON（错误路径与建议）
 - 状态 JSON：写入 `<output>/state`
 - 日志：按运行环境输出到文件或控制台
 

@@ -31,6 +31,8 @@ import (
 const (
 	statusJSONSchemaVersion = "v1"
 	statusJSONCommand       = "opskit status"
+	templateJSONSchemaVer   = "v1"
+	templateJSONCommand     = "opskit template validate"
 )
 
 type statusJSONPayload struct {
@@ -43,6 +45,22 @@ type statusJSONPayload struct {
 	Lifecycle     schema.LifecycleState `json:"lifecycle"`
 	Services      schema.ServicesState  `json:"services"`
 	Artifacts     schema.ArtifactsState `json:"artifacts"`
+}
+
+type templateValidateIssue struct {
+	Path    string `json:"path"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Advice  string `json:"advice,omitempty"`
+}
+
+type templateValidateJSONPayload struct {
+	Command       string                  `json:"command"`
+	SchemaVersion string                  `json:"schemaVersion"`
+	Template      string                  `json:"template"`
+	Valid         bool                    `json:"valid"`
+	ErrorCount    int                     `json:"errorCount"`
+	Issues        []templateValidateIssue `json:"issues"`
 }
 
 func main() {
@@ -79,7 +97,7 @@ func runCLI(args []string) int {
 
 func cmdTemplate(args []string) int {
 	if len(args) < 1 || args[0] != "validate" {
-		fmt.Fprintln(os.Stderr, "usage: opskit template validate <file> [--vars k=v] [--vars-file file] [--output dir]")
+		fmt.Fprintln(os.Stderr, "usage: opskit template validate <file> [--vars k=v] [--vars-file file] [--output dir] [--json]")
 		return exitcode.Precondition
 	}
 	fs := flag.NewFlagSet("template validate", flag.ContinueOnError)
@@ -87,6 +105,7 @@ func cmdTemplate(args []string) int {
 	varsRaw := fs.String("vars", "", "vars key=value[,key=value]")
 	varsFile := fs.String("vars-file", "", "vars file (json or key=value lines)")
 	output := fs.String("output", defaultOutputRoot(), "output root")
+	jsonOutput := fs.Bool("json", false, "json output")
 	if err := fs.Parse(args[1:]); err != nil {
 		return exitcode.Precondition
 	}
@@ -96,11 +115,175 @@ func cmdTemplate(args []string) int {
 	}
 	ref := fs.Arg(0)
 	if _, _, err := templates.Resolve(templates.ResolveOptions{TemplateRef: ref, BaseDir: *output, VarsRaw: *varsRaw, VarsFile: *varsFile}); err != nil {
-		fmt.Fprintf(os.Stderr, "template invalid: %v\n", err)
+		issue := diagnoseTemplateValidateError(err)
+		if *jsonOutput {
+			printTemplateValidateJSON(ref, false, []templateValidateIssue{issue})
+			return exitcode.Precondition
+		}
+		fmt.Fprintf(os.Stderr, "template invalid: %s\n", issue.Message)
+		fmt.Fprintf(os.Stderr, "- path: %s\n", issue.Path)
+		fmt.Fprintf(os.Stderr, "- code: %s\n", issue.Code)
+		if strings.TrimSpace(issue.Advice) != "" {
+			fmt.Fprintf(os.Stderr, "- advice: %s\n", issue.Advice)
+		}
 		return exitcode.Precondition
+	}
+	if *jsonOutput {
+		printTemplateValidateJSON(ref, true, []templateValidateIssue{})
+		return exitcode.Success
 	}
 	fmt.Printf("template valid: %s\n", ref)
 	return exitcode.Success
+}
+
+func printTemplateValidateJSON(ref string, valid bool, issues []templateValidateIssue) {
+	payload := templateValidateJSONPayload{
+		Command:       templateJSONCommand,
+		SchemaVersion: templateJSONSchemaVer,
+		Template:      ref,
+		Valid:         valid,
+		ErrorCount:    len(issues),
+		Issues:        issues,
+	}
+	body, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "template validate json marshal failed: %v\n", err)
+		return
+	}
+	fmt.Println(string(body))
+}
+
+func diagnoseTemplateValidateError(err error) templateValidateIssue {
+	msg := strings.TrimSpace(err.Error())
+	issue := templateValidateIssue{
+		Path:    "template",
+		Code:    "template_invalid",
+		Message: msg,
+		Advice:  "check template file and vars, then rerun `opskit template validate`",
+	}
+
+	switch {
+	case strings.Contains(msg, "unknown template id:"):
+		issue.Path = "template.ref"
+		issue.Code = "template_unknown_id"
+		issue.Advice = "use builtin id `generic-manage-v1` or pass a valid .json file path"
+		return issue
+	case strings.HasPrefix(msg, "vars-file "):
+		issue.Path = "vars-file"
+		issue.Code = "vars_file_invalid"
+		issue.Advice = "use JSON object or key=value lines; comments are allowed with # or //"
+		return issue
+	case strings.Contains(msg, "no such file or directory"):
+		issue.Path = "template.file"
+		issue.Code = "template_file_not_found"
+		issue.Advice = "check template path and file permissions"
+		return issue
+	case strings.Contains(msg, "permission denied"):
+		issue.Path = "template.file"
+		issue.Code = "template_file_permission_denied"
+		issue.Advice = "ensure read permission on template/vars files"
+		return issue
+	case strings.Contains(msg, "template: json: unknown field "):
+		field := between(msg, `unknown field "`, `"`)
+		if field != "" {
+			issue.Path = "template." + field
+			issue.Message = "unknown template JSON field: " + field
+		}
+		issue.Code = "template_unknown_field"
+		issue.Advice = "remove unsupported field or update template schema"
+		return issue
+	case strings.Contains(msg, "template: unexpected extra JSON content"):
+		issue.Path = "template"
+		issue.Code = "template_json_trailing_content"
+		issue.Advice = "ensure the template file contains exactly one JSON object"
+		return issue
+	case strings.Contains(msg, "unresolved var "):
+		path, token := splitUnresolvedVar(msg)
+		if path != "" {
+			issue.Path = path
+		}
+		issue.Code = "template_unresolved_var"
+		issue.Advice = "define " + token + " in template.vars and pass value via --vars/--vars-file"
+		return issue
+	case strings.Contains(msg, "invalid stage id"):
+		issue.Path = "template.stages"
+		issue.Code = "template_stage_invalid"
+		issue.Advice = "stage id must be one of A,B,C,D,E,F"
+		return issue
+	case strings.Contains(msg, ".params.severity"):
+		issue.Path = extractTemplatePath(msg)
+		issue.Code = "template_severity_invalid"
+		issue.Advice = "severity must be one of info, warn, fail"
+		return issue
+	}
+
+	path := extractTemplatePath(msg)
+	if path != "" {
+		issue.Path = path
+	}
+	if strings.Contains(msg, "template.vars.") {
+		issue.Code = "template_var_invalid"
+		issue.Advice = "check var type/enum/default or pass required value via --vars/--vars-file"
+		if strings.Contains(msg, " is required") {
+			issue.Code = "template_var_required"
+			issue.Advice = "pass the required var via --vars or --vars-file"
+		} else if strings.Contains(msg, "expects ") {
+			issue.Code = "template_var_type_mismatch"
+			issue.Advice = "fix var value type (int/number/bool/json array/json object)"
+		} else if strings.Contains(msg, "invalid value") || strings.Contains(msg, "default not in enum") {
+			issue.Code = "template_var_enum_mismatch"
+			issue.Advice = "use one of allowed enum values declared in template.vars"
+		}
+	}
+	return issue
+}
+
+func extractTemplatePath(msg string) string {
+	prefixes := []string{"template.", "template"}
+	delims := []string{":", " is ", " must ", " invalid ", " expects ", " contains ", " default "}
+	for _, p := range prefixes {
+		if !strings.HasPrefix(msg, p) {
+			continue
+		}
+		candidate := msg
+		for _, d := range delims {
+			if idx := strings.Index(candidate, d); idx > 0 {
+				candidate = candidate[:idx]
+				break
+			}
+		}
+		candidate = strings.TrimSpace(candidate)
+		if candidate != "" {
+			return candidate
+		}
+	}
+	return ""
+}
+
+func splitUnresolvedVar(msg string) (string, string) {
+	idx := strings.Index(msg, ": unresolved var ")
+	if idx < 0 {
+		return "", "${VAR}"
+	}
+	path := strings.TrimSpace(msg[:idx])
+	token := strings.TrimSpace(msg[idx+len(": unresolved var "):])
+	if token == "" {
+		token = "${VAR}"
+	}
+	return path, token
+}
+
+func between(s, left, right string) string {
+	start := strings.Index(s, left)
+	if start < 0 {
+		return ""
+	}
+	start += len(left)
+	end := strings.Index(s[start:], right)
+	if end < 0 {
+		return ""
+	}
+	return s[start : start+end]
 }
 
 func cmdInstall(args []string) int {
@@ -609,5 +792,5 @@ func printUsage() {
 	fmt.Println("  opskit accept [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--fix] [--output dir]")
 	fmt.Println("  opskit handover [--output dir]")
 	fmt.Println("  opskit web [--output dir] [--listen :18080]")
-	fmt.Println("  opskit template validate <file> [--vars k=v] [--vars-file file] [--output dir]")
+	fmt.Println("  opskit template validate <file> [--vars k=v] [--vars-file file] [--output dir] [--json]")
 }

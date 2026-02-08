@@ -215,6 +215,39 @@ func TestCmdTemplate_InvalidFile(t *testing.T) {
 	}
 }
 
+func TestCmdTemplate_InvalidFile_JSON(t *testing.T) {
+	missing := filepath.Join(t.TempDir(), "missing.json")
+	exit, stdout := captureStdout(t, func() int {
+		return cmdTemplate([]string{"validate", "--json", missing})
+	})
+	if exit != exitcode.Precondition {
+		t.Fatalf("expected precondition exit code, got %d", exit)
+	}
+
+	var payload templateValidateJSONPayload
+	if err := json.Unmarshal([]byte(strings.TrimSpace(stdout)), &payload); err != nil {
+		t.Fatalf("json unmarshal failed: %v, output=%q", err, stdout)
+	}
+	if payload.Command != templateJSONCommand {
+		t.Fatalf("unexpected command: %s", payload.Command)
+	}
+	if payload.SchemaVersion != templateJSONSchemaVer {
+		t.Fatalf("unexpected schemaVersion: %s", payload.SchemaVersion)
+	}
+	if payload.Valid {
+		t.Fatalf("expected valid=false")
+	}
+	if payload.ErrorCount != 1 || len(payload.Issues) != 1 {
+		t.Fatalf("expected one issue, got errorCount=%d issues=%d", payload.ErrorCount, len(payload.Issues))
+	}
+	if payload.Issues[0].Code != "template_file_not_found" {
+		t.Fatalf("unexpected issue code: %s", payload.Issues[0].Code)
+	}
+	if payload.Issues[0].Path != "template.file" {
+		t.Fatalf("unexpected issue path: %s", payload.Issues[0].Path)
+	}
+}
+
 func TestCmdTemplate_VarsFile(t *testing.T) {
 	tmp := t.TempDir()
 	tplPath := filepath.Join(tmp, "t.json")
@@ -247,6 +280,91 @@ func TestCmdTemplate_VarsFile(t *testing.T) {
 	got := cmdTemplate([]string{"validate", "--vars-file", varsPath, tplPath})
 	if got != exitcode.Success {
 		t.Fatalf("expected success, got %d", got)
+	}
+}
+
+func TestCmdTemplate_VarRequired_JSON(t *testing.T) {
+	tmp := t.TempDir()
+	tplPath := filepath.Join(tmp, "required-vars.json")
+	tpl := `{
+  "id": "required-vars",
+  "name": "required-vars",
+  "mode": "manage",
+  "vars": {
+    "ENV": { "type": "string", "required": true }
+  },
+  "stages": {
+    "A": {
+      "checks": [
+        { "id": "a.system_info", "kind": "system_info", "params": { "env": "${ENV}" } }
+      ]
+    }
+  }
+}`
+	if err := os.WriteFile(tplPath, []byte(tpl), 0o644); err != nil {
+		t.Fatalf("write template: %v", err)
+	}
+
+	exit, stdout := captureStdout(t, func() int {
+		return cmdTemplate([]string{"validate", "--json", tplPath})
+	})
+	if exit != exitcode.Precondition {
+		t.Fatalf("expected precondition exit code, got %d", exit)
+	}
+
+	var payload templateValidateJSONPayload
+	if err := json.Unmarshal([]byte(strings.TrimSpace(stdout)), &payload); err != nil {
+		t.Fatalf("json unmarshal failed: %v, output=%q", err, stdout)
+	}
+	if payload.ErrorCount != 1 || len(payload.Issues) != 1 {
+		t.Fatalf("expected one issue, got errorCount=%d issues=%d", payload.ErrorCount, len(payload.Issues))
+	}
+	if payload.Issues[0].Code != "template_var_required" {
+		t.Fatalf("unexpected issue code: %s", payload.Issues[0].Code)
+	}
+	if payload.Issues[0].Path != "template.vars.ENV" {
+		t.Fatalf("unexpected issue path: %s", payload.Issues[0].Path)
+	}
+}
+
+func TestCmdTemplate_UnresolvedVar_JSON(t *testing.T) {
+	tmp := t.TempDir()
+	tplPath := filepath.Join(tmp, "unresolved-var.json")
+	tpl := `{
+  "id": "unresolved-var",
+  "name": "unresolved-var",
+  "mode": "manage",
+  "stages": {
+    "A": {
+      "checks": [
+        { "id": "a.system_info", "kind": "system_info", "params": { "hostname": "${HOSTNAME_MISSING}" } }
+      ]
+    }
+  }
+}`
+	if err := os.WriteFile(tplPath, []byte(tpl), 0o644); err != nil {
+		t.Fatalf("write template: %v", err)
+	}
+
+	exit, stdout := captureStdout(t, func() int {
+		return cmdTemplate([]string{"validate", "--json", tplPath})
+	})
+	if exit != exitcode.Precondition {
+		t.Fatalf("expected precondition exit code, got %d", exit)
+	}
+
+	var payload templateValidateJSONPayload
+	if err := json.Unmarshal([]byte(strings.TrimSpace(stdout)), &payload); err != nil {
+		t.Fatalf("json unmarshal failed: %v, output=%q", err, stdout)
+	}
+	if payload.ErrorCount != 1 || len(payload.Issues) != 1 {
+		t.Fatalf("expected one issue, got errorCount=%d issues=%d", payload.ErrorCount, len(payload.Issues))
+	}
+	if payload.Issues[0].Code != "template_unresolved_var" {
+		t.Fatalf("unexpected issue code: %s", payload.Issues[0].Code)
+	}
+	if payload.Issues[0].Path != "template.stages.A.checks[0].params.hostname" {
+		t.Fatalf("unexpected issue path: %s", payload.Issues[0].Path)
 	}
 }
 

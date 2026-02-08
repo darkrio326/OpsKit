@@ -6,6 +6,7 @@
 
 ### Added
 
+- 新增 `opskit template validate --json` 机器可读输出（`issues.path/code/message/advice`）
 - 新增 `docs/RELEASE_PLAN_v0.3.6-preview.1.md`（下一版扩展任务清单）
 - 新增 `docs/RELEASE_NOTES_v0.3.6-preview.1.md`（下一版发布文案草稿）
 - `scripts/kylin-offline-validate.sh` 新增 `--summary-json-file`（结构化回归摘要）
@@ -32,6 +33,7 @@
 
 ### Changed
 
+- `template validate` 错误提示增强为路径化 + 修复建议（兼容原文本模式）
 - `README.md` / `README.zh-CN.md` 下一版计划入口滚动到 `v0.3.6-preview.1`
 - `ROADMAP.md` 最新发布/进行中版本滚动到 `v0.3.5` / `v0.3.6-preview.1`
 - `docs/GITHUB_RELEASE.md` 发布文案模板与命令滚动到 `v0.3.6-preview.1`
