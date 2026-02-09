@@ -6,8 +6,10 @@
 
 ### Added
 
-- 新增 `docs/RELEASE_PLAN_v0.4.0-preview.3.md`（M4 补齐版发布计划）
-- 新增 `docs/RELEASE_NOTES_v0.4.0-preview.3.md`（M4 补齐版发布说明）
+- 新增 `docs/RELEASE_PLAN_v0.4.0-preview.4.md`（M4 可发现性增强版计划）
+- 新增 `docs/RELEASE_NOTES_v0.4.0-preview.4.md`（M4 可发现性增强版说明草稿）
+- 新增规范：`docs/specs/SPEC_TEMPLATE_LIST_JSON.md`（`opskit template list --json` 契约）
+- 新增命令：`opskit template list` / `opskit template list --json`
 - 新增去生产化模板：`assets/templates/demo-runtime-baseline.json`（A/D/F）
 - 新增去生产化模板：`assets/templates/demo-blackbox-middleware-manage.json`（黑箱中间件 Manage）
 - 新增模板说明：`assets/templates/demo-runtime-baseline.README.md`
@@ -17,6 +19,7 @@
 - 新增 vars 示例：`examples/vars/demo-blackbox-middleware-manage-fcs.json`、`examples/vars/demo-blackbox-middleware-manage-fcs.env`
 - 新增 vars 示例：`examples/vars/demo-blackbox-middleware-manage-kingdee.json`、`examples/vars/demo-blackbox-middleware-manage-kingdee.env`
 - `scripts/release-check.sh` 默认接入 `template-validate-check` 门禁，并新增 `--skip-template-json-contract`（可选）
+- `scripts/release-check.sh` 新增 `template list --json` 冒烟步骤
 - `scripts/release-check.sh` 新增 `--summary-json-file`，并输出 machine-readable `summary.json`
 - 新增 `docs/specs/SPEC_RELEASE_CHECK_JSON.md`（`release-check summary.json` 契约）
 - 新增 `scripts/release-check-json-contract.sh`（`release-check summary.json` 契约门禁）

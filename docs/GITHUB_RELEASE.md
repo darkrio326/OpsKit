@@ -92,8 +92,8 @@ scripts/release.sh --version v0.3.7 --clean
 ## 7. Release 文案模板
 
 - 当前稳定版：`docs/releases/notes/RELEASE_NOTES_v0.3.7.md`
-- 下一版草稿：`docs/RELEASE_NOTES_v0.4.0-preview.3.md`
-- 下一版任务单：`docs/RELEASE_PLAN_v0.4.0-preview.3.md`
+- 下一版草稿：`docs/RELEASE_NOTES_v0.4.0-preview.4.md`
+- 下一版任务单：`docs/RELEASE_PLAN_v0.4.0-preview.4.md`
 
 ## 8. v0.3.7 正式发布命令（建议）
 
