@@ -494,6 +494,47 @@ func TestCmdTemplate_UnresolvedVar_JSON(t *testing.T) {
 	}
 }
 
+func TestCmdTemplate_UnsupportedPluginKind_JSON(t *testing.T) {
+	tmp := t.TempDir()
+	tplPath := filepath.Join(tmp, "unsupported-kind.json")
+	tpl := `{
+  "id": "unsupported-kind",
+  "name": "unsupported-kind",
+  "mode": "manage",
+  "stages": {
+    "A": {
+      "checks": [
+        { "id": "a.bad_kind", "kind": "nonexistent_check_kind" }
+      ]
+    }
+  }
+}`
+	if err := os.WriteFile(tplPath, []byte(tpl), 0o644); err != nil {
+		t.Fatalf("write template: %v", err)
+	}
+
+	exit, stdout := captureStdout(t, func() int {
+		return cmdTemplate([]string{"validate", "--json", tplPath})
+	})
+	if exit != exitcode.Precondition {
+		t.Fatalf("expected precondition exit code, got %d", exit)
+	}
+
+	var payload templateValidateJSONPayload
+	if err := json.Unmarshal([]byte(strings.TrimSpace(stdout)), &payload); err != nil {
+		t.Fatalf("json unmarshal failed: %v, output=%q", err, stdout)
+	}
+	if payload.ErrorCount != 1 || len(payload.Issues) != 1 {
+		t.Fatalf("expected one issue, got errorCount=%d issues=%d", payload.ErrorCount, len(payload.Issues))
+	}
+	if payload.Issues[0].Code != "template_plugin_kind_unsupported" {
+		t.Fatalf("unexpected issue code: %s", payload.Issues[0].Code)
+	}
+	if payload.Issues[0].Path != "template.stages.A.checks[0].kind" {
+		t.Fatalf("unexpected issue path: %s", payload.Issues[0].Path)
+	}
+}
+
 func TestCmdTemplate_VarTypeMismatch_Array_JSON(t *testing.T) {
 	tmp := t.TempDir()
 	tplPath := filepath.Join(tmp, "type-mismatch-array.json")
@@ -570,6 +611,54 @@ func TestCmdInstall_DryRun(t *testing.T) {
 	got := cmdInstall([]string{"--template", "generic-manage-v1", "--dry-run", "--no-systemd", "--output", tmp})
 	if got != exitcode.Success {
 		t.Fatalf("expected success, got %d", got)
+	}
+}
+
+func TestCmdRun_DryRunMissingTemplateStagePrecondition(t *testing.T) {
+	tmp := t.TempDir()
+	tplPath := filepath.Join(tmp, "missing-stage.json")
+	tpl := `{
+  "id": "missing-stage",
+  "name": "missing-stage",
+  "mode": "manage",
+  "stages": {
+    "D": {
+      "checks": [
+        { "id": "d.system_info", "kind": "system_info" }
+      ]
+    }
+  }
+}`
+	if err := os.WriteFile(tplPath, []byte(tpl), 0o644); err != nil {
+		t.Fatalf("write template: %v", err)
+	}
+	got := cmdRun([]string{"A", "--template", tplPath, "--dry-run", "--output", tmp})
+	if got != exitcode.Precondition {
+		t.Fatalf("expected precondition, got %d", got)
+	}
+}
+
+func TestCmdRun_DryRunUnsupportedPluginPrecondition(t *testing.T) {
+	tmp := t.TempDir()
+	tplPath := filepath.Join(tmp, "unsupported-kind-run.json")
+	tpl := `{
+  "id": "unsupported-kind-run",
+  "name": "unsupported-kind-run",
+  "mode": "manage",
+  "stages": {
+    "A": {
+      "checks": [
+        { "id": "a.bad_kind", "kind": "nonexistent_check_kind" }
+      ]
+    }
+  }
+}`
+	if err := os.WriteFile(tplPath, []byte(tpl), 0o644); err != nil {
+		t.Fatalf("write template: %v", err)
+	}
+	got := cmdRun([]string{"A", "--template", tplPath, "--dry-run", "--output", tmp})
+	if got != exitcode.Precondition {
+		t.Fatalf("expected precondition, got %d", got)
 	}
 }
 

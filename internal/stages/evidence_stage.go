@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"opskit/internal/core/fsx"
 	"opskit/internal/engine"
 	evidenceplugin "opskit/internal/plugins/evidence"
 	"opskit/internal/reporting"
@@ -137,22 +138,6 @@ func executeEvidenceStage(ctx context.Context, rt *engine.Runtime, stageID strin
 		Path: consistencyRel,
 	})
 
-	if err := rt.Store.WriteReportStub(
-		reportName,
-		reportTitle,
-		buildAcceptReportBody(stageID, result.Status, evidenceRows, issues, map[string]any{
-			"path": consistencyRel,
-			"ok":   consistency.OK,
-			"summary": map[string]any{
-				"missingRequiredState": len(consistency.MissingRequiredState),
-				"hashMismatch":         len(consistency.HashMismatch),
-				"missingInManifest":    len(consistency.MissingInManifest),
-				"missingInHashes":      len(consistency.MissingInHashes),
-			},
-		}),
-	); err != nil {
-		return engine.StageResult{}, err
-	}
 	result.Bundles = append(result.Bundles, schema.ArtifactRef{ID: "acceptance", Path: filepath.Join("bundles", bundleName)})
 
 	result.Metrics = append(metrics,
@@ -174,14 +159,7 @@ func fileExists(path string) bool {
 }
 
 func writeJSON(path string, v any) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return err
-	}
-	b, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(path, b, 0o644)
+	return fsx.AtomicWriteJSON(path, v)
 }
 
 func buildAcceptReportBody(stageID string, status schema.Status, evidenceRows []map[string]any, issues []schema.Issue, consistency any) string {

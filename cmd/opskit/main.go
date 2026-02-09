@@ -147,7 +147,22 @@ func cmdTemplateValidate(args []string) int {
 		return exitcode.Precondition
 	}
 	ref := fs.Arg(0)
-	if _, _, err := templates.Resolve(templates.ResolveOptions{TemplateRef: ref, BaseDir: *output, VarsRaw: *varsRaw, VarsFile: *varsFile}); err != nil {
+	t, _, err := templates.Resolve(templates.ResolveOptions{TemplateRef: ref, BaseDir: *output, VarsRaw: *varsRaw, VarsFile: *varsFile})
+	if err != nil {
+		issue := diagnoseTemplateValidateError(err)
+		if *jsonOutput {
+			printTemplateValidateJSON(ref, false, []templateValidateIssue{issue})
+			return exitcode.Precondition
+		}
+		fmt.Fprintf(os.Stderr, "template invalid: %s\n", issue.Message)
+		fmt.Fprintf(os.Stderr, "- path: %s\n", issue.Path)
+		fmt.Fprintf(os.Stderr, "- code: %s\n", issue.Code)
+		if strings.TrimSpace(issue.Advice) != "" {
+			fmt.Fprintf(os.Stderr, "- advice: %s\n", issue.Advice)
+		}
+		return exitcode.Precondition
+	}
+	if err := validateTemplateContract(t); err != nil {
 		issue := diagnoseTemplateValidateError(err)
 		if *jsonOutput {
 			printTemplateValidateJSON(ref, false, []templateValidateIssue{issue})
@@ -355,6 +370,11 @@ func diagnoseTemplateValidateError(err error) templateValidateIssue {
 		issue.Code = "template_severity_invalid"
 		issue.Advice = "severity must be one of info, warn, fail"
 		return issue
+	case strings.Contains(msg, ".kind unsupported:") || strings.Contains(msg, "plugin not found:"):
+		issue.Path = extractTemplatePath(msg)
+		issue.Code = "template_plugin_kind_unsupported"
+		issue.Advice = "use supported check/action/evidence kinds or register the plugin before running"
+		return issue
 	}
 
 	path := extractTemplatePath(msg)
@@ -396,18 +416,20 @@ func typeMismatchAdvice(msg string) string {
 }
 
 func extractTemplatePath(msg string) string {
-	if !strings.HasPrefix(msg, "template") {
+	start := strings.Index(msg, "template")
+	if start < 0 {
 		return ""
 	}
-	stop := len(msg)
-	for i, r := range msg {
+	segment := msg[start:]
+	stop := len(segment)
+	for i, r := range segment {
 		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '.' || r == '[' || r == ']' {
 			continue
 		}
 		stop = i
 		break
 	}
-	path := strings.TrimSpace(msg[:stop])
+	path := strings.TrimSpace(segment[:stop])
 	if path != "" {
 		return path
 	}
@@ -459,6 +481,14 @@ func cmdInstall(args []string) int {
 
 	t, _, err := templates.Resolve(templates.ResolveOptions{TemplateRef: *templateRef, BaseDir: *output, VarsRaw: *varsRaw, VarsFile: *varsFile})
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "install precondition failed: %v\n", err)
+		return exitcode.Precondition
+	}
+	if err := ensureTemplateHasStages(t, []string{"A", "D"}); err != nil {
+		fmt.Fprintf(os.Stderr, "install precondition failed: %v\n", err)
+		return exitcode.Precondition
+	}
+	if err := validateTemplateContract(t); err != nil {
 		fmt.Fprintf(os.Stderr, "install precondition failed: %v\n", err)
 		return exitcode.Precondition
 	}
@@ -567,6 +597,14 @@ func cmdRun(args []string) int {
 		fmt.Fprintf(os.Stderr, "run precondition failed: %v\n", err)
 		return exitcode.Precondition
 	}
+	if err := ensureTemplateHasStages(t, selected); err != nil {
+		fmt.Fprintf(os.Stderr, "run precondition failed: %v\n", err)
+		return exitcode.Precondition
+	}
+	if err := validateTemplateContract(t); err != nil {
+		fmt.Fprintf(os.Stderr, "run precondition failed: %v\n", err)
+		return exitcode.Precondition
+	}
 
 	store := state.NewStore(state.NewPaths(*output))
 	if *dryRun {
@@ -610,6 +648,14 @@ func cmdAccept(args []string) int {
 	selectedTemplate := resolveTemplateRef(*templateRef, *output)
 	t, _, err := templates.Resolve(templates.ResolveOptions{TemplateRef: selectedTemplate, BaseDir: *output, VarsRaw: *varsRaw, VarsFile: *varsFile})
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "accept precondition failed: %v\n", err)
+		return exitcode.Precondition
+	}
+	if err := ensureTemplateHasStages(t, []string{"F"}); err != nil {
+		fmt.Fprintf(os.Stderr, "accept precondition failed: %v\n", err)
+		return exitcode.Precondition
+	}
+	if err := validateTemplateContract(t); err != nil {
 		fmt.Fprintf(os.Stderr, "accept precondition failed: %v\n", err)
 		return exitcode.Precondition
 	}
@@ -839,6 +885,10 @@ func executeStages(ctx context.Context, store *state.Store, t schema.Template, s
 	evidenceReg := evidenceplugin.NewRegistry()
 	evidenceplugin.RegisterBuiltins(evidenceReg)
 
+	if err := ensureTemplateHasStages(t, selected); err != nil {
+		return exitcode.Precondition, err
+	}
+
 	rt := &engine.Runtime{
 		Store:            store,
 		CheckRegistry:    checkReg,
@@ -852,6 +902,9 @@ func executeStages(ctx context.Context, store *state.Store, t schema.Template, s
 			SelectedStages: selected,
 			DryRun:         dryRun,
 		},
+	}
+	if err := engine.ValidatePlanPlugins(rt.Plan, checkReg, actionReg, evidenceReg); err != nil {
+		return exitcode.Precondition, err
 	}
 	runner := engine.NewRunner(stages.DefaultExecutors())
 	results, err := runner.Execute(ctx, rt)
@@ -922,6 +975,33 @@ func mapErrorToExit(err error) int {
 		return exitcode.ManualIntervention
 	}
 	return exitcode.Failure
+}
+
+func ensureTemplateHasStages(t schema.Template, selected []string) error {
+	if len(selected) == 0 {
+		return nil
+	}
+	missing := make([]string, 0, len(selected))
+	for _, id := range selected {
+		if _, ok := t.Stages[id]; !ok {
+			missing = append(missing, id)
+		}
+	}
+	if len(missing) == 0 {
+		return nil
+	}
+	return fmt.Errorf("%w: template %s missing required stages: %s", coreerr.ErrPreconditionFailed, t.ID, strings.Join(missing, ","))
+}
+
+func validateTemplateContract(t schema.Template) error {
+	checkReg := checkplugin.NewRegistry()
+	checkplugin.RegisterBuiltins(checkReg)
+	actionReg := actionplugin.NewRegistry()
+	actionplugin.RegisterBuiltins(actionReg)
+	evidenceReg := evidenceplugin.NewRegistry()
+	evidenceplugin.RegisterBuiltins(evidenceReg)
+	plan := templates.BuildPlanWithOptions(t, nil, true)
+	return engine.ValidatePlanPlugins(plan, checkReg, actionReg, evidenceReg)
 }
 
 func defaultOutputRoot() string {
