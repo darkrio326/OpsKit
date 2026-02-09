@@ -2,7 +2,7 @@
 
 OpsKit 是一款**面向离线/信创环境的服务器全生命周期运维与验收工具**，覆盖 A-F 阶段：Preflight / Baseline / Deploy / Operate / Recover / Accept-Handover。
 
-当前版本：`v0.4.1-preview.1`（M4 模板交付收口与 v0.4.x 设计冻结预览版）
+当前版本：`v0.4.2-preview.1`（M4 自部署模板扩展预览版）
 
 ## 当前能力（Milestone 3）
 
@@ -103,14 +103,14 @@ web/ui/                    # 开发态 UI 资源
 - GitHub 发布说明：`docs/GITHUB_RELEASE.md`
 - 版本规划规范：`docs/RELEASE_PLANNING_GUIDE.md`
 - 当前稳定版发布说明：`docs/releases/notes/RELEASE_NOTES_v0.3.7.md`
-- 当前预览版发布说明：`docs/RELEASE_NOTES_v0.4.1-preview.1.md`
-- 当前预览版发布计划：`docs/RELEASE_PLAN_v0.4.1-preview.1.md`
+- 当前预览版发布说明：`docs/RELEASE_NOTES_v0.4.2-preview.1.md`
+- 当前预览版发布计划：`docs/RELEASE_PLAN_v0.4.2-preview.1.md`
 - 版本变更记录：`CHANGELOG.md`
 - 安全边界：`SECURITY.md`
 - 开源许可证：`LICENSE`（Apache-2.0）
 - 英文 README：`README.md`
 
-## 发布前门禁（v0.4.1-preview.1）
+## 发布前门禁（v0.4.2-preview.1）
 
 常规门禁：
 
@@ -147,11 +147,11 @@ scripts/release-check.sh --with-offline-validate --offline-strict-exit
 构建发布资产：
 
 ```bash
-scripts/release.sh --version v0.4.1-preview.1 --clean
+scripts/release.sh --version v0.4.2-preview.1 --clean
 ```
 
 发布资产包含：Linux 双架构二进制、`checksums.txt`、`release-metadata.json`。
 
 ## 免责声明
 
-当前版本（`v0.4.1-preview.1`）用于**内网/离线场景的通用能力验证与验收演练**。用于生产前，请完成安全性、稳定性与合规性评估。
+当前版本（`v0.4.2-preview.1`）用于**内网/离线场景的通用能力验证与验收演练**。用于生产前，请完成安全性、稳定性与合规性评估。

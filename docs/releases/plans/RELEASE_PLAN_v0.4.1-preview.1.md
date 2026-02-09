@@ -28,8 +28,8 @@
 
 ### 功能点 1：版本入口切换（完成）
 
-- 新增 `docs/RELEASE_PLAN_v0.4.1-preview.1.md`
-- 新增 `docs/RELEASE_NOTES_v0.4.1-preview.1.md`
+- 新增 `docs/releases/plans/RELEASE_PLAN_v0.4.1-preview.1.md`
+- 新增 `docs/releases/notes/RELEASE_NOTES_v0.4.1-preview.1.md`
 - README/docs 索引切换到当前版本入口
 
 验收：
@@ -81,7 +81,7 @@ ls -1 docs/RELEASE_PLAN_v*.md docs/RELEASE_NOTES_v*.md
 验收：
 
 ```bash
-rg -n "M4|黑箱|自部署|模板交付" ROADMAP.md docs/RELEASE_NOTES_v0.4.1-preview.1.md
+rg -n "M4|黑箱|自部署|模板交付" ROADMAP.md docs/releases/notes/RELEASE_NOTES_v0.4.1-preview.1.md
 ```
 
 ## 4. 发布准入（Go/No-Go）
@@ -93,6 +93,6 @@ rg -n "M4|黑箱|自部署|模板交付" ROADMAP.md docs/RELEASE_NOTES_v0.4.1-pr
 
 ## 5. 交付物
 
-- 当前版本计划：`docs/RELEASE_PLAN_v0.4.1-preview.1.md`
-- 当前版本说明：`docs/RELEASE_NOTES_v0.4.1-preview.1.md`
+- 当前版本计划：`docs/releases/plans/RELEASE_PLAN_v0.4.1-preview.1.md`
+- 当前版本说明：`docs/releases/notes/RELEASE_NOTES_v0.4.1-preview.1.md`
 - 设计冻结文档：`docs/product-design/10-v0.4.x设计冻结说明.md`

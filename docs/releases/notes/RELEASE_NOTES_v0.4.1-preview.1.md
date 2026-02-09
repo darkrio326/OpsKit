@@ -4,7 +4,7 @@
 
 ## Added
 
-- 新增发布计划：`docs/RELEASE_PLAN_v0.4.1-preview.1.md`
+- 新增发布计划：`docs/releases/plans/RELEASE_PLAN_v0.4.1-preview.1.md`
 - 新增设计冻结说明：`docs/product-design/10-v0.4.x设计冻结说明.md`
 
 ## Changed

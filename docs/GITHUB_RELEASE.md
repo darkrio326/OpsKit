@@ -23,7 +23,7 @@
 
 - 正式版：`v0.x.y`（当前稳定建议仍以 `v0.3.7` 为基线）
 - 预览版：`v0.x.y-preview.N`（用于下一阶段试运行）
-- 当前预览窗口：`v0.4.1-preview.1`（M4 收口与设计冻结）
+- 当前预览窗口：`v0.4.2-preview.1`（M4 自部署模板扩展）
 
 ## 5. Release 资产建议
 
@@ -43,7 +43,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/opskit-linux-amd64 ./cmd/
 一键脚本（推荐）：
 
 ```bash
-scripts/release.sh --version v0.4.1-preview.1 --clean
+scripts/release.sh --version v0.4.2-preview.1 --clean
 ```
 
 说明：`scripts/release.sh` 会自动生成并校验 `checksums.txt`，同时生成 `release-metadata.json`（含 `gitCommit/buildTime/goVersion`）。
@@ -92,19 +92,19 @@ scripts/release.sh --version v0.4.1-preview.1 --clean
 ## 7. Release 文案模板
 
 - 当前稳定版：`docs/releases/notes/RELEASE_NOTES_v0.3.7.md`
-- 当前预览版草稿：`docs/RELEASE_NOTES_v0.4.1-preview.1.md`
-- 当前预览版任务单：`docs/RELEASE_PLAN_v0.4.1-preview.1.md`
+- 当前预览版草稿：`docs/RELEASE_NOTES_v0.4.2-preview.1.md`
+- 当前预览版任务单：`docs/RELEASE_PLAN_v0.4.2-preview.1.md`
 
-## 8. v0.4.1-preview.1 预览发布命令（建议）
+## 8. v0.4.2-preview.1 预览发布命令（建议）
 
 ```bash
 scripts/release-check.sh --with-offline-validate
-scripts/release.sh --version v0.4.1-preview.1 --clean
-gh release create v0.4.1-preview.1 \
-  dist/opskit-v0.4.1-preview.1-linux-arm64 \
-  dist/opskit-v0.4.1-preview.1-linux-amd64 \
+scripts/release.sh --version v0.4.2-preview.1 --clean
+gh release create v0.4.2-preview.1 \
+  dist/opskit-v0.4.2-preview.1-linux-arm64 \
+  dist/opskit-v0.4.2-preview.1-linux-amd64 \
   dist/checksums.txt \
   dist/release-metadata.json \
-  --title "OpsKit v0.4.1-preview.1" \
-  --notes-file docs/RELEASE_NOTES_v0.4.1-preview.1.md
+  --title "OpsKit v0.4.2-preview.1" \
+  --notes-file docs/RELEASE_NOTES_v0.4.2-preview.1.md
 ```

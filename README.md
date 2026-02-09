@@ -4,7 +4,7 @@ OpsKit is a **server lifecycle operations and acceptance tool for offline / trus
 
 Chinese documentation: `README.zh-CN.md`
 
-Current version: `v0.4.1-preview.1` (M4 delivery closure and v0.4.x design-freeze preview)
+Current version: `v0.4.2-preview.1` (M4 deploy-template expansion preview)
 
 ## Current Capabilities (Milestone 3)
 
@@ -105,14 +105,14 @@ See `ROADMAP.md` and `docs/architecture/ROADMAP.md`.
 - GitHub release guide: `docs/GITHUB_RELEASE.md`
 - Release planning guide: `docs/RELEASE_PLANNING_GUIDE.md`
 - Current stable release notes: `docs/releases/notes/RELEASE_NOTES_v0.3.7.md`
-- Current preview release notes: `docs/RELEASE_NOTES_v0.4.1-preview.1.md`
-- Current preview release plan: `docs/RELEASE_PLAN_v0.4.1-preview.1.md`
+- Current preview release notes: `docs/RELEASE_NOTES_v0.4.2-preview.1.md`
+- Current preview release plan: `docs/RELEASE_PLAN_v0.4.2-preview.1.md`
 - Changelog: `CHANGELOG.md`
 - Security boundary: `SECURITY.md`
 - License: `LICENSE` (Apache-2.0)
 - Chinese README: `README.zh-CN.md`
 
-## Pre-Release Gates (v0.4.1-preview.1)
+## Pre-Release Gates (v0.4.2-preview.1)
 
 Standard gate set:
 
@@ -149,11 +149,11 @@ scripts/release-check.sh --with-offline-validate --offline-strict-exit
 Build release artifacts:
 
 ```bash
-scripts/release.sh --version v0.4.1-preview.1 --clean
+scripts/release.sh --version v0.4.2-preview.1 --clean
 ```
 
 Release output includes: Linux binaries (amd64/arm64), `checksums.txt`, `release-metadata.json`.
 
 ## Disclaimer
 
-Current version (`v0.4.1-preview.1`) is intended for **generic capability validation and acceptance rehearsal in intranet/offline environments**. Production usage requires separate security, reliability, and compliance evaluation.
+Current version (`v0.4.2-preview.1`) is intended for **generic capability validation and acceptance rehearsal in intranet/offline environments**. Production usage requires separate security, reliability, and compliance evaluation.

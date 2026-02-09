@@ -6,10 +6,13 @@
 
 ### Added
 
+- 新增 `docs/RELEASE_PLAN_v0.4.2-preview.1.md`（M4 自部署模板扩展计划）
+- 新增 `docs/RELEASE_NOTES_v0.4.2-preview.1.md`（M4 自部署模板扩展说明草稿）
 - 新增 `docs/RELEASE_PLAN_v0.4.1-preview.1.md`（M4 收口与设计冻结计划）
 - 新增 `docs/RELEASE_NOTES_v0.4.1-preview.1.md`（M4 收口与设计冻结说明草稿）
 - 新增 `docs/product-design/10-v0.4.x设计冻结说明.md`（v0.4.x 设计冻结边界）
 - 归档 `docs/releases/plans/RELEASE_PLAN_v0.4.0-preview.4.md` 与 `docs/releases/notes/RELEASE_NOTES_v0.4.0-preview.4.md`
+- 归档 `docs/releases/plans/RELEASE_PLAN_v0.4.1-preview.1.md` 与 `docs/releases/notes/RELEASE_NOTES_v0.4.1-preview.1.md`
 - 新增规范：`docs/specs/SPEC_TEMPLATE_LIST_JSON.md`（`opskit template list --json` 契约）
 - 新增命令：`opskit template list` / `opskit template list --json`
 - 新增去生产化模板：`assets/templates/demo-runtime-baseline.json`（A/D/F）
