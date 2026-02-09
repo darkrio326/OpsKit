@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"slices"
@@ -44,16 +45,24 @@ func (r *Runner) Execute(ctx context.Context, rt *Runtime) ([]StageResult, error
 	}
 
 	results := make([]StageResult, 0, len(rt.Plan.Stages))
+	stageStatus := map[string]schema.Status{}
 	for _, stagePlan := range rt.Plan.Stages {
-		exec, ok := r.executors[stagePlan.StageID]
-		if !ok {
-			return nil, fmt.Errorf("stage executor not found: %s", stagePlan.StageID)
-		}
-		res, err := exec.Execute(ctx, rt, stagePlan)
+		res, blocked, err := blockedStageResult(rt, stagePlan.StageID, stageStatus)
 		if err != nil {
 			return nil, err
 		}
+		if !blocked {
+			exec, ok := r.executors[stagePlan.StageID]
+			if !ok {
+				return nil, fmt.Errorf("stage executor not found: %s", stagePlan.StageID)
+			}
+			res, err = exec.Execute(ctx, rt, stagePlan)
+			if err != nil {
+				return nil, err
+			}
+		}
 		results = append(results, res)
+		stageStatus[res.StageID] = res.Status
 
 		for i := range lifecycle.Stages {
 			if lifecycle.Stages[i].StageID != res.StageID {
@@ -115,6 +124,75 @@ func (r *Runner) Execute(ctx context.Context, rt *Runtime) ([]StageResult, error
 	}
 
 	return results, nil
+}
+
+func blockedStageResult(rt *Runtime, stageID string, status map[string]schema.Status) (StageResult, bool, error) {
+	reason, by := blockReason(stageID, status, rt.Options.TemplateMode)
+	if reason == "" {
+		return StageResult{}, false, nil
+	}
+
+	result := StageResult{
+		StageID: stageID,
+		Status:  schema.StatusSkipped,
+		Metrics: []schema.Metric{
+			{Label: "blocked", Value: "1"},
+			{Label: "blocked_by", Value: by},
+		},
+		Issues: []schema.Issue{
+			{
+				ID:       stringsLowerStage(stageID) + ".blocked",
+				Severity: schema.SeverityInfo,
+				Message:  reason,
+				Advice:   "resolve blocking stage failure and rerun",
+			},
+		},
+	}
+
+	payload, _ := json.MarshalIndent(map[string]any{
+		"stage":     stageID,
+		"status":    result.Status,
+		"blockedBy": by,
+		"reason":    reason,
+	}, "", "  ")
+	report := ReportName(stageID)
+	if err := rt.Store.WriteReportStub(report, stageTitle(stageID)+" Report", string(payload)); err != nil {
+		return StageResult{}, false, err
+	}
+	result.Report = report
+	return result, true, nil
+}
+
+func blockReason(stageID string, status map[string]schema.Status, mode string) (reason string, blockedBy string) {
+	if stageID != "A" && status["A"] == schema.StatusFailed {
+		return "blocked: stage A failed", "A"
+	}
+	if stageID == "C" && status["B"] == schema.StatusFailed {
+		return "blocked: stage B failed", "B"
+	}
+	if strings.EqualFold(mode, "deploy") && (stageID == "D" || stageID == "E" || stageID == "F") && status["C"] == schema.StatusFailed {
+		return "blocked: stage C failed in deploy mode", "C"
+	}
+	return "", ""
+}
+
+func stageTitle(stageID string) string {
+	switch stageID {
+	case "A":
+		return "Preflight"
+	case "B":
+		return "Baseline"
+	case "C":
+		return "Deploy"
+	case "D":
+		return "Operate"
+	case "E":
+		return "Recover"
+	case "F":
+		return "Accept"
+	default:
+		return stageID
+	}
 }
 
 func stringsLowerStage(stageID string) string {
