@@ -2,6 +2,8 @@
 
 OpsKit is a **server lifecycle operations and acceptance tool for offline / trusted-computing environments**, covering A-F stages: Preflight / Baseline / Deploy / Operate / Recover / Accept-Handover.
 
+Chinese documentation: `README.zh-CN.md`
+
 Current version: `v0.4.1-preview.1` (M4 delivery closure and v0.4.x design-freeze preview)
 
 ## Current Capabilities (Milestone 3)
