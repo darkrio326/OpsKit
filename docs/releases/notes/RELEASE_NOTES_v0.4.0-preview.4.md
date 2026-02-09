@@ -10,7 +10,7 @@
 - 新增命令：`opskit template list --json`
 - 新增模板目录能力：内置模板 `ref/source/id/name/mode/aliases` 自动输出
 - 新增规范：`docs/specs/SPEC_TEMPLATE_LIST_JSON.md`
-- 新增计划：`docs/RELEASE_PLAN_v0.4.0-preview.4.md`
+- 新增计划：`docs/releases/plans/RELEASE_PLAN_v0.4.0-preview.4.md`
 - 新增模板：`assets/templates/demo-generic-selfhost-deploy.json`
 - 新增模板：`assets/templates/demo-minio-deploy.json`
 - 新增模板：`assets/templates/demo-elk-deploy.json`

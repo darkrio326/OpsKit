@@ -13,6 +13,8 @@
 7. `docs/product-design/07-状态模型与可视化约定.md`
 8. `docs/product-design/08-CLI安装与容器验证.md`
 9. `docs/product-design/09-模板设计指南.md`
+10. `docs/product-design/DELIVERY_GATE.md`
+11. `docs/product-design/10-v0.4.x设计冻结说明.md`
 
 ## 合并来源
 

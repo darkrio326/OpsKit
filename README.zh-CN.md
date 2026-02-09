@@ -1,158 +1,144 @@
 # OpsKit（中文版）
 
-OpsKit 是一个基于 Go 的运维生命周期工具，围绕 `A -> F` 阶段执行：
+OpsKit 是一款**面向离线/信创环境的服务器全生命周期运维与验收工具**，覆盖 A-F 阶段：Preflight / Baseline / Deploy / Operate / Recover / Accept-Handover。
 
-- A Preflight（前置检查）
-- B Baseline（基线）
-- C Deploy（部署）
-- D Operate（巡检）
-- E Recover（恢复）
-- F Accept/Handover（验收与移交）
+当前版本：`v0.4.1-preview.1`（M4 模板交付收口与 v0.4.x 设计冻结预览版）
 
-目标是用一个二进制和统一 JSON 状态输出，把“可执行、可观测、可留证据”的链路跑通。
+## 当前能力（Milestone 3）
 
-当前版本：`v0.3.7`（模板接入前置增强版，Milestone 4 预备）
+- 通用巡检能力：A / D 阶段可独立执行，支持状态汇总与问题分级
+- 可复核证据包：`accept` 生成 manifest + hashes + reports + snapshots
+- UI 状态页：读取 `state/*.json` 展示 overall、阶段状态与证据入口
+- 模板驱动：支持模板与变量渲染（内置 + 外部）
+- 模板变量校验：必填/类型/枚举/默认值/示例值/变量分组
+- 统一执行器：`executil` 作为唯一外部命令执行与审计入口
+- 并发安全：全局锁防并发执行（冲突返回退出码 `4`）
 
-快速上手：`docs/getting-started/GETSTART.md`
-麒麟离线部署：`docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md`
-麒麟离线回归：`docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md`
-离线一键回归脚本：`scripts/kylin-offline-validate.sh`
-真实服务器前统一门禁：`scripts/generic-readiness-check.sh`
-产品设计总览：`docs/product-design/README.md`
+## 当前不包含/不承诺
 
-## 快速开始
+- 生产级中间件一键部署模板（当前仅提供 demo 模板）
+- 客户定制模板、客户环境适配与驻场脚本
+- 登录/权限系统（RBAC、账号体系）
+- 多节点编排与分布式协调
+
+## 三种使用模式
+
+- 无模板：临时接管 / 排障 / 补验收；不承诺按模板交付
+- 标准模板（推荐）：按服务器用途选择内置/标准模板，执行 `A -> D -> Accept` 输出可复核结果
+- 定制模板（高级）：面向特殊项目，必须通过 `docs/product-design/09-模板设计指南.md` 与 `docs/product-design/DELIVERY_GATE.md` 门禁
+
+## 快速开始（最短跑通）
+
+1. 构建发布二进制（Linux）：
+
+```bash
+mkdir -p dist
+CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o dist/opskit-linux-arm64 ./cmd/opskit
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/opskit-linux-amd64 ./cmd/opskit
+```
+
+2. 本地最小链路（A / D / Accept）：
 
 ```bash
 go build -o opskit ./cmd/opskit
-./opskit template validate templates/builtin/default-manage.json
-./opskit install --template generic-manage-v1 --dry-run --no-systemd --output ./.tmp/opskit-demo
-./opskit run AF --template generic-manage-v1 --dry-run --output ./.tmp/opskit-demo
+./opskit run A --template templates/builtin/default-manage.json --output ./.tmp/opskit-demo
+./opskit run D --template templates/builtin/default-manage.json --output ./.tmp/opskit-demo
+./opskit accept --template templates/builtin/default-manage.json --output ./.tmp/opskit-demo
+./opskit status --output ./.tmp/opskit-demo
+./opskit status --output ./.tmp/opskit-demo --json
 ```
 
-## 常用命令
+模板接入前建议做机器可读校验：
 
 ```bash
-./opskit install [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--output dir]
-./opskit run <A|B|C|D|E|F|AF> [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--output dir]
-./opskit status [--output dir]
-./opskit status [--output dir] [--json]
-./opskit accept [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--output dir]
-./opskit handover [--output dir]
-./opskit web [--output dir] [--listen :18080] [--status-interval 15s]
-./opskit template validate <file>
-./opskit template validate --json <file>
+./opskit template validate --vars-file examples/vars/demo-server-audit.json --json assets/templates/demo-server-audit.json
 ```
 
-说明：`web --status-interval` 会在后台定时刷新 `state/*.json`，UI 前端自动刷新读取的是这些更新后的状态。
-
-## vars-file 示例
+3. 启动 UI 查看状态：
 
 ```bash
-./opskit run C \
-  --template assets/templates/demo-hello-service.json \
-  --vars-file examples/vars/demo-hello-service.json \
-  --output ./.tmp/opskit-hello
+./opskit web --output ./.tmp/opskit-demo --listen 127.0.0.1:18080 --status-interval 15s
 ```
 
-```bash
-./opskit run A \
-  --template assets/templates/demo-server-audit.json \
-  --vars-file examples/vars/demo-server-audit.env \
-  --output ./.tmp/opskit-demo
-```
+浏览器访问：`http://127.0.0.1:18080`
 
-## 退出码
+参考文档：
 
-- `0`：成功
-- `1`：失败
-- `2`：前置条件不满足
-- `3`：部分成功（存在 WARN）
-- `4`：需人工介入（例如全局锁冲突）
+- `docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
+- `docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md`
+- `docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md`
+- `scripts/kylin-offline-validate.sh`
+- `scripts/generic-readiness-check.sh`
 
-## 关键能力（当前）
-
-- 全局锁：并发执行冲突时返回退出码 `4`
-- 统一 state JSON：`overall/lifecycle/services/artifacts`
-- 原子写：所有状态文件以原子方式落盘
-- 模板机制：支持模板加载、变量渲染、执行计划构建
-- 模板变量校验：必填/类型/枚举/默认值/示例值/变量分组
-- 插件机制：checks/actions/evidence 统一注册入口
-- 最小 UI：静态页面读取 JSON，展示 A~F 状态与产物入口
-
-## 界面预览（建议补充截图）
-
-为便于开源读者快速理解，可以补充以下截图（建议放在 `docs/assets/screenshots/`）：
-
-- 状态总览页（overall + A~F 概览）
-- 阶段详情页（某一阶段的 checks/actions/evidence）
-- 证据包列表页（reports/bundles 入口）
-
-截图占位（稍后补图即可自动生效）：
-
-![OpsKit UI 总览](docs/assets/screenshots/overview.png)
-![OpsKit 阶段详情](docs/assets/screenshots/stage-detail.png)
-![OpsKit 证据包列表](docs/assets/screenshots/artifacts.png)
-
-## 目录说明（核心）
-
-- `cmd/opskit`：CLI 入口
-- `internal/core`：time/fs/exec/log/errors/exitcode/lock 等通用能力
-- `internal/schema`：模板与 state 结构、枚举与校验
-- `internal/engine`：Template -> Plan -> Stage 执行编排
-- `internal/plugins`：checks/actions/evidence 插件实现与注册
-- `internal/state`：state 读写、汇总与保留策略
-- `web/ui`：开发态静态 UI
-- `internal/installer/assets`：安装落盘 UI 资源
-- `templates/builtin`：内置模板
-
-## 在银河麒麟 V10 Docker 中验证（推荐回归入口）
+## 可选验证（银河麒麟 V10 Docker）
 
 ```bash
 make -C examples/generic-manage docker-kylin-e2e
 ```
 
-可选参数示例：
+## 目录结构（简述）
 
-```bash
-IMAGE=kylinv10/kylin:b09 DOCKER_PLATFORM=linux/amd64 DRY_RUN=1 make -C examples/generic-manage docker-kylin-e2e
+```text
+assets/templates/          # Demo 模板（去生产化）
+docs/                      # 设计、规范、发布文档
+internal/                  # 核心实现（engine/state/plugins/...）
+cmd/opskit/                # CLI 主程序入口
+templates/builtin/         # 内置模板
+web/ui/                    # 开发态 UI 资源
 ```
 
-详细部署与验证说明见：`docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
+## 路线图（Milestone 4-6）
 
-版本变更记录见：`CHANGELOG.md`
-版本规划规范：`docs/RELEASE_PLANNING_GUIDE.md`
-当前稳定版发布说明：`docs/releases/notes/RELEASE_NOTES_v0.3.7.md`
-下一版发布说明：`docs/RELEASE_NOTES_v0.4.0-preview.4.md`
-下一版发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.4.md`
+- Milestone 4：模板库扩展（ELK 等示例模板、模板验收规范）
+- Milestone 5：Recover/Operate 深化（策略化恢复、更多通用检查）
+- Milestone 6：交付能力增强（多格式 handover、模板仓库化、多实例预研）
 
-## 发布前门禁（v0.3.7）
+详见：`ROADMAP.md` 与 `docs/architecture/ROADMAP.md`。
 
-常规门禁（推荐）：
+## 文档与发布入口
+
+- 规格与安全：`docs/specs/README.md`
+- 产品设计（整理版）：`docs/product-design/README.md`
+- 模板交付门禁：`docs/product-design/DELIVERY_GATE.md`
+- GitHub 发布说明：`docs/GITHUB_RELEASE.md`
+- 版本规划规范：`docs/RELEASE_PLANNING_GUIDE.md`
+- 当前稳定版发布说明：`docs/releases/notes/RELEASE_NOTES_v0.3.7.md`
+- 当前预览版发布说明：`docs/RELEASE_NOTES_v0.4.1-preview.1.md`
+- 当前预览版发布计划：`docs/RELEASE_PLAN_v0.4.1-preview.1.md`
+- 版本变更记录：`CHANGELOG.md`
+- 安全边界：`SECURITY.md`
+- 开源许可证：`LICENSE`（Apache-2.0）
+- 英文 README：`README.md`
+
+## 发布前门禁（v0.4.1-preview.1）
+
+常规门禁：
 
 ```bash
 scripts/template-validate-check.sh --clean
 scripts/release-check.sh --with-offline-validate
+scripts/template-delivery-check.sh --clean
 ```
 
-进入真实服务器前（建议）：
+真实服务器验证前建议：
 
 ```bash
 scripts/generic-readiness-check.sh --clean
 ```
 
-如需附加 `release-check summary.json` 契约门禁：
+附加 `release-check summary.json` 契约检查：
 
 ```bash
 scripts/generic-readiness-check.sh --with-release-json-contract --clean
 ```
 
-严格模式（通用链路 + 离线回归都要求 exit=0）：
+严格模式（通用链路 + 离线回归均要求全 0 退出码）：
 
 ```bash
 scripts/generic-readiness-check.sh --generic-strict --offline-strict --clean
 ```
 
-严格门禁（要求离线回归阶段 exit 全为 0）：
+离线严格门禁（离线回归阶段退出码必须全为 `0`）：
 
 ```bash
 scripts/release-check.sh --with-offline-validate --offline-strict-exit
@@ -161,7 +147,11 @@ scripts/release-check.sh --with-offline-validate --offline-strict-exit
 构建发布资产：
 
 ```bash
-scripts/release.sh --version v0.3.7 --clean
+scripts/release.sh --version v0.4.1-preview.1 --clean
 ```
 
-发布资产包含：双架构二进制、`checksums.txt`、`release-metadata.json`。
+发布资产包含：Linux 双架构二进制、`checksums.txt`、`release-metadata.json`。
+
+## 免责声明
+
+当前版本（`v0.4.1-preview.1`）用于**内网/离线场景的通用能力验证与验收演练**。用于生产前，请完成安全性、稳定性与合规性评估。

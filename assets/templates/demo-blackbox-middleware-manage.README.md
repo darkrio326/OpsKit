@@ -3,6 +3,8 @@
 `demo-blackbox-middleware-manage.json` 是一个面向黑箱型中间件服务器的 Manage 模板。
 适用于“只能做运行态巡检与证据采集，不做部署变更”的场景，例如永中 FCS、金蝶中间件等。
 
+- Delivery Level: `Demo`
+
 ## 适用范围
 
 - 生命周期阶段：`A` / `B` / `C` / `D` / `E` / `F`
@@ -118,6 +120,47 @@ examples/vars/demo-blackbox-middleware-manage-kingdee.json      # 金蝶预设
 
 - E 阶段 `recover_sequence` 默认 `enabled=false`，避免误触发 `systemctl start`。
 - 需要演练恢复时，可使用 `--fix` 包含禁用步骤。
+
+## 交付门禁信息
+
+### 接管职责（一句话）
+
+该模板接管“黑箱业务系统（FCS/金蝶等）的单机运行态监管与验收输出”职责（A/D/F）。
+
+### 模板不做什么
+
+- 不负责厂商安装流程与制品部署
+- 不修改业务系统配置语义
+- 不假设可访问外部控制平面
+
+### 单机自洽前提
+
+- 目标服务已由外部流程部署完成
+- 本机可执行基础检查命令，`--output` 可写
+- 不依赖其他节点状态
+
+### 最短命令链（A -> D -> Accept）
+
+```bash
+./opskit run A --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage.json --output ./.tmp/opskit-blackbox
+./opskit run D --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage.json --output ./.tmp/opskit-blackbox
+./opskit accept --template assets/templates/demo-blackbox-middleware-manage.json --vars-file examples/vars/demo-blackbox-middleware-manage.json --output ./.tmp/opskit-blackbox
+```
+
+### vars 仅表达差异（不承载逻辑）
+
+- 变量样例：`examples/vars/demo-blackbox-middleware-manage/vars.example.yaml`
+- FCS/金蝶差异通过 `unit/port/path/process_match` 表达，不通过 vars 决定执行流程
+
+校验失败示例（缺失必填变量）：
+
+```bash
+./opskit template validate --json --vars-file examples/vars/demo-blackbox-middleware-manage.json --vars "STACK_ID=" assets/templates/demo-blackbox-middleware-manage.json
+```
+
+### 失败可交付说明
+
+即便服务异常或检查失败，仍应产出 `state/*.json` 与报告/证据索引，支持黑箱系统问题定位和交付复核。
 
 ## 预期输出
 

@@ -16,6 +16,7 @@ Repository-level release history: `CHANGELOG.md`
 - `docs/product-design/07-状态模型与可视化约定.md`
 - `docs/product-design/08-CLI安装与容器验证.md`
 - `docs/product-design/09-模板设计指南.md`
+- `docs/product-design/10-v0.4.x设计冻结说明.md`
 
 ## Getting Started
 
@@ -47,8 +48,8 @@ Repository-level release history: `CHANGELOG.md`
 - `docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
 - `docs/GITHUB_RELEASE.md`
 - `docs/RELEASE_PLANNING_GUIDE.md`
-- 当前版本发布说明：`docs/RELEASE_NOTES_v0.4.0-preview.4.md`
-- 当前版本发布计划：`docs/RELEASE_PLAN_v0.4.0-preview.4.md`
+- 当前版本发布说明：`docs/RELEASE_NOTES_v0.4.1-preview.1.md`
+- 当前版本发布计划：`docs/RELEASE_PLAN_v0.4.1-preview.1.md`
 - 历史发布文档索引：`docs/releases/README.md`
 
 ## Examples

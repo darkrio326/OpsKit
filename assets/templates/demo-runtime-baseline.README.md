@@ -3,6 +3,8 @@
 `demo-runtime-baseline.json` 是一个去生产化的运行时基线检查模板。
 该模板聚焦通用服务器就绪性检查与证据输出，不包含任何中间件部署逻辑。
 
+- Delivery Level: `Demo`
+
 ## 适用范围
 
 - 生命周期阶段：`A` / `D` / `F`
@@ -36,3 +38,43 @@ go run ./cmd/opskit accept --template assets/templates/demo-runtime-baseline.jso
 - `/tmp/opskit-demo-runtime/state/*.json`
 - `/tmp/opskit-demo-runtime/reports/*.html`
 - `/tmp/opskit-demo-runtime/evidence/*-hash.json`
+
+## 交付门禁信息
+
+### 接管职责（一句话）
+
+该模板接管“单机运行时基线检查与证据输出”职责（A/D/F）。
+
+### 模板不做什么
+
+- 不做服务安装、升级、迁移
+- 不做跨节点联动判断
+- 不在 check 中执行持久变更
+
+### 单机自洽前提
+
+- 本机具备基础系统命令与可写输出目录
+- 不依赖外部控制面与公网
+
+### 最短命令链（A -> D -> Accept）
+
+```bash
+./opskit run A --template assets/templates/demo-runtime-baseline.json --vars-file examples/vars/demo-runtime-baseline.json --output ./.tmp/opskit-demo-runtime
+./opskit run D --template assets/templates/demo-runtime-baseline.json --vars-file examples/vars/demo-runtime-baseline.json --output ./.tmp/opskit-demo-runtime
+./opskit accept --template assets/templates/demo-runtime-baseline.json --vars-file examples/vars/demo-runtime-baseline.json --output ./.tmp/opskit-demo-runtime
+```
+
+### vars 仅表达差异（不承载逻辑）
+
+- 变量样例：`examples/vars/demo-runtime-baseline/vars.example.yaml`
+- 变量仅覆盖路径、挂载目标、DNS 探测目标等环境差异
+
+校验失败示例（缺失必填变量）：
+
+```bash
+./opskit template validate --json --vars-file examples/vars/demo-runtime-baseline.json --vars "DNS_HOST=" assets/templates/demo-runtime-baseline.json
+```
+
+### 失败可交付说明
+
+即便检查失败，仍应通过 `accept` 输出统一状态与证据索引，用于后续复核与移交。

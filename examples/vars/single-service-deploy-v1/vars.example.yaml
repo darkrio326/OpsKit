@@ -1,0 +1,6 @@
+# vars.example.yaml
+# single-service-deploy-v1 默认无需必填 vars；建议仅覆盖环境差异
+# 示例：
+# SERVICE_PORT: 18080
+# SERVICE_UNIT: "example.service"
+# INSTALL_ROOT: "/data/opskit"

@@ -4,6 +4,8 @@
 它用于演示“离线包校验 + 解压部署 + systemd 拉起 + 运行态检查 + 证据输出”完整链路。
 该模板基于 `demo-generic-selfhost-deploy` 的通用 deploy 链路，增加了 MinIO 专用变量与启动参数。
 
+- Delivery Level: `Demo`
+
 ## 适用范围
 
 - 生命周期阶段：`A` / `B` / `C` / `D` / `F`（`E` 默认禁用）
@@ -90,3 +92,44 @@ examples/vars/demo-minio-deploy.env
 - `untar` 失败：包路径错误或解压目录权限不足
 - `systemd_enable_start` 失败：目标主机未启用 systemd 或 unit 配置有误
 - `port_listening` WARN/FAIL：服务未实际监听 `SERVICE_PORT` / `CONSOLE_PORT`
+
+## 交付门禁信息
+
+### 接管职责（一句话）
+
+该模板接管“MinIO 自部署单机节点的 deploy+operate+accept 闭环”职责。
+
+### 模板不做什么
+
+- 不负责 MinIO 集群化/分布式部署编排
+- 不负责对象数据迁移与业务级初始化
+- 不依赖公网拉取制品
+
+### 单机自洽前提
+
+- 离线包及 SHA256 在本机可访问
+- 目标目录可写，systemd 可用（不可用则失败留痕）
+- 不依赖外部控制平面
+
+### 最短命令链（A -> D -> Accept）
+
+```bash
+./opskit run A --template assets/templates/demo-minio-deploy.json --vars-file examples/vars/demo-minio-deploy.json --output ./.tmp/opskit-minio
+./opskit run D --template assets/templates/demo-minio-deploy.json --vars-file examples/vars/demo-minio-deploy.json --output ./.tmp/opskit-minio
+./opskit accept --template assets/templates/demo-minio-deploy.json --vars-file examples/vars/demo-minio-deploy.json --output ./.tmp/opskit-minio
+```
+
+### vars 仅表达差异（不承载逻辑）
+
+- 变量样例：`examples/vars/demo-minio-deploy/vars.example.yaml`
+- 变量只表达 package/path/unit/port/account 差异，不表达流程逻辑
+
+校验失败示例（缺失必填变量）：
+
+```bash
+./opskit template validate --json --vars-file examples/vars/demo-minio-deploy.json --vars "STACK_ID=" assets/templates/demo-minio-deploy.json
+```
+
+### 失败可交付说明
+
+即便部署失败或服务未起来，也应可执行 `accept`，输出统一状态与证据索引用于交付复核。

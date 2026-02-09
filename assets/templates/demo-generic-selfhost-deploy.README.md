@@ -3,6 +3,8 @@
 `demo-generic-selfhost-deploy.json` 是“自行部署类服务”的通用基线模板（`mode=deploy`）。
 它用于抽象通用链路：离线包校验、解压、systemd 安装启动、运行态检查与证据输出。
 
+- Delivery Level: `Demo`
+
 ## 用途
 
 - 作为新模板起点：MinIO/ELK/PowerJob 这类模板都可从此基线扩展
@@ -42,3 +44,44 @@ examples/vars/demo-generic-selfhost-deploy.env
 
 - `E` 阶段默认 `enabled=false`，避免非预期自动恢复动作
 - 这是通用基线，不包含产品级配置细节
+
+## 交付门禁信息
+
+### 接管职责（一句话）
+
+该模板接管“自部署单服务节点的通用 deploy+manage 闭环”职责（A/C/D/F）。
+
+### 模板不做什么
+
+- 不内置具体中间件的业务级配置策略
+- 不负责多节点拓扑编排
+- 不在 vars 中承载流程逻辑
+
+### 单机自洽前提
+
+- 离线包与校验值可本机访问
+- systemd 环境可用（或允许相应检查失败并留痕）
+- 输出目录可写，不依赖外部控制面
+
+### 最短命令链（A -> D -> Accept）
+
+```bash
+./opskit run A --template assets/templates/demo-generic-selfhost-deploy.json --vars-file examples/vars/demo-generic-selfhost-deploy.json --output ./.tmp/opskit-generic-selfhost
+./opskit run D --template assets/templates/demo-generic-selfhost-deploy.json --vars-file examples/vars/demo-generic-selfhost-deploy.json --output ./.tmp/opskit-generic-selfhost
+./opskit accept --template assets/templates/demo-generic-selfhost-deploy.json --vars-file examples/vars/demo-generic-selfhost-deploy.json --output ./.tmp/opskit-generic-selfhost
+```
+
+### vars 仅表达差异（不承载逻辑）
+
+- 变量样例：`examples/vars/demo-generic-selfhost-deploy/vars.example.yaml`
+- 变量只表达包路径、unit、端口、目录等差异
+
+校验失败示例（缺失必填变量）：
+
+```bash
+./opskit template validate --json --vars-file examples/vars/demo-generic-selfhost-deploy.json --vars "STACK_ID=" assets/templates/demo-generic-selfhost-deploy.json
+```
+
+### 失败可交付说明
+
+即便部署动作失败，也应通过 `accept` 输出状态与证据索引，用于可追溯交付。

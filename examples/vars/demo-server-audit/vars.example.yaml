@@ -1,0 +1,4 @@
+# vars.example.yaml
+# 仅表达环境差异（unit/port/path/package），不包含流程逻辑
+INSTALL_ROOT: ".tmp/opskit-audit-demo"
+EVIDENCE_DIR: ".tmp/opskit-audit-demo/evidence"

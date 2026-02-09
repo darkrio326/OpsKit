@@ -1,0 +1,5 @@
+# vars.example.yaml
+# generic-manage-v1 默认无需必填 vars；建议仅覆盖环境差异
+# 示例：
+# ROOT_MOUNT: "/"
+# DNS_HOST: "localhost"

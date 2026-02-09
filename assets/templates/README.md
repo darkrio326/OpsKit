@@ -41,3 +41,24 @@
 - `demo-powerjob-deploy.README.md`
 
 注意：此目录不包含任何生产级部署模板或客户环境信息。
+
+## 交付门禁对齐（Template Design Guide）
+
+每个模板 README 必须显式包含：
+
+- 接管职责一句话（明确“服务器用途”）
+- 模板不做什么（边界）
+- 最短命令链（`run A -> run D -> accept`）
+- `vars.example.yaml` 路径与“vars 仅表达差异”约束
+- `Delivery Level: Demo | Pilot | Production-Candidate`
+
+当前默认分级：
+
+- `Demo`：`assets/templates/*.json`
+- `Pilot`：`templates/builtin/*.json`
+
+批量交付门禁检查：
+
+```bash
+scripts/template-delivery-check.sh --clean
+```

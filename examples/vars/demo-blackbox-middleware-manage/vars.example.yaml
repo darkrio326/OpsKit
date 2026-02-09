@@ -1,0 +1,16 @@
+# vars.example.yaml
+# 仅表达环境差异（unit/port/path/package），不包含流程逻辑
+STACK_ID: "blackbox-middleware"
+SERVICE_NAME: "blackbox-service"
+SERVICE_UNIT: "blackbox.service"
+PROCESS_MATCH: "blackbox-service"
+SERVICE_PORT: "18080"
+HEALTH_HOST: "localhost"
+APP_DIR: "/opt/blackbox"
+DATA_DIR: "/data/blackbox"
+LOG_DIR: "/logs/blackbox"
+INSTALL_ROOT: "/data/opskit-blackbox"
+EVIDENCE_DIR: "/data/opskit-blackbox/evidence"
+MAX_RESTARTS: "3"
+ROOT_MOUNT: "/"
+RECOVER_TRIGGER: "blackbox_monitor"
