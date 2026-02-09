@@ -1,5 +1,7 @@
 OpsKit 路线图（从通用服务器到模板化交付）
 
+> 说明：本文件保留为历史设计过程参考。当前统一口径以根目录 `ROADMAP.md` 与 `docs/product-design/03-里程碑与验收标准.md` 为准。
+
 0. 产品总目标
 	•	一个二进制（opskit）
 	•	一个命令部署：opskit install
