@@ -51,7 +51,7 @@ go build -o opskit ./cmd/opskit
 3) 启动 UI 查看状态
 
 ```bash
-./opskit web --output ./.tmp/opskit-demo --listen 127.0.0.1:18080
+./opskit web --output ./.tmp/opskit-demo --listen 127.0.0.1:18080 --status-interval 15s
 ```
 
 浏览器访问：`http://127.0.0.1:18080`

@@ -18,6 +18,23 @@
         <aside class="hero-right">
           <label for="template-select">模板视图</label>
           <select id="template-select"></select>
+          <div class="hero-actions">
+            <button id="template-clear" class="ghost-btn" type="button">清空模板视图</button>
+          </div>
+          <div class="refresh-controls">
+            <label class="inline"><input id="auto-refresh" type="checkbox" /> 自动刷新</label>
+            <select id="refresh-interval" aria-label="刷新间隔">
+              <option value="5">5s</option>
+              <option value="10">10s</option>
+              <option value="15">15s</option>
+              <option value="30">30s</option>
+              <option value="60">60s</option>
+            </select>
+            <button id="refresh-now" class="ghost-btn" type="button">立即刷新</button>
+          </div>
+          <p id="refresh-hint" class="muted tiny">刷新状态初始化中...</p>
+          <p id="status-refresh-hint" class="muted tiny">后台状态刷新初始化中...</p>
+          <div class="quick-switch" id="template-group-switch"></div>
           <p id="template-hint" class="muted tiny">未选择模板时使用基础通用能力视图。</p>
         </aside>
       </div>
@@ -25,15 +42,18 @@
 
     <section id="recover-alert"></section>
     <section class="status-wall" id="status-wall"></section>
+    <section class="dashboard-grid" id="dashboard-grid"></section>
 
     <h2 id="lifecycle-title">Lifecycle (A-F)</h2>
     <p id="lifecycle-note" class="muted"></p>
+    <section class="filters" id="stage-filters"></section>
     <section class="grid" id="stages"></section>
 
     <h2>Overview</h2>
     <section class="grid" id="overview"></section>
 
     <h2>Services</h2>
+    <section class="filters" id="service-filters"></section>
     <section class="list" id="services"></section>
 
     <h2>Templates</h2>

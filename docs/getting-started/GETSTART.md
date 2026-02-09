@@ -74,6 +74,20 @@ IMAGE=kylinv10/kylin:b09 DOCKER_PLATFORM=linux/amd64 DRY_RUN=1 make -C examples/
 - `OUTPUT/ui/index.html`
 - `OUTPUT/summary.json`
 
+## 6.1) Web UI 自动刷新服务器状态（推荐）
+
+`web` 进程可后台定时刷新 `state/*.json`，UI 再读取这些最新状态：
+
+```bash
+./opskit web --output ./.tmp/opskit-demo --listen 127.0.0.1:18080 --status-interval 15s
+```
+
+说明：
+
+- `--status-interval` 默认 `15s`
+- 设为 `0` 或负值可关闭后台状态刷新
+- UI 前端自动刷新只负责重读 JSON，不执行巡检动作
+
 ## 7) 麒麟离线机一键回归（v0.3.x）
 
 ```bash

@@ -1,10 +1,16 @@
 const statePrefix = '../state';
 let artifactFilter = parseFilterFromURL();
 let templateFilter = parseTemplateFilterFromURL();
+let stageFilter = parseStageFilterFromURL();
+let serviceFilter = parseServiceFilterFromURL();
 let selectedTemplateRef = parseTemplateViewFromURL();
 let selectedTemplate = null;
 let recoverCountdownTimer = null;
 let appState = null;
+let autoRefreshTimer = null;
+let autoRefreshEnabled = readBoolSetting('opskit.ui.autoRefresh', true);
+let autoRefreshIntervalSec = readIntSetting('opskit.ui.autoRefreshSec', 15, [5, 10, 15, 30, 60]);
+let inFlightReload = false;
 
 function htmlEscape(input) {
   return String(input)
@@ -31,6 +37,34 @@ async function loadOptionalJson(path) {
   }
 }
 
+function readBoolSetting(key, fallback) {
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (raw === null) return fallback;
+    return raw === '1';
+  } catch (_) {
+    return fallback;
+  }
+}
+
+function readIntSetting(key, fallback, allowed) {
+  try {
+    const raw = Number(window.localStorage.getItem(key));
+    if (!Number.isInteger(raw)) return fallback;
+    return allowed.includes(raw) ? raw : fallback;
+  } catch (_) {
+    return fallback;
+  }
+}
+
+function writeSetting(key, value) {
+  try {
+    window.localStorage.setItem(key, String(value));
+  } catch (_) {
+    // ignore storage write failures
+  }
+}
+
 function card(title, bodyHtml) {
   return `<article class="card"><h3>${htmlEscape(title)}</h3>${bodyHtml}</article>`;
 }
@@ -39,11 +73,26 @@ function wallCard(title, value, sub, extraClass = '') {
   return `<article class="wall-card ${htmlEscape(extraClass)}"><h3>${htmlEscape(title)}</h3><div class="wall-value ${htmlEscape(extraClass)}">${htmlEscape(value)}</div><div class="wall-sub">${htmlEscape(sub)}</div></article>`;
 }
 
+function wallActionCard(action, title, value, sub, extraClass = '') {
+  return `<article class="wall-card clickable ${htmlEscape(extraClass)}" data-action="${htmlEscape(action)}"><h3>${htmlEscape(title)}</h3><div class="wall-value ${htmlEscape(extraClass)}">${htmlEscape(value)}</div><div class="wall-sub">${htmlEscape(sub)}</div></article>`;
+}
+
 function currentTemplateLabel() {
   if (!selectedTemplate) {
     return 'generic-baseline';
   }
   return `${selectedTemplate.ref} (${selectedTemplate.mode}/${selectedTemplate.serviceScope})`;
+}
+
+function templateMatchesGroup(item, groupId) {
+  if (!item) return false;
+  const mode = String(item.mode || '').toLowerCase();
+  const scope = String(item.serviceScope || '').toLowerCase();
+  const tags = (item.tags || []).map((x) => String(x).toLowerCase());
+  if (groupId === 'manage' || groupId === 'deploy') return mode === groupId;
+  if (groupId === 'single-service' || groupId === 'multi-service') return scope === groupId;
+  if (groupId === 'demo' || groupId === 'builtin') return tags.includes(groupId);
+  return false;
 }
 
 function renderOverview(overall) {
@@ -91,13 +140,156 @@ function renderStatusWall(overall, lifecycle, services, artifacts) {
   const reports = artifacts.reports || [];
 
   target.innerHTML = [
-    wallCard('运行健康度', `${healthScore}%`, `visible stages ${visibleStageIds.length}`),
+    wallActionCard('wall:stage-all', '运行健康度', `${healthScore}%`, `visible stages ${visibleStageIds.length}`),
     wallCard('当前状态', overall.overallStatus || 'UNKNOWN', `issues ${overall.openIssuesCount || 0}`),
-    wallCard('阶段分布', `${counts.PASSED}/${visibleStageIds.length}`, `warn ${counts.WARN} · fail ${counts.FAILED}`),
-    wallCard('服务健康', `${serviceHealthy}`, `degraded ${serviceDegraded} · unhealthy ${serviceUnhealthy}`),
-    wallCard('证据产物', `${reports.length}/${bundles.length}`, 'reports / bundles', 'small'),
+    wallActionCard('wall:stage-problem', '阶段分布', `${counts.PASSED}/${visibleStageIds.length}`, `warn ${counts.WARN} · fail ${counts.FAILED}`),
+    wallActionCard('wall:service-degraded', '服务健康', `${serviceHealthy}`, `degraded ${serviceDegraded} · unhealthy ${serviceUnhealthy}`),
+    wallActionCard('wall:artifact-all', '证据产物', `${reports.length}/${bundles.length}`, 'reports / bundles', 'small'),
     wallCard('模板视图', selectedTemplate ? selectedTemplate.mode : 'generic', selectedTemplate ? (selectedTemplate.ref || '-') : 'no template selected', 'small'),
   ].join('');
+}
+
+function severityRank(input) {
+  const sev = String(input || '').toLowerCase();
+  if (sev === 'fail' || sev === 'error') return 3;
+  if (sev === 'warn' || sev === 'warning') return 2;
+  return 1;
+}
+
+function renderDashboardPanels(overall, lifecycle, services, artifacts, templatesCatalog) {
+  const target = document.getElementById('dashboard-grid');
+  if (!target) return;
+
+  const visibleStageIds = visibleStageIdsForTemplate(selectedTemplate);
+  const stageMap = new Map((lifecycle.stages || []).map((x) => [x.stageId, x]));
+  const stageRows = visibleStageIds.map((id) => {
+    const row = stageMap.get(id) || { stageId: id, name: '-', status: 'NOT_STARTED' };
+    return {
+      stageId: id,
+      name: row.name || '-',
+      status: row.status || 'NOT_STARTED',
+      issues: row.issues || [],
+    };
+  });
+  const stageCounts = { PASSED: 0, WARN: 0, FAILED: 0, RUNNING: 0, NOT_STARTED: 0, SKIPPED: 0 };
+  stageRows.forEach((row) => {
+    if (!Object.prototype.hasOwnProperty.call(stageCounts, row.status)) {
+      stageCounts.NOT_STARTED += 1;
+      return;
+    }
+    stageCounts[row.status] += 1;
+  });
+  const totalStage = Math.max(stageRows.length, 1);
+  const progressSegments = ['PASSED', 'WARN', 'FAILED', 'RUNNING', 'NOT_STARTED', 'SKIPPED']
+    .map((status) => {
+      const count = stageCounts[status];
+      if (!count) return '';
+      const width = Math.max(2, Math.round((count / totalStage) * 100));
+      return `<span class="progress-seg ${htmlEscape(status)}" style="width:${width}%"></span>`;
+    })
+    .join('');
+  const stageList = stageRows
+    .map((row) => `<div class="stage-mini"><span class="name">${htmlEscape(row.stageId)} ${htmlEscape(row.name)}</span><span class="status ${htmlEscape(row.status)}">${htmlEscape(row.status)}</span></div>`)
+    .join('');
+
+  const issueRows = stageRows
+    .flatMap((row) => (row.issues || []).map((issue) => ({
+      stageId: row.stageId,
+      severity: String(issue.severity || 'info').toLowerCase(),
+      message: issue.message || issue.id || '-',
+    })))
+    .sort((a, b) => severityRank(b.severity) - severityRank(a.severity))
+    .slice(0, 8);
+  const issueList = issueRows.length
+    ? `<ul class="dash-list">${issueRows.map((row) => `<li><span class="severity-badge ${htmlEscape(row.severity)}">${htmlEscape(row.severity.toUpperCase())}</span>[${htmlEscape(row.stageId)}] ${htmlEscape(row.message)}</li>`).join('')}</ul>`
+    : '<div class="muted">当前视图无告警/失败问题</div>';
+
+  const serviceRows = services.services || [];
+  const serviceList = serviceRows.length
+    ? `<ul class="dash-list">${serviceRows.map((svc) => `<li><strong>${htmlEscape(svc.serviceId || '-')}</strong> <span class="status ${htmlEscape(String(svc.health || '').toUpperCase())}">${htmlEscape((svc.health || 'unknown').toUpperCase())}</span></li>`).join('')}</ul>`
+    : '<div class="muted">暂无服务数据</div>';
+
+  const bundles = artifacts.bundles || [];
+  const reports = artifacts.reports || [];
+  const latestAcceptance = latestBy((x) => artifactKind(x) === 'acceptance', bundles);
+  const latestCollect = latestBy((x) => artifactKind(x) === 'recover', bundles);
+  const latestHandover = latestBy((x) => artifactKind(x) === 'handover', bundles);
+  const latestConsistency = latestBy((x) => String(x.id || '').includes('consistency') || String(x.path || '').includes('consistency'), reports);
+
+  const templateItems = (templatesCatalog && Array.isArray(templatesCatalog.templates)) ? templatesCatalog.templates : [];
+  const manageCount = templateItems.filter((x) => String(x.mode || '').toLowerCase() === 'manage').length;
+  const deployCount = templateItems.filter((x) => String(x.mode || '').toLowerCase() === 'deploy').length;
+  const scopeMulti = templateItems.filter((x) => String(x.serviceScope || '').toLowerCase() === 'multi-service').length;
+  const scopeSingle = templateItems.filter((x) => String(x.serviceScope || '').toLowerCase() === 'single-service').length;
+
+  target.innerHTML = [
+    `<article class="dash-panel clickable" data-action="dash:stage-all"><h3>阶段进度</h3><div class="progress-summary">${progressSegments || '<span class="progress-seg NOT_STARTED" style="width:100%"></span>'}</div><div class="muted">pass ${stageCounts.PASSED} · warn ${stageCounts.WARN} · fail ${stageCounts.FAILED} · running ${stageCounts.RUNNING}</div>${stageList}</article>`,
+    `<article class="dash-panel clickable" data-action="dash:stage-problem"><h3>问题聚合（Top 8）</h3>${issueList}</article>`,
+    `<article class="dash-panel clickable" data-action="dash:service-degraded"><h3>服务矩阵</h3>${serviceList}</article>`,
+    `<article class="dash-panel clickable" data-action="dash:artifact-acceptance"><h3>证据通道</h3><ul class="dash-list"><li>reports: ${reports.length} · bundles: ${bundles.length}</li><li>acceptance: ${htmlEscape(latestAcceptance ? (latestAcceptance.id || latestAcceptance.path) : '-')}</li><li>recover collect: ${htmlEscape(latestCollect ? (latestCollect.id || latestCollect.path) : '-')}</li><li>handover: ${htmlEscape(latestHandover ? (latestHandover.id || latestHandover.path) : '-')}</li><li>consistency: ${htmlEscape(latestConsistency ? (latestConsistency.id || latestConsistency.path) : '-')}</li></ul></article>`,
+    `<article class="dash-panel clickable" data-action="dash:template-all"><h3>模板库存</h3><ul class="dash-list"><li>catalog total: ${templateItems.length}</li><li>manage/deploy: ${manageCount}/${deployCount}</li><li>single/multi: ${scopeSingle}/${scopeMulti}</li><li>view: ${htmlEscape(currentTemplateLabel())}</li></ul></article>`,
+  ].join('');
+}
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  try {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (_) {
+    el.scrollIntoView();
+  }
+}
+
+function applyDashboardAction(action) {
+  switch (action) {
+    case 'wall:stage-all':
+    case 'dash:stage-all':
+      stageFilter = 'all';
+      syncStageFilterToURL(stageFilter);
+      scrollToSection('stages');
+      break;
+    case 'wall:stage-problem':
+    case 'dash:stage-problem':
+      stageFilter = 'problem';
+      syncStageFilterToURL(stageFilter);
+      scrollToSection('stages');
+      break;
+    case 'wall:service-degraded':
+    case 'dash:service-degraded':
+      serviceFilter = 'degraded';
+      syncServiceFilterToURL(serviceFilter);
+      scrollToSection('services');
+      break;
+    case 'wall:artifact-all':
+      artifactFilter = 'all';
+      syncFilterToURL(artifactFilter);
+      scrollToSection('artifacts');
+      break;
+    case 'dash:artifact-acceptance':
+      artifactFilter = 'acceptance';
+      syncFilterToURL(artifactFilter);
+      scrollToSection('artifacts');
+      break;
+    case 'dash:template-all':
+      templateFilter = 'all';
+      syncTemplateFilterToURL(templateFilter);
+      scrollToSection('templates');
+      break;
+    default:
+      return;
+  }
+  renderAll();
+}
+
+function wireDashboardActions() {
+  const actionNodes = document.querySelectorAll('[data-action]');
+  actionNodes.forEach((node) => {
+    node.addEventListener('click', () => {
+      const action = node.getAttribute('data-action') || '';
+      applyDashboardAction(action);
+    });
+  });
 }
 
 function parseSystemInfoMessage(msg) {
@@ -190,21 +382,29 @@ function visibleStageIdsForTemplate(template) {
   return ['A', 'D', 'E', 'F'];
 }
 
+function stageStatusMatch(status, filter) {
+  const normalized = String(status || 'NOT_STARTED').toUpperCase();
+  if (filter === 'all') return true;
+  if (filter === 'problem') return normalized === 'WARN' || normalized === 'FAILED';
+  return normalized.toLowerCase() === filter;
+}
+
 function renderLifecycleViewNote(template, lifecycle) {
   const title = document.getElementById('lifecycle-title');
   const note = document.getElementById('lifecycle-note');
   const all = ['A', 'B', 'C', 'D', 'E', 'F'];
   const visible = visibleStageIdsForTemplate(template);
   const hidden = all.filter((x) => !visible.includes(x));
+  const stageFilterLabel = stageFilter === 'all' ? 'all' : stageFilter;
   if (template) {
     title.textContent = `Lifecycle (A-F) · ${template.ref}`;
     note.textContent = hidden.length
-      ? `当前模板视图模式：${template.mode}，展示阶段 ${visible.join(',')}，隐藏 ${hidden.join(',')}。`
-      : `当前模板视图模式：${template.mode}，展示全部 A-F 阶段。`;
+      ? `当前模板视图模式：${template.mode}，展示阶段 ${visible.join(',')}，隐藏 ${hidden.join(',')}。stage filter=${stageFilterLabel}`
+      : `当前模板视图模式：${template.mode}，展示全部 A-F 阶段。stage filter=${stageFilterLabel}`;
     return;
   }
   title.textContent = 'Lifecycle (A-F) · Generic Baseline';
-  note.textContent = `未选择模板，按基础通用能力展示阶段 ${visible.join(',')}。`;
+  note.textContent = `未选择模板，按基础通用能力展示阶段 ${visible.join(',')}。stage filter=${stageFilterLabel}`;
 }
 
 function renderStages(lifecycle, artifacts) {
@@ -226,7 +426,16 @@ function renderStages(lifecycle, artifacts) {
     },
     artifacts?.reports || [],
   );
-  target.innerHTML = stageIds.map((id) => {
+  const filteredStageIds = stageIds.filter((id) => {
+    const s = (lifecycle.stages || []).find((x) => x.stageId === id);
+    return stageStatusMatch(s?.status || 'NOT_STARTED', stageFilter);
+  });
+  if (!filteredStageIds.length) {
+    target.innerHTML = '<div class="card"><h3>Stages</h3><div class="muted">no stages match current stage filter</div></div>';
+    return;
+  }
+
+  target.innerHTML = filteredStageIds.map((id) => {
     const s = (lifecycle.stages || []).find((x) => x.stageId === id) || {
       stageId: id,
       name: 'N/A',
@@ -257,6 +466,36 @@ function renderStages(lifecycle, artifacts) {
   }).join('');
 }
 
+function renderStageFilters(lifecycle) {
+  const target = document.getElementById('stage-filters');
+  if (!target) return;
+  const stageIds = visibleStageIdsForTemplate(selectedTemplate);
+  const stages = stageIds.map((id) => (lifecycle.stages || []).find((x) => x.stageId === id) || { status: 'NOT_STARTED' });
+  const defs = [
+    { id: 'all', label: 'All' },
+    { id: 'problem', label: 'Problem' },
+    { id: 'passed', label: 'Passed' },
+    { id: 'warn', label: 'Warn' },
+    { id: 'failed', label: 'Failed' },
+    { id: 'running', label: 'Running' },
+    { id: 'not_started', label: 'Not Started' },
+  ];
+  const count = (id) => stages.filter((s) => stageStatusMatch(s.status || 'NOT_STARTED', id)).length;
+  target.innerHTML = defs.map((d) => {
+    const active = d.id === stageFilter ? 'active' : '';
+    return `<button class="filter-btn ${active}" data-stage-filter="${htmlEscape(d.id)}">${htmlEscape(d.label)} (${count(d.id)})</button>`;
+  }).join('');
+  target.querySelectorAll('.filter-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      stageFilter = btn.dataset.stageFilter || 'all';
+      syncStageFilterToURL(stageFilter);
+      renderStageFilters(lifecycle);
+      renderLifecycleViewNote(selectedTemplate, lifecycle);
+      renderStages(lifecycle, appState ? appState.artifacts : { reports: [], bundles: [] });
+    });
+  });
+}
+
 function stageMetricValue(stage, label) {
   const metric = (stage.metrics || []).find((m) => m.label === label);
   return metric ? metric.value : '';
@@ -274,11 +513,44 @@ function stageSummaryLine(summary) {
 
 function renderServices(services) {
   const target = document.getElementById('services');
-  const rows = (services.services || []).map((svc) => {
+  const rows = (services.services || [])
+    .filter((svc) => {
+      if (serviceFilter === 'all') return true;
+      return String(svc.health || '').toLowerCase() === serviceFilter;
+    })
+    .map((svc) => {
     const checks = (svc.checks || []).map((c) => `${c.checkId}:${c.result}`).join(', ');
     return `<li><strong>${htmlEscape(svc.serviceId || '-')}</strong> (${htmlEscape(svc.health || 'unknown')}) - ${htmlEscape(checks || 'no checks')}</li>`;
   });
-  target.innerHTML = rows.length ? `<ul>${rows.join('')}</ul>` : '<div class="muted">no services yet</div>';
+  target.innerHTML = rows.length ? `<ul>${rows.join('')}</ul>` : '<div class="muted">no services match current service filter</div>';
+}
+
+function renderServiceFilters(services) {
+  const target = document.getElementById('service-filters');
+  if (!target) return;
+  const defs = [
+    { id: 'all', label: 'All' },
+    { id: 'healthy', label: 'Healthy' },
+    { id: 'degraded', label: 'Degraded' },
+    { id: 'unhealthy', label: 'Unhealthy' },
+  ];
+  const rows = services.services || [];
+  const count = (id) => {
+    if (id === 'all') return rows.length;
+    return rows.filter((x) => String(x.health || '').toLowerCase() === id).length;
+  };
+  target.innerHTML = defs.map((d) => {
+    const active = d.id === serviceFilter ? 'active' : '';
+    return `<button class="filter-btn ${active}" data-service-filter="${htmlEscape(d.id)}">${htmlEscape(d.label)} (${count(d.id)})</button>`;
+  }).join('');
+  target.querySelectorAll('.filter-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      serviceFilter = btn.dataset.serviceFilter || 'all';
+      syncServiceFilterToURL(serviceFilter);
+      renderServiceFilters(services);
+      renderServices(services);
+    });
+  });
 }
 
 function findSelectedTemplate(catalog) {
@@ -292,6 +564,7 @@ function findSelectedTemplate(catalog) {
 
 function renderTemplateSelector(catalog, overall) {
   const select = document.getElementById('template-select');
+  const clearBtn = document.getElementById('template-clear');
   const hint = document.getElementById('template-hint');
   const items = (catalog && Array.isArray(catalog.templates)) ? catalog.templates : [];
 
@@ -320,12 +593,83 @@ function renderTemplateSelector(catalog, overall) {
     const active = (overall.activeTemplates || []).join(', ') || '-';
     hint.textContent = `当前为基础通用能力视图。activeTemplates: ${active}`;
   }
+  if (clearBtn) {
+    clearBtn.disabled = !selectedTemplateRef;
+    clearBtn.onclick = () => {
+      selectedTemplateRef = '';
+      selectedTemplate = null;
+      syncTemplateViewToURL('');
+      renderAll();
+    };
+  }
 
   select.onchange = () => {
     selectedTemplateRef = String(select.value || '');
     syncTemplateViewToURL(selectedTemplateRef);
     renderAll();
   };
+}
+
+function pickTemplateForGroup(items, groupId) {
+  if (!Array.isArray(items) || !items.length) return null;
+  const sorted = items.slice().sort((a, b) => String(a.ref || '').localeCompare(String(b.ref || '')));
+  if (selectedTemplate && templateMatchesGroup(selectedTemplate, groupId)) {
+    return selectedTemplate;
+  }
+  return sorted.find((x) => templateMatchesGroup(x, groupId)) || null;
+}
+
+function renderTemplateGroupSwitch(catalog) {
+  const target = document.getElementById('template-group-switch');
+  if (!target) return;
+  const items = (catalog && Array.isArray(catalog.templates)) ? catalog.templates : [];
+  const defs = [
+    { id: 'baseline', label: '基础通用' },
+    { id: 'manage', label: 'Manage' },
+    { id: 'deploy', label: 'Deploy' },
+    { id: 'single-service', label: '单服务' },
+    { id: 'multi-service', label: '多服务' },
+    { id: 'demo', label: 'Demo' },
+    { id: 'builtin', label: 'Builtin' },
+  ];
+  const count = (id) => {
+    if (id === 'baseline') return 1;
+    return items.filter((x) => templateMatchesGroup(x, id)).length;
+  };
+  const isActive = (id) => {
+    if (id === 'baseline') return !selectedTemplate;
+    return !!selectedTemplate && templateMatchesGroup(selectedTemplate, id);
+  };
+
+  target.innerHTML = defs.map((d) => {
+    const active = isActive(d.id) ? 'active' : '';
+    return `<button class="filter-btn ${active}" data-template-group="${htmlEscape(d.id)}">${htmlEscape(d.label)} (${count(d.id)})</button>`;
+  }).join('');
+
+  target.querySelectorAll('.filter-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const groupId = btn.dataset.templateGroup || 'baseline';
+      if (groupId === 'baseline') {
+        selectedTemplateRef = '';
+        selectedTemplate = null;
+        templateFilter = 'all';
+        syncTemplateViewToURL('');
+        syncTemplateFilterToURL('all');
+        renderAll();
+        return;
+      }
+      const picked = pickTemplateForGroup(items, groupId);
+      if (!picked) return;
+      selectedTemplateRef = picked.ref || picked.templateId || '';
+      selectedTemplate = picked;
+      syncTemplateViewToURL(selectedTemplateRef);
+      if (allowedTemplateFilter(groupId)) {
+        templateFilter = groupId;
+        syncTemplateFilterToURL(templateFilter);
+      }
+      renderAll();
+    });
+  });
 }
 
 function renderTemplates(catalog) {
@@ -548,6 +892,46 @@ function syncTemplateViewToURL(ref) {
   window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
 }
 
+function allowedStageFilter(id) {
+  return ['all', 'problem', 'passed', 'warn', 'failed', 'running', 'not_started'].includes(id);
+}
+
+function parseStageFilterFromURL() {
+  const params = new URLSearchParams(window.location.search || '');
+  const raw = (params.get('stageFilter') || 'all').trim().toLowerCase();
+  return allowedStageFilter(raw) ? raw : 'all';
+}
+
+function syncStageFilterToURL(filter) {
+  const url = new URL(window.location.href);
+  if (!allowedStageFilter(filter) || filter === 'all') {
+    url.searchParams.delete('stageFilter');
+  } else {
+    url.searchParams.set('stageFilter', filter);
+  }
+  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
+function allowedServiceFilter(id) {
+  return ['all', 'healthy', 'degraded', 'unhealthy'].includes(id);
+}
+
+function parseServiceFilterFromURL() {
+  const params = new URLSearchParams(window.location.search || '');
+  const raw = (params.get('serviceFilter') || 'all').trim().toLowerCase();
+  return allowedServiceFilter(raw) ? raw : 'all';
+}
+
+function syncServiceFilterToURL(filter) {
+  const url = new URL(window.location.href);
+  if (!allowedServiceFilter(filter) || filter === 'all') {
+    url.searchParams.delete('serviceFilter');
+  } else {
+    url.searchParams.set('serviceFilter', filter);
+  }
+  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
 function latestBy(predicate, items) {
   for (let i = items.length - 1; i >= 0; i -= 1) {
     if (predicate(items[i])) return items[i];
@@ -599,6 +983,89 @@ function startRecoverCountdown() {
   }, 1000);
 }
 
+function renderRefreshHint(overall) {
+  const hint = document.getElementById('refresh-hint');
+  if (!hint) return;
+  const base = overall && overall.lastRefreshTime ? `上次刷新: ${overall.lastRefreshTime}` : '上次刷新: -';
+  if (!autoRefreshEnabled) {
+    hint.textContent = `${base} · 自动刷新已关闭`;
+    return;
+  }
+  hint.textContent = `${base} · 自动刷新 ${autoRefreshIntervalSec}s`;
+}
+
+function renderStatusRefreshHint(webRuntime) {
+  const hint = document.getElementById('status-refresh-hint');
+  if (!hint) return;
+  if (!webRuntime || typeof webRuntime !== 'object') {
+    hint.textContent = '后台状态刷新: unknown（未检测到 web_runtime.json）';
+    return;
+  }
+  const enabled = !!webRuntime.statusAutoRefreshEnabled;
+  const interval = Number(webRuntime.statusIntervalSeconds || 0);
+  const lastTime = String(webRuntime.lastStatusRefreshTime || '-');
+  const lastTrigger = String(webRuntime.lastStatusRefreshTrigger || '-');
+  const lastExit = Number.isInteger(Number(webRuntime.lastStatusRefreshExit))
+    ? String(webRuntime.lastStatusRefreshExit)
+    : '-';
+  const lastError = String(webRuntime.lastStatusRefreshError || '');
+  if (!enabled) {
+    hint.textContent = '后台状态刷新: 未启用（可通过 `opskit web --status-interval 15s` 启用）';
+    return;
+  }
+  const errorPart = lastError ? ` · error=${lastError}` : '';
+  hint.textContent = `后台状态刷新: 已启用(${interval || '?'}s) · last=${lastTime} · trigger=${lastTrigger} · exit=${lastExit}${errorPart}`;
+}
+
+function applyAutoRefreshTimer() {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+  }
+  if (!autoRefreshEnabled) return;
+  autoRefreshTimer = setInterval(() => {
+    reloadState(true);
+  }, autoRefreshIntervalSec * 1000);
+}
+
+function initRefreshControls() {
+  const autoBox = document.getElementById('auto-refresh');
+  const intervalSelect = document.getElementById('refresh-interval');
+  const refreshNow = document.getElementById('refresh-now');
+  if (!autoBox || !intervalSelect || !refreshNow) return;
+
+  autoBox.checked = autoRefreshEnabled;
+  intervalSelect.value = String(autoRefreshIntervalSec);
+  intervalSelect.disabled = !autoRefreshEnabled;
+
+  autoBox.onchange = () => {
+    autoRefreshEnabled = !!autoBox.checked;
+    intervalSelect.disabled = !autoRefreshEnabled;
+    writeSetting('opskit.ui.autoRefresh', autoRefreshEnabled ? '1' : '0');
+    applyAutoRefreshTimer();
+    if (appState) {
+      renderRefreshHint(appState.overall);
+      renderStatusRefreshHint(appState.webRuntime);
+    }
+  };
+
+  intervalSelect.onchange = () => {
+    const raw = Number(intervalSelect.value);
+    if (!Number.isInteger(raw) || ![5, 10, 15, 30, 60].includes(raw)) return;
+    autoRefreshIntervalSec = raw;
+    writeSetting('opskit.ui.autoRefreshSec', raw);
+    applyAutoRefreshTimer();
+    if (appState) {
+      renderRefreshHint(appState.overall);
+      renderStatusRefreshHint(appState.webRuntime);
+    }
+  };
+
+  refreshNow.onclick = () => {
+    reloadState(false);
+  };
+}
+
 function artifactLink(label, artifact) {
   if (!artifact) return `<span class="muted">${htmlEscape(label)}: -</span>`;
   const href = htmlEscape(linkFor(artifact.path));
@@ -640,9 +1107,50 @@ function consistencyFromAcceptanceBundle(artifact) {
   };
 }
 
+async function reloadState(silent) {
+  if (inFlightReload) return;
+  inFlightReload = true;
+  const headline = document.getElementById('headline');
+  try {
+    const [overall, lifecycle, services, artifacts, summary, templatesCatalog, webRuntime] = await Promise.all([
+      loadJson('overall'),
+      loadJson('lifecycle'),
+      loadJson('services'),
+      loadJson('artifacts'),
+      loadOptionalJson('../summary.json'),
+      loadOptionalJson(`${statePrefix}/templates.json`),
+      loadOptionalJson(`${statePrefix}/web_runtime.json`),
+    ]);
+    appState = {
+      overall,
+      lifecycle,
+      services,
+      artifacts,
+      summary,
+      templatesCatalog,
+      webRuntime,
+    };
+    renderAll();
+  } catch (err) {
+    if (!silent && headline) {
+      headline.textContent = `Failed to load state JSON: ${err.message}`;
+    }
+  } finally {
+    inFlightReload = false;
+  }
+}
+
 function renderAll() {
   if (!appState) return;
-  const { overall, lifecycle, services, artifacts, summary, templatesCatalog } = appState;
+  const {
+    overall,
+    lifecycle,
+    services,
+    artifacts,
+    summary,
+    templatesCatalog,
+    webRuntime,
+  } = appState;
   selectedTemplate = findSelectedTemplate(templatesCatalog);
 
   const headline = document.getElementById('headline');
@@ -650,12 +1158,19 @@ function renderAll() {
   headline.textContent = `Overall ${overall.overallStatus || 'UNKNOWN'} · refreshed ${overall.lastRefreshTime || '-'} · view ${stageView}`;
 
   renderTemplateSelector(templatesCatalog, overall);
+  renderTemplateGroupSwitch(templatesCatalog);
   renderServerBasic(overall, lifecycle, services);
   renderRecoverAlert(overall);
   renderStatusWall(overall, lifecycle, services, artifacts);
+  renderDashboardPanels(overall, lifecycle, services, artifacts, templatesCatalog);
+  wireDashboardActions();
   renderLifecycleViewNote(selectedTemplate, lifecycle);
+  renderStageFilters(lifecycle);
   renderStages(lifecycle, artifacts);
   renderOverview(overall);
+  renderServiceFilters(services);
+  renderRefreshHint(overall);
+  renderStatusRefreshHint(webRuntime);
   renderServices(services);
   renderTemplateFilters(templatesCatalog);
   renderTemplates(templatesCatalog);
@@ -667,28 +1182,12 @@ function renderAll() {
 
 async function boot() {
   const headline = document.getElementById('headline');
-  try {
-    const [overall, lifecycle, services, artifacts, summary, templatesCatalog] = await Promise.all([
-      loadJson('overall'),
-      loadJson('lifecycle'),
-      loadJson('services'),
-      loadJson('artifacts'),
-      loadOptionalJson('../summary.json'),
-      loadOptionalJson(`${statePrefix}/templates.json`),
-    ]);
-
-    appState = {
-      overall,
-      lifecycle,
-      services,
-      artifacts,
-      summary,
-      templatesCatalog,
-    };
-    renderAll();
-  } catch (err) {
-    headline.textContent = `Failed to load state JSON: ${err.message}`;
+  if (headline) {
+    headline.textContent = 'Loading state...';
   }
+  initRefreshControls();
+  await reloadState(false);
+  applyAutoRefreshTimer();
 }
 
 boot();

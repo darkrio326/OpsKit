@@ -162,7 +162,7 @@ grep -R "\"health\"" "$OPSKIT_OUT/status.json"
 ## 5. 启动 Web UI 查看状态
 
 ```bash
-opskit web --output /data/opskit-demo --listen 127.0.0.1:18080
+opskit web --output /data/opskit-demo --listen 127.0.0.1:18080 --status-interval 15s
 ```
 
 本机访问：`http://127.0.0.1:18080`
@@ -253,7 +253,7 @@ opskit status --output /data/opskit-demo
 - 状态刷新：`opskit status --output <dir>`
 - 验收打包：`opskit accept ...`
 - 移交包：`opskit handover --output <dir>`
-- UI 服务：`opskit web --output <dir> --listen 127.0.0.1:18080`
+- UI 服务：`opskit web --output <dir> --listen 127.0.0.1:18080 --status-interval 15s`
 
 ## 9. 安全建议
 

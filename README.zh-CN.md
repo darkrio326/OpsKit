@@ -38,10 +38,12 @@ go build -o opskit ./cmd/opskit
 ./opskit status [--output dir] [--json]
 ./opskit accept [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--output dir]
 ./opskit handover [--output dir]
-./opskit web [--output dir] [--listen :18080]
+./opskit web [--output dir] [--listen :18080] [--status-interval 15s]
 ./opskit template validate <file>
 ./opskit template validate --json <file>
 ```
+
+说明：`web --status-interval` 会在后台定时刷新 `state/*.json`，UI 前端自动刷新读取的是这些更新后的状态。
 
 ## vars-file 示例
 

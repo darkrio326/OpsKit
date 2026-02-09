@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	coreerr "opskit/internal/core/errors"
 	"opskit/internal/core/executil"
@@ -35,6 +36,8 @@ const (
 	templateJSONSchemaVer   = "v1"
 	templateJSONCommand     = "opskit template validate"
 	templateListJSONCommand = "opskit template list"
+	webRuntimeSchemaVersion = "v1"
+	webRuntimeStateFile     = "web_runtime.json"
 )
 
 type statusJSONPayload struct {
@@ -81,6 +84,18 @@ type templateListJSONPayload struct {
 	SchemaVersion string             `json:"schemaVersion"`
 	Count         int                `json:"count"`
 	Templates     []templateListItem `json:"templates"`
+}
+
+type webRuntimeState struct {
+	SchemaVersion            string `json:"schemaVersion"`
+	StatusAutoRefreshEnabled bool   `json:"statusAutoRefreshEnabled"`
+	StatusIntervalSeconds    int    `json:"statusIntervalSeconds"`
+	StatusInterval           string `json:"statusInterval"`
+	LastStatusRefreshTime    string `json:"lastStatusRefreshTime,omitempty"`
+	LastStatusRefreshTrigger string `json:"lastStatusRefreshTrigger,omitempty"`
+	LastStatusRefreshExit    int    `json:"lastStatusRefreshExit,omitempty"`
+	LastStatusRefreshError   string `json:"lastStatusRefreshError,omitempty"`
+	UpdatedAt                string `json:"updatedAt"`
 }
 
 func main() {
@@ -742,52 +757,11 @@ func cmdStatus(args []string) int {
 		return exitcode.Failure
 	}
 
-	overall, err := store.ReadOverall()
+	overall, lifecycle, services, artifacts, finalCode, err := refreshStatusState(store)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "status unavailable: %v\n", err)
 		return exitcode.Failure
 	}
-	lifecycle, err := store.ReadLifecycle()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "status unavailable: %v\n", err)
-		return exitcode.Failure
-	}
-	services, err := store.ReadServices()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "status unavailable: %v\n", err)
-		return exitcode.Failure
-	}
-	artifacts, err := store.ReadArtifacts()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "status unavailable: %v\n", err)
-		return exitcode.Failure
-	}
-
-	s, issues := state.DeriveOverall(lifecycle)
-	overall.OverallStatus = s
-	overall.OpenIssuesCount = issues
-	overall.LastRefreshTime = timeutil.NowISO8601()
-	overall.RecoverSummary = state.DeriveRecoverSummary(store.Paths(), lifecycle)
-	if err := store.WriteLifecycle(lifecycle); err != nil {
-		fmt.Fprintf(os.Stderr, "status write failed: %v\n", err)
-		return exitcode.Failure
-	}
-	if err := store.WriteServices(services); err != nil {
-		fmt.Fprintf(os.Stderr, "status write failed: %v\n", err)
-		return exitcode.Failure
-	}
-	if err := store.WriteArtifacts(artifacts); err != nil {
-		fmt.Fprintf(os.Stderr, "status write failed: %v\n", err)
-		return exitcode.Failure
-	}
-	if err := store.WriteOverall(overall); err != nil {
-		fmt.Fprintf(os.Stderr, "status write failed: %v\n", err)
-		return exitcode.Failure
-	}
-	if err := writeTemplateCatalogState(store.Paths()); err != nil {
-		fmt.Fprintf(os.Stderr, "status template catalog warning: %v\n", err)
-	}
-	finalCode := exitForLifecycle(lifecycle)
 
 	if *jsonOutput {
 		payload := buildStatusJSONPayload(overall, lifecycle, services, artifacts, finalCode)
@@ -810,6 +784,54 @@ func cmdStatus(args []string) int {
 		fmt.Printf("- %s %-16s %s\n", s.StageID, s.Name, s.Status)
 	}
 	return finalCode
+}
+
+func refreshStatusState(store *state.Store) (schema.OverallState, schema.LifecycleState, schema.ServicesState, schema.ArtifactsState, int, error) {
+	var zeroOverall schema.OverallState
+	var zeroLifecycle schema.LifecycleState
+	var zeroServices schema.ServicesState
+	var zeroArtifacts schema.ArtifactsState
+
+	overall, err := store.ReadOverall()
+	if err != nil {
+		return zeroOverall, zeroLifecycle, zeroServices, zeroArtifacts, exitcode.Failure, err
+	}
+	lifecycle, err := store.ReadLifecycle()
+	if err != nil {
+		return zeroOverall, zeroLifecycle, zeroServices, zeroArtifacts, exitcode.Failure, err
+	}
+	services, err := store.ReadServices()
+	if err != nil {
+		return zeroOverall, zeroLifecycle, zeroServices, zeroArtifacts, exitcode.Failure, err
+	}
+	artifacts, err := store.ReadArtifacts()
+	if err != nil {
+		return zeroOverall, zeroLifecycle, zeroServices, zeroArtifacts, exitcode.Failure, err
+	}
+
+	s, issues := state.DeriveOverall(lifecycle)
+	overall.OverallStatus = s
+	overall.OpenIssuesCount = issues
+	overall.LastRefreshTime = timeutil.NowISO8601()
+	overall.RecoverSummary = state.DeriveRecoverSummary(store.Paths(), lifecycle)
+
+	if err := store.WriteLifecycle(lifecycle); err != nil {
+		return zeroOverall, zeroLifecycle, zeroServices, zeroArtifacts, exitcode.Failure, err
+	}
+	if err := store.WriteServices(services); err != nil {
+		return zeroOverall, zeroLifecycle, zeroServices, zeroArtifacts, exitcode.Failure, err
+	}
+	if err := store.WriteArtifacts(artifacts); err != nil {
+		return zeroOverall, zeroLifecycle, zeroServices, zeroArtifacts, exitcode.Failure, err
+	}
+	if err := store.WriteOverall(overall); err != nil {
+		return zeroOverall, zeroLifecycle, zeroServices, zeroArtifacts, exitcode.Failure, err
+	}
+	if err := writeTemplateCatalogState(store.Paths()); err != nil {
+		fmt.Fprintf(os.Stderr, "status template catalog warning: %v\n", err)
+	}
+	finalCode := exitForLifecycle(lifecycle)
+	return overall, lifecycle, services, artifacts, finalCode, nil
 }
 
 func writeTemplateCatalogState(paths state.Paths) error {
@@ -862,6 +884,7 @@ func cmdWeb(args []string) int {
 	fs.SetOutput(os.Stderr)
 	output := fs.String("output", defaultOutputRoot(), "output root")
 	listenAddr := fs.String("listen", ":18080", "web listen address")
+	statusInterval := fs.Duration("status-interval", 15*time.Second, "auto refresh state interval, <=0 disables")
 	if err := fs.Parse(args); err != nil {
 		return exitcode.Precondition
 	}
@@ -870,11 +893,99 @@ func cmdWeb(args []string) int {
 		fmt.Fprintf(os.Stderr, "web layout failed: %v\n", err)
 		return exitcode.Failure
 	}
+	webState := newWebRuntimeState(*statusInterval > 0, *statusInterval)
+	if err := writeWebRuntimeState(store.Paths(), webState); err != nil {
+		fmt.Fprintf(os.Stderr, "web runtime state warning: %v\n", err)
+	}
+	if *statusInterval > 0 {
+		runWebStatusRefresh(store, "startup", *statusInterval)
+		go runWebStatusRefresher(store, *statusInterval)
+		fmt.Printf("web status auto refresh enabled: interval=%s\n", statusInterval.String())
+	} else {
+		fmt.Println("web status auto refresh disabled: interval<=0")
+	}
 	if err := webserver.Serve(store.Paths(), *listenAddr); err != nil {
 		fmt.Fprintf(os.Stderr, "web server failed: %v\n", err)
 		return exitcode.Failure
 	}
 	return exitcode.Success
+}
+
+func runWebStatusRefresher(store *state.Store, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for range ticker.C {
+		runWebStatusRefresh(store, "interval", interval)
+	}
+}
+
+func runWebStatusRefresh(store *state.Store, trigger string, interval time.Duration) {
+	unlock, code := acquireGlobalLock(store)
+	if code != exitcode.Success {
+		runtimeState := newWebRuntimeState(interval > 0, interval)
+		runtimeState.LastStatusRefreshTime = timeutil.NowISO8601()
+		runtimeState.LastStatusRefreshTrigger = trigger
+		runtimeState.LastStatusRefreshExit = code
+		runtimeState.LastStatusRefreshError = "lock_unavailable"
+		_ = writeWebRuntimeState(store.Paths(), runtimeState)
+		if code != exitcode.ManualIntervention {
+			fmt.Fprintf(os.Stderr, "web status refresh skipped (%s): lock unavailable\n", trigger)
+		}
+		return
+	}
+	defer unlock()
+	if err := store.InitStateIfMissing(""); err != nil {
+		runtimeState := newWebRuntimeState(interval > 0, interval)
+		runtimeState.LastStatusRefreshTime = timeutil.NowISO8601()
+		runtimeState.LastStatusRefreshTrigger = trigger
+		runtimeState.LastStatusRefreshExit = exitcode.Failure
+		runtimeState.LastStatusRefreshError = "init_failed"
+		_ = writeWebRuntimeState(store.Paths(), runtimeState)
+		fmt.Fprintf(os.Stderr, "web status refresh failed (%s): init failed: %v\n", trigger, err)
+		return
+	}
+	overall, _, _, _, finalCode, err := refreshStatusState(store)
+	if err != nil {
+		runtimeState := newWebRuntimeState(interval > 0, interval)
+		runtimeState.LastStatusRefreshTime = timeutil.NowISO8601()
+		runtimeState.LastStatusRefreshTrigger = trigger
+		runtimeState.LastStatusRefreshExit = exitcode.Failure
+		runtimeState.LastStatusRefreshError = "status_refresh_failed"
+		_ = writeWebRuntimeState(store.Paths(), runtimeState)
+		fmt.Fprintf(os.Stderr, "web status refresh failed (%s): %v\n", trigger, err)
+		return
+	}
+	runtimeState := newWebRuntimeState(interval > 0, interval)
+	runtimeState.LastStatusRefreshTime = overall.LastRefreshTime
+	runtimeState.LastStatusRefreshTrigger = trigger
+	runtimeState.LastStatusRefreshExit = finalCode
+	_ = writeWebRuntimeState(store.Paths(), runtimeState)
+	if trigger == "startup" {
+		fmt.Printf("web status refreshed (%s): overall=%s issues=%d refreshed=%s exit=%d\n",
+			trigger, overall.OverallStatus, overall.OpenIssuesCount, overall.LastRefreshTime, finalCode)
+	}
+}
+
+func newWebRuntimeState(enabled bool, interval time.Duration) webRuntimeState {
+	seconds := 0
+	if interval > 0 {
+		seconds = int(interval / time.Second)
+		if seconds <= 0 {
+			seconds = 1
+		}
+	}
+	return webRuntimeState{
+		SchemaVersion:            webRuntimeSchemaVersion,
+		StatusAutoRefreshEnabled: enabled,
+		StatusIntervalSeconds:    seconds,
+		StatusInterval:           interval.String(),
+		UpdatedAt:                timeutil.NowISO8601(),
+	}
+}
+
+func writeWebRuntimeState(paths state.Paths, payload webRuntimeState) error {
+	payload.UpdatedAt = timeutil.NowISO8601()
+	return fsx.AtomicWriteJSON(filepath.Join(paths.StateDir, webRuntimeStateFile), payload)
 }
 
 func executeStages(ctx context.Context, store *state.Store, t schema.Template, selected []string, dryRun bool, includeDisabled bool) (int, error) {
@@ -1042,7 +1153,7 @@ func printUsage() {
 	fmt.Println("  opskit status [--output dir] [--json]")
 	fmt.Println("  opskit accept [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--fix] [--output dir]")
 	fmt.Println("  opskit handover [--output dir]")
-	fmt.Println("  opskit web [--output dir] [--listen :18080]")
+	fmt.Println("  opskit web [--output dir] [--listen :18080] [--status-interval 15s]")
 	fmt.Println("  opskit template validate <file|id> [--vars k=v] [--vars-file file] [--output dir] [--json]")
 	fmt.Println("  opskit template list [--json]")
 }

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	coreerr "opskit/internal/core/errors"
 	"opskit/internal/core/exitcode"
@@ -218,6 +219,119 @@ func TestCmdStatus_LockConflict(t *testing.T) {
 	if got := cmdStatus([]string{"--output", tmp}); got != exitcode.ManualIntervention {
 		t.Fatalf("expected manual intervention exit code, got %d", got)
 	}
+}
+
+func TestRefreshStatusState_WritesAndReturns(t *testing.T) {
+	tmp := t.TempDir()
+	store := state.NewStore(state.NewPaths(tmp))
+	if err := store.InitStateIfMissing("demo"); err != nil {
+		t.Fatalf("init state: %v", err)
+	}
+
+	lifecycle := state.DefaultLifecycle()
+	for i := range lifecycle.Stages {
+		lifecycle.Stages[i].Status = schema.StatusPassed
+	}
+	lifecycle.Stages[0].Status = schema.StatusWarn
+	if err := store.WriteLifecycle(lifecycle); err != nil {
+		t.Fatalf("write lifecycle: %v", err)
+	}
+
+	overall, gotLifecycle, _, _, code, err := refreshStatusState(store)
+	if err != nil {
+		t.Fatalf("refresh status state: %v", err)
+	}
+	if code != exitcode.PartialSuccess {
+		t.Fatalf("expected partial success, got %d", code)
+	}
+	if strings.TrimSpace(overall.LastRefreshTime) == "" {
+		t.Fatalf("expected last refresh time")
+	}
+	if len(gotLifecycle.Stages) != 6 {
+		t.Fatalf("expected 6 stages, got %d", len(gotLifecycle.Stages))
+	}
+	if gotLifecycle.Stages[0].Status != schema.StatusWarn {
+		t.Fatalf("expected first stage warn, got %s", gotLifecycle.Stages[0].Status)
+	}
+
+	if _, err := os.Stat(filepath.Join(tmp, "state", "templates.json")); err != nil {
+		t.Fatalf("expected templates catalog written: %v", err)
+	}
+}
+
+func TestRunWebStatusRefresh_SkipsWhenLocked(t *testing.T) {
+	tmp := t.TempDir()
+	store := state.NewStore(state.NewPaths(tmp))
+	if err := store.InitStateIfMissing("demo"); err != nil {
+		t.Fatalf("init state: %v", err)
+	}
+	overallBefore, _, _, _, _, err := refreshStatusState(store)
+	if err != nil {
+		t.Fatalf("seed refresh: %v", err)
+	}
+
+	l, err := lock.Acquire(store.Paths().LockFile)
+	if err != nil {
+		t.Fatalf("acquire lock: %v", err)
+	}
+	defer func() { _ = l.Release() }()
+
+	runWebStatusRefresh(store, "interval", 15*time.Second)
+
+	overallAfter, err := store.ReadOverall()
+	if err != nil {
+		t.Fatalf("read overall: %v", err)
+	}
+	if overallAfter.LastRefreshTime != overallBefore.LastRefreshTime {
+		t.Fatalf("expected refresh skipped while locked: before=%s after=%s", overallBefore.LastRefreshTime, overallAfter.LastRefreshTime)
+	}
+	webRuntime := mustReadWebRuntimeState(t, filepath.Join(tmp, "state", webRuntimeStateFile))
+	if webRuntime.LastStatusRefreshTrigger != "interval" {
+		t.Fatalf("unexpected trigger in runtime state: %+v", webRuntime)
+	}
+	if webRuntime.LastStatusRefreshError != "lock_unavailable" {
+		t.Fatalf("expected lock_unavailable runtime error, got %+v", webRuntime)
+	}
+}
+
+func TestRunWebStatusRefresh_WritesRuntimeStateOnSuccess(t *testing.T) {
+	tmp := t.TempDir()
+	store := state.NewStore(state.NewPaths(tmp))
+	if err := store.InitStateIfMissing("demo"); err != nil {
+		t.Fatalf("init state: %v", err)
+	}
+
+	runWebStatusRefresh(store, "startup", 20*time.Second)
+
+	webRuntime := mustReadWebRuntimeState(t, filepath.Join(tmp, "state", webRuntimeStateFile))
+	if !webRuntime.StatusAutoRefreshEnabled {
+		t.Fatalf("expected auto refresh enabled runtime state, got %+v", webRuntime)
+	}
+	if webRuntime.StatusIntervalSeconds != 20 {
+		t.Fatalf("expected interval seconds=20, got %+v", webRuntime)
+	}
+	if webRuntime.LastStatusRefreshTrigger != "startup" {
+		t.Fatalf("expected startup trigger, got %+v", webRuntime)
+	}
+	if strings.TrimSpace(webRuntime.LastStatusRefreshTime) == "" {
+		t.Fatalf("expected non-empty refresh time, got %+v", webRuntime)
+	}
+	if webRuntime.LastStatusRefreshError != "" {
+		t.Fatalf("expected empty refresh error on success, got %+v", webRuntime)
+	}
+}
+
+func mustReadWebRuntimeState(t *testing.T, path string) webRuntimeState {
+	t.Helper()
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read web runtime state: %v", err)
+	}
+	var payload webRuntimeState
+	if err := json.Unmarshal(b, &payload); err != nil {
+		t.Fatalf("unmarshal web runtime state: %v", err)
+	}
+	return payload
 }
 
 func TestCmdRun_DryRunSuccess(t *testing.T) {
