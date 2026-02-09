@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,15 +9,29 @@
 <body>
   <main>
     <header class="hero">
-      <h1>OpsKit v1</h1>
-      <p id="headline" class="muted">Loading state...</p>
+      <div class="hero-main">
+        <div class="hero-left">
+          <h1>OpsKit v1</h1>
+          <p id="headline" class="muted">Loading state...</p>
+          <section class="server-basic" id="server-basic"></section>
+        </div>
+        <aside class="hero-right">
+          <label for="template-select">模板视图</label>
+          <select id="template-select"></select>
+          <p id="template-hint" class="muted tiny">未选择模板时使用基础通用能力视图。</p>
+        </aside>
+      </div>
     </header>
+
     <section id="recover-alert"></section>
+    <section class="status-wall" id="status-wall"></section>
 
-    <section class="grid" id="overview"></section>
-
-    <h2>Lifecycle (A-F)</h2>
+    <h2 id="lifecycle-title">Lifecycle (A-F)</h2>
+    <p id="lifecycle-note" class="muted"></p>
     <section class="grid" id="stages"></section>
+
+    <h2>Overview</h2>
+    <section class="grid" id="overview"></section>
 
     <h2>Services</h2>
     <section class="list" id="services"></section>

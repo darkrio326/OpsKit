@@ -1,7 +1,10 @@
 const statePrefix = '../state';
 let artifactFilter = parseFilterFromURL();
 let templateFilter = parseTemplateFilterFromURL();
+let selectedTemplateRef = parseTemplateViewFromURL();
+let selectedTemplate = null;
 let recoverCountdownTimer = null;
+let appState = null;
 
 function htmlEscape(input) {
   return String(input)
@@ -32,9 +35,19 @@ function card(title, bodyHtml) {
   return `<article class="card"><h3>${htmlEscape(title)}</h3>${bodyHtml}</article>`;
 }
 
+function wallCard(title, value, sub, extraClass = '') {
+  return `<article class="wall-card ${htmlEscape(extraClass)}"><h3>${htmlEscape(title)}</h3><div class="wall-value ${htmlEscape(extraClass)}">${htmlEscape(value)}</div><div class="wall-sub">${htmlEscape(sub)}</div></article>`;
+}
+
+function currentTemplateLabel() {
+  if (!selectedTemplate) {
+    return 'generic-baseline';
+  }
+  return `${selectedTemplate.ref} (${selectedTemplate.mode}/${selectedTemplate.serviceScope})`;
+}
+
 function renderOverview(overall) {
   const target = document.getElementById('overview');
-  const template = (overall.activeTemplates || []).join(', ') || '-';
   const recover = overall.recoverSummary || {};
   const trend = `ok:${recover.successCount || 0} fail:${recover.failureCount || 0} warn:${recover.warnCount || 0}`;
   const lastRecover = recover.lastStatus ? `${recover.lastStatus}${recover.lastTrigger ? ` · ${recover.lastTrigger}` : ''}` : '-';
@@ -42,10 +55,111 @@ function renderOverview(overall) {
   target.innerHTML = [
     card('Overall', `<div class="status ${htmlEscape(overall.overallStatus || 'UNKNOWN')}">${htmlEscape(overall.overallStatus || 'UNKNOWN')}</div>`),
     card('Open Issues', `<div>${htmlEscape(overall.openIssuesCount ?? 0)}</div>`),
-    card('Template', `<div>${htmlEscape(template)}</div>`),
+    card('Template View', `<div>${htmlEscape(currentTemplateLabel())}</div>`),
     card('Recover Trend', `<div>${htmlEscape(trend)}</div><div class="muted">${htmlEscape(lastRecover)}</div><div class="muted">cooldown: ${htmlEscape(cooldown)}</div>`),
     card('Last Refresh', `<div class="muted">${htmlEscape(overall.lastRefreshTime || '-')}</div>`),
   ].join('');
+}
+
+function renderStatusWall(overall, lifecycle, services, artifacts) {
+  const target = document.getElementById('status-wall');
+  const visibleStageIds = visibleStageIdsForTemplate(selectedTemplate);
+  const stageMap = new Map((lifecycle.stages || []).map((s) => [s.stageId, s]));
+  const counts = {
+    PASSED: 0,
+    WARN: 0,
+    FAILED: 0,
+    SKIPPED: 0,
+    NOT_STARTED: 0,
+    RUNNING: 0,
+  };
+  visibleStageIds.forEach((id) => {
+    const status = (stageMap.get(id)?.status || 'NOT_STARTED');
+    if (Object.prototype.hasOwnProperty.call(counts, status)) {
+      counts[status] += 1;
+    }
+  });
+  const scored = counts.PASSED + counts.WARN + counts.FAILED;
+  const healthScore = scored ? Math.round(((counts.PASSED + counts.WARN * 0.5) / scored) * 100) : 0;
+
+  const serviceRows = services.services || [];
+  const serviceHealthy = serviceRows.filter((x) => String(x.health || '').toLowerCase() === 'healthy').length;
+  const serviceDegraded = serviceRows.filter((x) => String(x.health || '').toLowerCase() === 'degraded').length;
+  const serviceUnhealthy = serviceRows.filter((x) => String(x.health || '').toLowerCase() === 'unhealthy').length;
+
+  const bundles = artifacts.bundles || [];
+  const reports = artifacts.reports || [];
+
+  target.innerHTML = [
+    wallCard('运行健康度', `${healthScore}%`, `visible stages ${visibleStageIds.length}`),
+    wallCard('当前状态', overall.overallStatus || 'UNKNOWN', `issues ${overall.openIssuesCount || 0}`),
+    wallCard('阶段分布', `${counts.PASSED}/${visibleStageIds.length}`, `warn ${counts.WARN} · fail ${counts.FAILED}`),
+    wallCard('服务健康', `${serviceHealthy}`, `degraded ${serviceDegraded} · unhealthy ${serviceUnhealthy}`),
+    wallCard('证据产物', `${reports.length}/${bundles.length}`, 'reports / bundles', 'small'),
+    wallCard('模板视图', selectedTemplate ? selectedTemplate.mode : 'generic', selectedTemplate ? (selectedTemplate.ref || '-') : 'no template selected', 'small'),
+  ].join('');
+}
+
+function parseSystemInfoMessage(msg) {
+  const out = {};
+  const osMatch = /(?:^|\s)os=([^\s]+)/i.exec(msg || '');
+  const archMatch = /(?:^|\s)arch=([^\s]+)/i.exec(msg || '');
+  const kernelTzMatch = /kernel=(.+?)\s+timezone=/i.exec(msg || '');
+  const kernelOnlyMatch = /kernel=(.+)$/i.exec(msg || '');
+  const tzMatch = /(?:^|\s)timezone=([^\s]+)/i.exec(msg || '');
+  if (osMatch) out.os = osMatch[1];
+  if (archMatch) out.arch = archMatch[1];
+  if (kernelTzMatch) out.kernel = kernelTzMatch[1].trim();
+  else if (kernelOnlyMatch) out.kernel = kernelOnlyMatch[1].trim();
+  if (tzMatch) out.timezone = tzMatch[1];
+  return out;
+}
+
+function extractServerInfo(lifecycle, services) {
+  const info = {
+    os: '-',
+    arch: '-',
+    kernel: '-',
+    timezone: '-',
+    host: window.location.hostname || '-',
+  };
+
+  const stageA = (lifecycle.stages || []).find((x) => x.stageId === 'A');
+  (stageA?.metrics || []).forEach((m) => {
+    const label = String(m.label || '').toLowerCase();
+    if (label === 'os' && info.os === '-') info.os = String(m.value || '-');
+    if (label === 'arch' && info.arch === '-') info.arch = String(m.value || '-');
+  });
+
+  const checks = [];
+  (services.services || []).forEach((svc) => {
+    (svc.checks || []).forEach((c) => checks.push(c));
+  });
+
+  const sysInfoCheck = checks.find((c) => String(c.checkId || '').includes('system_info'));
+  if (sysInfoCheck && String(sysInfoCheck.message || '').trim() !== '') {
+    const parsed = parseSystemInfoMessage(sysInfoCheck.message);
+    info.os = parsed.os || info.os;
+    info.arch = parsed.arch || info.arch;
+    info.kernel = parsed.kernel || info.kernel;
+    info.timezone = parsed.timezone || info.timezone;
+  }
+
+  return info;
+}
+
+function renderServerBasic(overall, lifecycle, services) {
+  const target = document.getElementById('server-basic');
+  const info = extractServerInfo(lifecycle, services);
+  const items = [
+    ['Host', info.host],
+    ['OS', info.os],
+    ['Arch', info.arch],
+    ['Kernel', info.kernel],
+    ['TZ', info.timezone],
+    ['Refresh', overall.lastRefreshTime || '-'],
+  ];
+  target.innerHTML = items.map(([k, v]) => `<span class="kv"><b>${htmlEscape(k)}</b><span>${htmlEscape(v || '-')}</span></span>`).join('');
 }
 
 function renderRecoverAlert(overall) {
@@ -68,8 +182,33 @@ function renderRecoverAlert(overall) {
   target.innerHTML = '';
 }
 
+function visibleStageIdsForTemplate(template) {
+  if (!template) return ['A', 'D', 'E', 'F'];
+  const mode = String(template.mode || '').toLowerCase();
+  if (mode === 'deploy') return ['A', 'B', 'C', 'D', 'E', 'F'];
+  if (mode === 'manage') return ['A', 'B', 'D', 'E', 'F'];
+  return ['A', 'D', 'E', 'F'];
+}
+
+function renderLifecycleViewNote(template, lifecycle) {
+  const title = document.getElementById('lifecycle-title');
+  const note = document.getElementById('lifecycle-note');
+  const all = ['A', 'B', 'C', 'D', 'E', 'F'];
+  const visible = visibleStageIdsForTemplate(template);
+  const hidden = all.filter((x) => !visible.includes(x));
+  if (template) {
+    title.textContent = `Lifecycle (A-F) · ${template.ref}`;
+    note.textContent = hidden.length
+      ? `当前模板视图模式：${template.mode}，展示阶段 ${visible.join(',')}，隐藏 ${hidden.join(',')}。`
+      : `当前模板视图模式：${template.mode}，展示全部 A-F 阶段。`;
+    return;
+  }
+  title.textContent = 'Lifecycle (A-F) · Generic Baseline';
+  note.textContent = `未选择模板，按基础通用能力展示阶段 ${visible.join(',')}。`;
+}
+
 function renderStages(lifecycle, artifacts) {
-  const stages = ['A', 'B', 'C', 'D', 'E', 'F'];
+  const stageIds = visibleStageIdsForTemplate(selectedTemplate);
   const target = document.getElementById('stages');
   const latestRecoverCollect = latestBy(
     (x) => {
@@ -87,7 +226,7 @@ function renderStages(lifecycle, artifacts) {
     },
     artifacts?.reports || [],
   );
-  target.innerHTML = stages.map((id) => {
+  target.innerHTML = stageIds.map((id) => {
     const s = (lifecycle.stages || []).find((x) => x.stageId === id) || {
       stageId: id,
       name: 'N/A',
@@ -140,6 +279,53 @@ function renderServices(services) {
     return `<li><strong>${htmlEscape(svc.serviceId || '-')}</strong> (${htmlEscape(svc.health || 'unknown')}) - ${htmlEscape(checks || 'no checks')}</li>`;
   });
   target.innerHTML = rows.length ? `<ul>${rows.join('')}</ul>` : '<div class="muted">no services yet</div>';
+}
+
+function findSelectedTemplate(catalog) {
+  const items = (catalog && Array.isArray(catalog.templates)) ? catalog.templates : [];
+  if (!selectedTemplateRef) return null;
+  const ref = String(selectedTemplateRef).trim();
+  const found = items.find((x) => x.ref === ref || x.templateId === ref);
+  if (!found) return null;
+  return found;
+}
+
+function renderTemplateSelector(catalog, overall) {
+  const select = document.getElementById('template-select');
+  const hint = document.getElementById('template-hint');
+  const items = (catalog && Array.isArray(catalog.templates)) ? catalog.templates : [];
+
+  const options = ['<option value="">基础通用能力（不选模板）</option>'];
+  items
+    .slice()
+    .sort((a, b) => String(a.ref || '').localeCompare(String(b.ref || '')))
+    .forEach((item) => {
+      const label = `${item.ref} (${item.mode}/${item.serviceScope})`;
+      options.push(`<option value="${htmlEscape(item.ref)}">${htmlEscape(label)}</option>`);
+    });
+  select.innerHTML = options.join('');
+
+  const found = findSelectedTemplate(catalog);
+  if (!found) {
+    selectedTemplateRef = '';
+    selectedTemplate = null;
+  } else {
+    selectedTemplate = found;
+  }
+  select.value = selectedTemplateRef || '';
+
+  if (selectedTemplate) {
+    hint.textContent = `当前模板：${selectedTemplate.ref} · mode=${selectedTemplate.mode} · scope=${selectedTemplate.serviceScope}`;
+  } else {
+    const active = (overall.activeTemplates || []).join(', ') || '-';
+    hint.textContent = `当前为基础通用能力视图。activeTemplates: ${active}`;
+  }
+
+  select.onchange = () => {
+    selectedTemplateRef = String(select.value || '');
+    syncTemplateViewToURL(selectedTemplateRef);
+    renderAll();
+  };
 }
 
 function renderTemplates(catalog) {
@@ -302,7 +488,7 @@ function renderArtifactFilters(artifacts) {
       artifactFilter = btn.dataset.filter || 'all';
       syncFilterToURL(artifactFilter);
       renderArtifactFilters(artifacts);
-      renderArtifacts(artifacts);
+      renderArtifacts(artifacts, appState ? appState.summary : null);
     });
   });
 }
@@ -347,6 +533,21 @@ function syncTemplateFilterToURL(filter) {
   window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
 }
 
+function parseTemplateViewFromURL() {
+  const params = new URLSearchParams(window.location.search || '');
+  return String(params.get('viewTemplate') || '').trim();
+}
+
+function syncTemplateViewToURL(ref) {
+  const url = new URL(window.location.href);
+  if (!ref) {
+    url.searchParams.delete('viewTemplate');
+  } else {
+    url.searchParams.set('viewTemplate', ref);
+  }
+  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
 function latestBy(predicate, items) {
   for (let i = items.length - 1; i >= 0; i -= 1) {
     if (predicate(items[i])) return items[i];
@@ -376,18 +577,21 @@ function isCooldownOpen(until) {
   return untilMs > Date.now();
 }
 
-function startRecoverCountdown(overall) {
+function startRecoverCountdown() {
   if (recoverCountdownTimer) {
     clearInterval(recoverCountdownTimer);
     recoverCountdownTimer = null;
   }
-  const recover = overall.recoverSummary || {};
+  if (!appState) return;
+  const recover = appState.overall.recoverSummary || {};
   if (!recover.circuitOpen || !isCooldownOpen(recover.cooldownUntil)) {
     return;
   }
   recoverCountdownTimer = setInterval(() => {
-    renderRecoverAlert(overall);
-    renderOverview(overall);
+    if (!appState) return;
+    renderRecoverAlert(appState.overall);
+    renderOverview(appState.overall);
+    renderStatusWall(appState.overall, appState.lifecycle, appState.services, appState.artifacts);
     if (!isCooldownOpen(recover.cooldownUntil)) {
       clearInterval(recoverCountdownTimer);
       recoverCountdownTimer = null;
@@ -436,6 +640,31 @@ function consistencyFromAcceptanceBundle(artifact) {
   };
 }
 
+function renderAll() {
+  if (!appState) return;
+  const { overall, lifecycle, services, artifacts, summary, templatesCatalog } = appState;
+  selectedTemplate = findSelectedTemplate(templatesCatalog);
+
+  const headline = document.getElementById('headline');
+  const stageView = visibleStageIdsForTemplate(selectedTemplate).join(',');
+  headline.textContent = `Overall ${overall.overallStatus || 'UNKNOWN'} · refreshed ${overall.lastRefreshTime || '-'} · view ${stageView}`;
+
+  renderTemplateSelector(templatesCatalog, overall);
+  renderServerBasic(overall, lifecycle, services);
+  renderRecoverAlert(overall);
+  renderStatusWall(overall, lifecycle, services, artifacts);
+  renderLifecycleViewNote(selectedTemplate, lifecycle);
+  renderStages(lifecycle, artifacts);
+  renderOverview(overall);
+  renderServices(services);
+  renderTemplateFilters(templatesCatalog);
+  renderTemplates(templatesCatalog);
+  renderArtifactHighlights(artifacts, summary);
+  renderArtifactFilters(artifacts);
+  renderArtifacts(artifacts, summary);
+  startRecoverCountdown();
+}
+
 async function boot() {
   const headline = document.getElementById('headline');
   try {
@@ -448,17 +677,15 @@ async function boot() {
       loadOptionalJson(`${statePrefix}/templates.json`),
     ]);
 
-    headline.textContent = `Overall ${overall.overallStatus || 'UNKNOWN'} · refreshed ${overall.lastRefreshTime || '-'}`;
-    renderRecoverAlert(overall);
-    renderOverview(overall);
-    renderStages(lifecycle, artifacts);
-    renderServices(services);
-    renderTemplateFilters(templatesCatalog);
-    renderTemplates(templatesCatalog);
-    renderArtifactHighlights(artifacts, summary);
-    renderArtifactFilters(artifacts);
-    renderArtifacts(artifacts, summary);
-    startRecoverCountdown(overall);
+    appState = {
+      overall,
+      lifecycle,
+      services,
+      artifacts,
+      summary,
+      templatesCatalog,
+    };
+    renderAll();
   } catch (err) {
     headline.textContent = `Failed to load state JSON: ${err.message}`;
   }
