@@ -2,18 +2,28 @@
 
 > 预览版本（进行中）。主线聚焦 M4：在设计冻结约束内扩展 deploy 模板能力。
 
-## Planned
+## Current Progress
 
 ### Added
 
 - 新增发布计划：`docs/RELEASE_PLAN_v0.4.2-preview.1.md`
 - 新增当前预览发布说明：`docs/RELEASE_NOTES_v0.4.2-preview.1.md`
+- 新增负例 vars（必填变量为空）：
+  - `examples/vars/demo-generic-selfhost-deploy/vars.invalid.empty_package_file.json`
+  - `examples/vars/demo-minio-deploy/vars.invalid.empty_package_file.json`
+  - `examples/vars/demo-elk-deploy/vars.invalid.empty_es_package_file.json`
+  - `examples/vars/demo-powerjob-deploy/vars.invalid.empty_server_package_file.json`
 
 ### Changed
 
 - 根目录当前 release 文档入口切换到 `v0.4.2-preview.1`
 - `v0.4.1-preview.1` 计划与说明归档到 `docs/releases/`
 - 文档入口（README/ROADMAP/docs index/GITHUB_RELEASE）同步滚动到新预览版
+- 模板文档收敛（通用 deploy / MinIO / ELK / PowerJob）：
+  - 增加阶段职责（A/B/C/D/F）
+  - 增加最小变量集（必填且无模板默认值）
+  - 增加稳定可复现的必填变量失败示例
+- `release-check --skip-tests --skip-run` 回归通过
 
 ## Focus
 

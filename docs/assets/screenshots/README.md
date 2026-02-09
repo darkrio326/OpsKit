@@ -1,14 +1,26 @@
 # OpsKit UI Screenshots
 
-This folder is for Open Source friendly UI screenshots referenced by `README.zh-CN.md`.
+This folder stores release-friendly UI screenshots.
 
-Suggested files:
+## Directory layout
 
-- `overview.png`      (overall + A~F status summary)
-- `stage-detail.png`  (checks/actions/evidence in a single stage)
-- `artifacts.png`     (reports/bundles list)
+- `latest/`: screenshot slots currently used by docs
+- `releases/<version>/`: snapshot of screenshot slots for each release
 
-Notes:
+Required slots:
 
-- Avoid any customer data, real IPs, usernames, or sensitive output.
-- Prefer small, readable images (≤ 1600px wide).
+- `ui-template-stage.png` (template selector + A-F cards)
+- `ui-dashboard-evidence.png` (dashboard + evidence entry points)
+
+## Update workflow
+
+1. Replace files under `latest/` with real screenshots.
+2. Run:
+   - `scripts/screenshot-sync.sh --version <version>`
+   - `scripts/screenshot-check.sh --version <version>`
+3. Commit `latest/` and `releases/<version>/`.
+
+## Redaction / safety
+
+- Do not include customer IPs, hostnames, usernames, tokens, or secrets.
+- Keep screenshots from demo or sanitized environments only.

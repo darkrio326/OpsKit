@@ -27,59 +27,67 @@
 
 ## 3. 功能点拆分（固定 5 项）
 
-### 功能点 1：通用 deploy-manage 模板骨架
+### 功能点 1（完成）：通用 deploy-manage 模板骨架
 
 - 收敛 `demo-generic-selfhost-deploy` 的最小变量集与阶段职责
 - 明确“模板做什么/不做什么/失败可交付”的 README 契约
 - 输出统一 vars 示例（只表达差异，不承载逻辑）
+- 增加“缺失必填变量”的负例 vars 文件用于门禁与示例
 
 验收：
 
 ```bash
 go run ./cmd/opskit template validate --vars-file examples/vars/demo-generic-selfhost-deploy.json assets/templates/demo-generic-selfhost-deploy.json
+go run ./cmd/opskit template validate --vars-file examples/vars/demo-generic-selfhost-deploy/vars.invalid.empty_package_file.json assets/templates/demo-generic-selfhost-deploy.json
 scripts/template-delivery-check.sh --clean
 ```
 
-### 功能点 2：MinIO 模板收敛
+### 功能点 2（完成）：MinIO 模板收敛
 
 - 统一 MinIO 模板变量分组（service/path/network/package）
 - 增加最短命令链与失败场景说明
 - 校验 A/D/Accept 失败可交付
+- 增加“必填变量为空”的负例 vars 文件
 
 验收：
 
 ```bash
 go run ./cmd/opskit template validate --vars-file examples/vars/demo-minio-deploy.json assets/templates/demo-minio-deploy.json
+go run ./cmd/opskit template validate --vars-file examples/vars/demo-minio-deploy/vars.invalid.empty_package_file.json assets/templates/demo-minio-deploy.json
 scripts/template-delivery-check.sh --clean
 ```
 
-### 功能点 3：ELK 多服务模板收敛
+### 功能点 3（完成）：ELK 多服务模板收敛
 
 - 明确 ES/Logstash/Kibana 的多服务边界与责任
 - 补齐高级变量说明（JVM/TLS/pipeline）的非逻辑化约束
 - 增加多服务失败诊断证据入口
+- 增加“必填变量为空”的负例 vars 文件
 
 验收：
 
 ```bash
 go run ./cmd/opskit template validate --vars-file examples/vars/demo-elk-deploy.json assets/templates/demo-elk-deploy.json
+go run ./cmd/opskit template validate --vars-file examples/vars/demo-elk-deploy/vars.invalid.empty_es_package_file.json assets/templates/demo-elk-deploy.json
 scripts/template-delivery-check.sh --clean
 ```
 
-### 功能点 4：PowerJob 模板收敛
+### 功能点 4（完成）：PowerJob 模板收敛
 
 - 明确应用服务与依赖边界
 - 补齐示例变量与单机前提说明
 - 统一 Delivery Level 与最短命令链
+- 增加“必填变量为空”的负例 vars 文件
 
 验收：
 
 ```bash
 go run ./cmd/opskit template validate --vars-file examples/vars/demo-powerjob-deploy.json assets/templates/demo-powerjob-deploy.json
+go run ./cmd/opskit template validate --vars-file examples/vars/demo-powerjob-deploy/vars.invalid.empty_server_package_file.json assets/templates/demo-powerjob-deploy.json
 scripts/template-delivery-check.sh --clean
 ```
 
-### 功能点 5：门禁与发布流程增强
+### 功能点 5（完成）：门禁与发布流程增强
 
 - `release-check` 增加 deploy 模板校验组合冒烟
 - 对齐 README/ROADMAP/GITHUB_RELEASE 当前预览入口

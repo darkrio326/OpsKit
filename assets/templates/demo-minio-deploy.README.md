@@ -12,6 +12,14 @@
 - 目标场景：由 OpsKit 统一部署和监管的服务（如 MinIO/ELK/PowerJob）
 - 非目标场景：已经是黑箱交付的厂商中间件（这类应使用 `manage` 模板）
 
+## 阶段职责（A/B/C/D/F）
+
+- A：环境预检（系统、挂载、端口冲突）
+- B：目录与运行前置准备
+- C：MinIO 离线部署（包校验、解压、env 渲染、systemd 安装/启停）
+- D：运行态检查（unit 存在/活跃、端口监听、重启次数）
+- F：证据采集（env/unit hash、进程参数、端口快照）
+
 ## 部署前准备（离线）
 
 至少准备以下文件/路径：
@@ -35,6 +43,8 @@
 ```bash
 examples/vars/demo-minio-deploy.json
 examples/vars/demo-minio-deploy.env
+examples/vars/demo-minio-deploy/vars.example.yaml
+examples/vars/demo-minio-deploy/vars.invalid.empty_package_file.json
 ```
 
 最少需要你重点确认的变量：
@@ -42,6 +52,18 @@ examples/vars/demo-minio-deploy.env
 - `PACKAGE_FILE`
 - `PACKAGE_SHA256`
 - `SERVICE_EXEC`
+- `MINIO_ROOT_USER`
+- `MINIO_ROOT_PASSWORD`
+
+最小变量集（必填且无模板默认值）：
+
+- `INSTALL_ROOT`
+- `CONF_DIR`
+- `EVIDENCE_DIR`
+- `PACKAGE_FILE`
+- `PACKAGE_SHA256`
+- `SERVICE_EXEC`
+- `MINIO_DATA_DIR`
 - `MINIO_ROOT_USER`
 - `MINIO_ROOT_PASSWORD`
 
@@ -127,7 +149,7 @@ examples/vars/demo-minio-deploy.env
 校验失败示例（缺失必填变量）：
 
 ```bash
-./opskit template validate --json --vars-file examples/vars/demo-minio-deploy.json --vars "STACK_ID=" assets/templates/demo-minio-deploy.json
+./opskit template validate --json --vars-file examples/vars/demo-minio-deploy/vars.invalid.empty_package_file.json assets/templates/demo-minio-deploy.json
 ```
 
 ### 失败可交付说明

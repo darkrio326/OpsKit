@@ -127,6 +127,7 @@ scripts/generic-readiness-check.sh --generic-strict --offline-strict --clean
 
 - 项目总览：`README.md` / `README.zh-CN.md`
 - UI 模板视图说明：`docs/getting-started/UI_TEMPLATE_USAGE.md`
+- UI 截图版本同步：`scripts/screenshot-sync.sh --version <version>` + `scripts/screenshot-check.sh --version <version>`
 - 麒麟离线部署（从 Release 包开始）：`docs/getting-started/KYLIN_V10_OFFLINE_RELEASE.md`
 - 麒麟离线回归清单（v0.3.x）：`docs/getting-started/KYLIN_V10_OFFLINE_VALIDATION.md`
 - 麒麟容器部署：`docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`

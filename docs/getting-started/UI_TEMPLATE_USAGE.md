@@ -35,5 +35,48 @@ opskit web --output /data/opskit-demo --listen 127.0.0.1:18080 --status-interval
 
 ## 4. 截图占位（建议）
 
-![UI-模板选择与阶段卡片](docs/assets/screenshots/ui-template-stage.png)
-![UI-状态大屏与证据入口](docs/assets/screenshots/ui-dashboard-evidence.png)
+当前占位图（latest）：
+
+![UI-模板选择与阶段卡片](../assets/screenshots/latest/ui-template-stage.png)
+![UI-状态大屏与证据入口](../assets/screenshots/latest/ui-dashboard-evidence.png)
+
+版本归档目录：
+
+- `docs/assets/screenshots/releases/<version>/ui-template-stage.png`
+- `docs/assets/screenshots/releases/<version>/ui-dashboard-evidence.png`
+
+## 5. 通过 Docker 运行时截图（宿主机）
+
+推荐在宿主机浏览器打开 UI 后截图（容器内一般没有桌面环境）：
+
+```bash
+docker run --rm -it \
+  -p 18080:18080 \
+  -v "$PWD/.tmp/opskit-demo:/data/opskit" \
+  <your-opskit-image> \
+  ./opskit web --output /data/opskit --listen 0.0.0.0:18080 --status-interval 15s
+```
+
+宿主机打开：`http://127.0.0.1:18080/ui/`
+
+macOS 截图写入占位槽位（宿主机执行）：
+
+```bash
+bash /Users/darkrio/.codex/skills/screenshot/scripts/ensure_macos_permissions.sh
+python3 /Users/darkrio/.codex/skills/screenshot/scripts/take_screenshot.py --app "Google Chrome" --path docs/assets/screenshots/latest/ui-template-stage.png
+python3 /Users/darkrio/.codex/skills/screenshot/scripts/take_screenshot.py --app "Google Chrome" --path docs/assets/screenshots/latest/ui-dashboard-evidence.png
+```
+
+## 6. 截图版本同步（随版本更新）
+
+发版前执行：
+
+```bash
+scripts/screenshot-sync.sh --version v0.4.2-preview.1
+scripts/screenshot-check.sh --version v0.4.2-preview.1
+```
+
+说明：
+
+- `screenshot-sync.sh`：把 `latest/` 的截图复制到对应版本目录
+- `screenshot-check.sh`：校验 latest 与版本目录的截图文件是否齐全

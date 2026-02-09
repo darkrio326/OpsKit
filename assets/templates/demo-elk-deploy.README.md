@@ -10,6 +10,14 @@
 
 - Delivery Level: `Demo`
 
+## 阶段职责（A/B/C/D/F）
+
+- A：环境预检（基础环境 + ES/Logstash/Kibana 端口冲突）
+- B：多服务目录准备（安装、配置、证据目录）
+- C：多服务离线部署（3 份包校验、解压、unit 安装与启动）
+- D：多服务运行态检查（3 个 unit + 3 个端口 + 重启计数）
+- F：多服务证据采集（配置哈希、进程参数、端口快照）
+
 ## 特点
 
 - A 阶段一次性检查 3 个端口冲突（`9200/5044/5601`）
@@ -25,7 +33,18 @@
 ```bash
 examples/vars/demo-elk-deploy.json
 examples/vars/demo-elk-deploy.env
+examples/vars/demo-elk-deploy/vars.example.yaml
+examples/vars/demo-elk-deploy/vars.invalid.empty_es_package_file.json
 ```
+
+最小变量集（必填且无模板默认值）：
+
+- `INSTALL_ROOT`
+- `CONF_DIR`
+- `EVIDENCE_DIR`
+- `ES_PACKAGE_FILE` / `ES_PACKAGE_SHA256` / `ES_EXEC` / `ES_DATA_DIR`
+- `LOG_PACKAGE_FILE` / `LOG_PACKAGE_SHA256` / `LOG_EXEC` / `LOG_PIPELINE_CONFIG`
+- `KB_PACKAGE_FILE` / `KB_PACKAGE_SHA256` / `KB_EXEC` / `KB_ES_HOSTS`
 
 ## 校验
 
@@ -83,7 +102,7 @@ examples/vars/demo-elk-deploy.env
 校验失败示例（缺失必填变量）：
 
 ```bash
-./opskit template validate --json --vars-file examples/vars/demo-elk-deploy.json --vars "STACK_ID=" assets/templates/demo-elk-deploy.json
+./opskit template validate --json --vars-file examples/vars/demo-elk-deploy/vars.invalid.empty_es_package_file.json assets/templates/demo-elk-deploy.json
 ```
 
 ### 失败可交付说明

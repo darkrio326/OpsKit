@@ -10,6 +10,14 @@
 - 作为新模板起点：MinIO/ELK/PowerJob 这类模板都可从此基线扩展
 - 作为单服务通用模板：仅替换变量即可跑通 A/B/C/D/F
 
+## 阶段职责（A/B/C/D/F）
+
+- A：环境预检（系统信息、systemd 可用性、挂载与端口冲突）
+- B：基础目录准备（安装目录、配置目录、证据目录）
+- C：离线部署动作（包校验、解压、渲染 env、安装并拉起 systemd）
+- D：运行态检查（unit 存在/活跃、端口监听、重启次数）
+- F：证据采集（环境哈希、unit 哈希、进程参数、端口快照）
+
 ## 关键变量
 
 - `PACKAGE_FILE` / `PACKAGE_SHA256`：离线包和校验值
@@ -17,11 +25,22 @@
 - `SERVICE_UNIT` / `SERVICE_PORT`：systemd 与端口
 - `INSTALL_ROOT` / `CONF_DIR` / `EVIDENCE_DIR`：状态与证据路径
 
+## 最小变量集（必填且无默认值）
+
+- `INSTALL_ROOT`
+- `CONF_DIR`
+- `EVIDENCE_DIR`
+- `PACKAGE_FILE`
+- `PACKAGE_SHA256`
+- `SERVICE_EXEC`
+
 ## 示例变量文件
 
 ```bash
 examples/vars/demo-generic-selfhost-deploy.json
 examples/vars/demo-generic-selfhost-deploy.env
+examples/vars/demo-generic-selfhost-deploy/vars.example.yaml
+examples/vars/demo-generic-selfhost-deploy/vars.invalid.empty_package_file.json
 ```
 
 ## 校验
@@ -79,7 +98,7 @@ examples/vars/demo-generic-selfhost-deploy.env
 校验失败示例（缺失必填变量）：
 
 ```bash
-./opskit template validate --json --vars-file examples/vars/demo-generic-selfhost-deploy.json --vars "STACK_ID=" assets/templates/demo-generic-selfhost-deploy.json
+./opskit template validate --json --vars-file examples/vars/demo-generic-selfhost-deploy/vars.invalid.empty_package_file.json assets/templates/demo-generic-selfhost-deploy.json
 ```
 
 ### 失败可交付说明

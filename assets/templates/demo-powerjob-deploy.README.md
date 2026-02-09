@@ -8,6 +8,14 @@
 
 - Delivery Level: `Demo`
 
+## 阶段职责（A/B/C/D/F）
+
+- A：环境预检（系统、挂载、端口冲突）
+- B：server/worker 目录与前置准备
+- C：server/worker 离线部署（包校验、解压、unit 安装与启动）
+- D：双服务运行态检查（unit、端口、重启次数）
+- F：双服务证据采集（配置哈希、进程参数、端口快照）
+
 ## 特点
 
 - C 阶段统一处理 server/worker 两份离线包与 systemd unit
@@ -19,7 +27,17 @@
 ```bash
 examples/vars/demo-powerjob-deploy.json
 examples/vars/demo-powerjob-deploy.env
+examples/vars/demo-powerjob-deploy/vars.example.yaml
+examples/vars/demo-powerjob-deploy/vars.invalid.empty_server_package_file.json
 ```
+
+最小变量集（必填且无模板默认值）：
+
+- `INSTALL_ROOT`
+- `CONF_DIR`
+- `EVIDENCE_DIR`
+- `SERVER_PACKAGE_FILE` / `SERVER_PACKAGE_SHA256` / `SERVER_EXEC` / `SERVER_DATA_DIR`
+- `WORKER_PACKAGE_FILE` / `WORKER_PACKAGE_SHA256` / `WORKER_EXEC` / `SERVER_ENDPOINT`
 
 ## 校验
 
@@ -76,7 +94,7 @@ examples/vars/demo-powerjob-deploy.env
 校验失败示例（缺失必填变量）：
 
 ```bash
-./opskit template validate --json --vars-file examples/vars/demo-powerjob-deploy.json --vars "STACK_ID=" assets/templates/demo-powerjob-deploy.json
+./opskit template validate --json --vars-file examples/vars/demo-powerjob-deploy/vars.invalid.empty_server_package_file.json assets/templates/demo-powerjob-deploy.json
 ```
 
 ### 失败可交付说明
