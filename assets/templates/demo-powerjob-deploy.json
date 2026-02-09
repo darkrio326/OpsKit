@@ -1,0 +1,553 @@
+{
+  "id": "demo-powerjob-deploy-v1",
+  "name": "Demo PowerJob Deploy v1",
+  "mode": "deploy",
+  "vars": {
+    "STACK_ID": {
+      "type": "string",
+      "group": "service",
+      "required": true,
+      "default": "powerjob-demo",
+      "example": "powerjob-demo",
+      "description": "stack identifier for state and evidence naming"
+    },
+    "INSTALL_ROOT": {
+      "type": "string",
+      "group": "paths",
+      "required": true,
+      "example": "/data/opskit-powerjob",
+      "description": "opskit install root"
+    },
+    "CONF_DIR": {
+      "type": "string",
+      "group": "paths",
+      "required": true,
+      "example": "/etc/opskit",
+      "description": "config root directory"
+    },
+    "EVIDENCE_DIR": {
+      "type": "string",
+      "group": "paths",
+      "required": true,
+      "example": "/data/opskit-powerjob/evidence",
+      "description": "evidence output directory"
+    },
+    "SYSTEMD_UNIT_DIR": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "/etc/systemd/system",
+      "example": "/etc/systemd/system",
+      "description": "systemd unit directory"
+    },
+    "ROOT_MOUNT": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "/",
+      "example": "/",
+      "description": "required mount for preflight checks"
+    },
+    "MAX_RESTARTS": {
+      "type": "int",
+      "group": "runtime",
+      "required": true,
+      "default": "3",
+      "example": "3",
+      "description": "max allowed restart count"
+    },
+    "RECOVER_TRIGGER": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "powerjob_monitor",
+      "example": "powerjob_monitor",
+      "description": "recover trigger source label"
+    },
+    "SERVER_SERVICE_NAME": {
+      "type": "string",
+      "group": "service",
+      "required": true,
+      "default": "powerjob-server",
+      "example": "powerjob-server",
+      "description": "powerjob server service name"
+    },
+    "SERVER_UNIT": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "powerjob-server.service",
+      "example": "powerjob-server.service",
+      "description": "powerjob server unit name"
+    },
+    "SERVER_PROCESS_MATCH": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "powerjob-server",
+      "example": "powerjob-server",
+      "description": "powerjob server process match keyword"
+    },
+    "SERVER_PORT": {
+      "type": "int",
+      "group": "network",
+      "required": true,
+      "default": "7700",
+      "example": "7700",
+      "description": "powerjob server port"
+    },
+    "SERVER_PACKAGE_FILE": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "/data/packages/powerjob-server.tar.gz",
+      "description": "powerjob server package path"
+    },
+    "SERVER_PACKAGE_SHA256": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "replace-with-real-sha256",
+      "description": "powerjob server package sha256"
+    },
+    "SERVER_EXEC": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "/data/opskit-powerjob/powerjob-server/release/bin/server-start.sh",
+      "description": "powerjob server executable path"
+    },
+    "SERVER_DATA_DIR": {
+      "type": "string",
+      "group": "paths",
+      "required": true,
+      "example": "/data/powerjob/server",
+      "description": "powerjob server data path"
+    },
+    "WORKER_SERVICE_NAME": {
+      "type": "string",
+      "group": "service",
+      "required": true,
+      "default": "powerjob-worker",
+      "example": "powerjob-worker",
+      "description": "powerjob worker service name"
+    },
+    "WORKER_UNIT": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "powerjob-worker.service",
+      "example": "powerjob-worker.service",
+      "description": "powerjob worker unit name"
+    },
+    "WORKER_PROCESS_MATCH": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "powerjob-worker",
+      "example": "powerjob-worker",
+      "description": "powerjob worker process match keyword"
+    },
+    "WORKER_PORT": {
+      "type": "int",
+      "group": "network",
+      "required": true,
+      "default": "10086",
+      "example": "10086",
+      "description": "powerjob worker port"
+    },
+    "WORKER_PACKAGE_FILE": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "/data/packages/powerjob-worker.tar.gz",
+      "description": "powerjob worker package path"
+    },
+    "WORKER_PACKAGE_SHA256": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "replace-with-real-sha256",
+      "description": "powerjob worker package sha256"
+    },
+    "WORKER_EXEC": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "/data/opskit-powerjob/powerjob-worker/release/bin/worker-start.sh",
+      "description": "powerjob worker executable path"
+    },
+    "WORKER_APP_NAME": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "powerjob-worker",
+      "example": "powerjob-worker",
+      "description": "powerjob worker app name"
+    },
+    "SERVER_ENDPOINT": {
+      "type": "string",
+      "group": "network",
+      "required": true,
+      "default": "127.0.0.1:7700",
+      "example": "127.0.0.1:7700",
+      "description": "powerjob server endpoint used by worker"
+    }
+  },
+  "stages": {
+    "A": {
+      "checks": [
+        {
+          "id": "a.system_info",
+          "kind": "system_info",
+          "enabled": true
+        },
+        {
+          "id": "a.systemd_available",
+          "kind": "systemd_available",
+          "params": {
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.mount_check",
+          "kind": "mount_check",
+          "params": {
+            "required_mounts": [
+              "${ROOT_MOUNT}"
+            ]
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.port_conflict",
+          "kind": "port_conflict",
+          "params": {
+            "reserved_ports": [
+              "${SERVER_PORT}",
+              "${WORKER_PORT}"
+            ]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "B": {
+      "actions": [
+        {
+          "id": "b.ensure_paths",
+          "kind": "ensure_paths",
+          "params": {
+            "paths": [
+              "${INSTALL_ROOT}/${SERVER_SERVICE_NAME}/release",
+              "${INSTALL_ROOT}/${WORKER_SERVICE_NAME}/release",
+              "${CONF_DIR}/${SERVER_SERVICE_NAME}",
+              "${CONF_DIR}/${WORKER_SERVICE_NAME}",
+              "${SERVER_DATA_DIR}",
+              "${EVIDENCE_DIR}"
+            ],
+            "perm": "755"
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "C": {
+      "actions": [
+        {
+          "id": "c.server_sha256_verify",
+          "kind": "sha256_verify",
+          "params": {
+            "file": "${SERVER_PACKAGE_FILE}",
+            "expected_sha256": "${SERVER_PACKAGE_SHA256}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.worker_sha256_verify",
+          "kind": "sha256_verify",
+          "params": {
+            "file": "${WORKER_PACKAGE_FILE}",
+            "expected_sha256": "${WORKER_PACKAGE_SHA256}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.server_untar",
+          "kind": "untar",
+          "params": {
+            "src": "${SERVER_PACKAGE_FILE}",
+            "dest": "${INSTALL_ROOT}/${SERVER_SERVICE_NAME}/release"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.worker_untar",
+          "kind": "untar",
+          "params": {
+            "src": "${WORKER_PACKAGE_FILE}",
+            "dest": "${INSTALL_ROOT}/${WORKER_SERVICE_NAME}/release"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.render_server_env",
+          "kind": "render_templates",
+          "params": {
+            "template": "SERVER_PORT=${SERVER_PORT}\\nSERVER_DATA_DIR=${SERVER_DATA_DIR}\\n",
+            "output": "${CONF_DIR}/${SERVER_SERVICE_NAME}/runtime.env",
+            "perm": "600"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.render_worker_env",
+          "kind": "render_templates",
+          "params": {
+            "template": "WORKER_PORT=${WORKER_PORT}\\nWORKER_APP_NAME=${WORKER_APP_NAME}\\nSERVER_ENDPOINT=${SERVER_ENDPOINT}\\n",
+            "output": "${CONF_DIR}/${WORKER_SERVICE_NAME}/runtime.env",
+            "perm": "600"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.install_server_unit",
+          "kind": "systemd_install_unit",
+          "params": {
+            "unit_name": "${SERVER_UNIT}",
+            "unit_content": "[Unit]\\nDescription=${SERVER_SERVICE_NAME}\\nAfter=network.target\\n\\n[Service]\\nType=simple\\nEnvironmentFile=${CONF_DIR}/${SERVER_SERVICE_NAME}/runtime.env\\nExecStart=${SERVER_EXEC} --server.port=${SERVER_PORT} --data.path=${SERVER_DATA_DIR}\\nRestart=always\\nRestartSec=5\\n\\n[Install]\\nWantedBy=multi-user.target\\n",
+            "unit_dir": "${SYSTEMD_UNIT_DIR}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.install_worker_unit",
+          "kind": "systemd_install_unit",
+          "params": {
+            "unit_name": "${WORKER_UNIT}",
+            "unit_content": "[Unit]\\nDescription=${WORKER_SERVICE_NAME}\\nAfter=network.target ${SERVER_UNIT}\\n\\n[Service]\\nType=simple\\nEnvironmentFile=${CONF_DIR}/${WORKER_SERVICE_NAME}/runtime.env\\nExecStart=${WORKER_EXEC} --appName=${WORKER_APP_NAME} --serverAddress=${SERVER_ENDPOINT} --port=${WORKER_PORT}\\nRestart=always\\nRestartSec=5\\n\\n[Install]\\nWantedBy=multi-user.target\\n",
+            "unit_dir": "${SYSTEMD_UNIT_DIR}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.systemd_daemon_reload",
+          "kind": "systemd_daemon_reload",
+          "enabled": true
+        },
+        {
+          "id": "c.systemd_enable_start_server",
+          "kind": "systemd_enable_start",
+          "params": {
+            "unit": "${SERVER_UNIT}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.systemd_enable_start_worker",
+          "kind": "systemd_enable_start",
+          "params": {
+            "unit": "${WORKER_UNIT}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.capture_inventory",
+          "kind": "capture_inventory",
+          "params": {
+            "units": [
+              "${SERVER_UNIT}",
+              "${WORKER_UNIT}"
+            ],
+            "ports": [
+              "${SERVER_PORT}",
+              "${WORKER_PORT}"
+            ],
+            "paths": [
+              "${INSTALL_ROOT}/${SERVER_SERVICE_NAME}",
+              "${INSTALL_ROOT}/${WORKER_SERVICE_NAME}",
+              "${CONF_DIR}/${SERVER_SERVICE_NAME}",
+              "${CONF_DIR}/${WORKER_SERVICE_NAME}"
+            ],
+            "output": "${INVENTORY_FILE}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.declare_stack",
+          "kind": "declare_stack",
+          "params": {
+            "output": "${STACK_DECLARATION}",
+            "stack_id": "${STACK_ID}",
+            "mode": "deploy",
+            "components": [
+              "${SERVER_SERVICE_NAME}",
+              "${WORKER_SERVICE_NAME}"
+            ]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "D": {
+      "checks": [
+        {
+          "id": "d.server_unit_active",
+          "kind": "systemd_unit_active",
+          "params": {
+            "unit": "${SERVER_UNIT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.worker_unit_active",
+          "kind": "systemd_unit_active",
+          "params": {
+            "unit": "${WORKER_UNIT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.server_port_listening",
+          "kind": "port_listening",
+          "params": {
+            "port": "${SERVER_PORT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.worker_port_listening",
+          "kind": "port_listening",
+          "params": {
+            "port": "${WORKER_PORT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.server_restart_count",
+          "kind": "systemd_restart_count",
+          "params": {
+            "unit": "${SERVER_UNIT}",
+            "max_restarts": "${MAX_RESTARTS}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.worker_restart_count",
+          "kind": "systemd_restart_count",
+          "params": {
+            "unit": "${WORKER_UNIT}",
+            "max_restarts": "${MAX_RESTARTS}",
+            "severity": "warn"
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "E": {
+      "actions": [
+        {
+          "id": "e.recover_sequence",
+          "kind": "recover_sequence",
+          "params": {
+            "units": [
+              "${SERVER_UNIT}",
+              "${WORKER_UNIT}"
+            ],
+            "max_attempts": 2,
+            "cooldown_seconds": 600,
+            "readiness_network": true,
+            "readiness_mounts": [
+              "${ROOT_MOUNT}"
+            ],
+            "trigger_source": "${RECOVER_TRIGGER}",
+            "stage": "E",
+            "circuit_file": "${RECOVER_CIRCUIT_FILE}",
+            "collect_file": "${RECOVER_COLLECT_FILE}",
+            "collect_bundle_dir": "${COLLECT_BUNDLE_DIR}",
+            "collect_paths": [
+              "${INSTALL_ROOT}/${SERVER_SERVICE_NAME}",
+              "${INSTALL_ROOT}/${WORKER_SERVICE_NAME}",
+              "${CONF_DIR}/${SERVER_SERVICE_NAME}",
+              "${CONF_DIR}/${WORKER_SERVICE_NAME}"
+            ],
+            "redact_keys": [
+              "password",
+              "token",
+              "secret"
+            ]
+          },
+          "enabled": false
+        }
+      ]
+    },
+    "F": {
+      "evidence": [
+        {
+          "id": "f.server_env_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${CONF_DIR}/${SERVER_SERVICE_NAME}/runtime.env",
+            "output": "${EVIDENCE_DIR}/powerjob-server-env-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.worker_env_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${CONF_DIR}/${WORKER_SERVICE_NAME}/runtime.env",
+            "output": "${EVIDENCE_DIR}/powerjob-worker-env-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.server_process_args",
+          "kind": "process_args",
+          "params": {
+            "match": "${SERVER_PROCESS_MATCH}",
+            "output": "${EVIDENCE_DIR}/powerjob-server-process-args.json",
+            "redact_keys": [
+              "password",
+              "token",
+              "secret"
+            ]
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.worker_process_args",
+          "kind": "process_args",
+          "params": {
+            "match": "${WORKER_PROCESS_MATCH}",
+            "output": "${EVIDENCE_DIR}/powerjob-worker-process-args.json",
+            "redact_keys": [
+              "password",
+              "token",
+              "secret"
+            ]
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.port_snapshot",
+          "kind": "command_output",
+          "params": {
+            "name": "ss",
+            "args": [
+              "-ltn"
+            ],
+            "output": "${EVIDENCE_DIR}/powerjob-ss-ltn.json"
+          },
+          "enabled": true
+        }
+      ]
+    }
+  }
+}

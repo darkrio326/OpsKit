@@ -118,6 +118,41 @@ func TestCmdStatus_JSONOutputContract(t *testing.T) {
 	}
 }
 
+func TestCmdStatus_WritesTemplateCatalogState(t *testing.T) {
+	tmp := t.TempDir()
+	store := state.NewStore(state.NewPaths(tmp))
+	if err := store.InitStateIfMissing("demo"); err != nil {
+		t.Fatalf("init state: %v", err)
+	}
+
+	exit := cmdStatus([]string{"--output", tmp})
+	if exit != exitcode.Success {
+		t.Fatalf("expected success, got %d", exit)
+	}
+
+	path := filepath.Join(tmp, "state", "templates.json")
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read templates catalog: %v", err)
+	}
+	var payload templateListJSONPayload
+	if err := json.Unmarshal(b, &payload); err != nil {
+		t.Fatalf("unmarshal templates catalog: %v", err)
+	}
+	if payload.Command != templateListJSONCommand {
+		t.Fatalf("unexpected command: %s", payload.Command)
+	}
+	if payload.SchemaVersion != templateJSONSchemaVer {
+		t.Fatalf("unexpected schemaVersion: %s", payload.SchemaVersion)
+	}
+	if payload.Count != len(payload.Templates) {
+		t.Fatalf("count mismatch: %d vs %d", payload.Count, len(payload.Templates))
+	}
+	if len(payload.Templates) == 0 {
+		t.Fatalf("expected non-empty templates catalog")
+	}
+}
+
 func TestCmdStatus_JSONHealthByLifecycle(t *testing.T) {
 	tmp := t.TempDir()
 	store := state.NewStore(state.NewPaths(tmp))
@@ -205,6 +240,93 @@ func TestCmdAccept_DryRunSuccess(t *testing.T) {
 	got := cmdAccept([]string{"--template", "generic-manage-v1", "--dry-run", "--output", tmp})
 	if got != exitcode.Success {
 		t.Fatalf("expected success, got %d", got)
+	}
+}
+
+func TestCmdTemplate_List_Text(t *testing.T) {
+	exit, stdout := captureStdout(t, func() int {
+		return cmdTemplate([]string{"list"})
+	})
+	if exit != exitcode.Success {
+		t.Fatalf("expected success, got %d", exit)
+	}
+	if !strings.Contains(stdout, "builtin templates:") {
+		t.Fatalf("expected builtin templates header, output=%q", stdout)
+	}
+	if !strings.Contains(stdout, "ref=generic-manage-v1") {
+		t.Fatalf("expected generic-manage-v1 in output=%q", stdout)
+	}
+	if !strings.Contains(stdout, "ref=single-service-deploy-v1") {
+		t.Fatalf("expected single-service-deploy-v1 in output=%q", stdout)
+	}
+	if !strings.Contains(stdout, "ref=demo-elk-deploy") {
+		t.Fatalf("expected demo-elk-deploy in output=%q", stdout)
+	}
+	if !strings.Contains(stdout, "scope=single-service") {
+		t.Fatalf("expected scope in output=%q", stdout)
+	}
+	if !strings.Contains(stdout, "scope=multi-service") {
+		t.Fatalf("expected multi-service scope in output=%q", stdout)
+	}
+	if !strings.Contains(stdout, "tags=") {
+		t.Fatalf("expected tags in output=%q", stdout)
+	}
+}
+
+func TestCmdTemplate_List_JSON(t *testing.T) {
+	exit, stdout := captureStdout(t, func() int {
+		return cmdTemplate([]string{"list", "--json"})
+	})
+	if exit != exitcode.Success {
+		t.Fatalf("expected success, got %d", exit)
+	}
+	var payload templateListJSONPayload
+	if err := json.Unmarshal([]byte(strings.TrimSpace(stdout)), &payload); err != nil {
+		t.Fatalf("json unmarshal failed: %v, output=%q", err, stdout)
+	}
+	if payload.Command != templateListJSONCommand {
+		t.Fatalf("unexpected command: %s", payload.Command)
+	}
+	if payload.SchemaVersion != templateJSONSchemaVer {
+		t.Fatalf("unexpected schemaVersion: %s", payload.SchemaVersion)
+	}
+	if payload.Count != len(payload.Templates) {
+		t.Fatalf("count mismatch: %d vs %d", payload.Count, len(payload.Templates))
+	}
+	if len(payload.Templates) < 2 {
+		t.Fatalf("expected at least 2 templates, got %d", len(payload.Templates))
+	}
+	foundManage := false
+	foundSingle := false
+	foundDemoELK := false
+	for _, item := range payload.Templates {
+		if strings.TrimSpace(item.ServiceScope) == "" {
+			t.Fatalf("empty serviceScope in item: %+v", item)
+		}
+		if len(item.Tags) == 0 {
+			t.Fatalf("empty tags in item: %+v", item)
+		}
+		if item.Ref == "generic-manage-v1" {
+			foundManage = true
+			if item.Mode != "manage" {
+				t.Fatalf("expected manage mode for generic-manage-v1, got %s", item.Mode)
+			}
+		}
+		if item.Ref == "single-service-deploy-v1" {
+			foundSingle = true
+			if item.Mode != "deploy" {
+				t.Fatalf("expected deploy mode for single-service-deploy-v1, got %s", item.Mode)
+			}
+		}
+		if item.Ref == "demo-elk-deploy" {
+			foundDemoELK = true
+			if item.ServiceScope != "multi-service" {
+				t.Fatalf("expected multi-service for demo-elk-deploy, got %s", item.ServiceScope)
+			}
+		}
+	}
+	if !foundManage || !foundSingle || !foundDemoELK {
+		t.Fatalf("expected builtin refs in payload, got %+v", payload.Templates)
 	}
 }
 

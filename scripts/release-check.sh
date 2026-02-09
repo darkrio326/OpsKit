@@ -267,6 +267,7 @@ run_step "template validate demo-blackbox-middleware-manage-default" "step_faile
 run_step "template validate demo-blackbox-middleware-manage-fcs" "step_failed_template_validate_demo_blackbox_middleware_manage_fcs" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-blackbox-middleware-manage-fcs.json assets/templates/demo-blackbox-middleware-manage.json
 run_step "template validate demo-blackbox-middleware-manage-kingdee" "step_failed_template_validate_demo_blackbox_middleware_manage_kingdee" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate --vars-file ./examples/vars/demo-blackbox-middleware-manage-kingdee.json assets/templates/demo-blackbox-middleware-manage.json
 run_step "template validate generic-manage-v1" "step_failed_template_validate_generic_manage_v1" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template validate generic-manage-v1
+run_step "template list --json" "step_failed_template_list_json" env GOCACHE="${GO_CACHE_DIR}" go run ./cmd/opskit template list --json
 
 if [[ "${SKIP_TEMPLATE_JSON_CONTRACT}" == "0" ]]; then
   run_step "template validate json contract" "step_failed_template_validate_json_contract" env GO_CACHE_DIR="${GO_CACHE_DIR}" ./scripts/template-validate-check.sh --output "${OUTPUT_DIR}/template-validate-check" --clean

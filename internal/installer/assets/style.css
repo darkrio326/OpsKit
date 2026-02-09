@@ -98,6 +98,20 @@ h2 {
   line-height: 1.35;
 }
 
+.tag-row {
+  margin-top: 4px;
+}
+
+.tag {
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-right: 4px;
+}
+
 .filters {
   display: flex;
   gap: 8px;

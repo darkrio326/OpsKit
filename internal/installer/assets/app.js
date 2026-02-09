@@ -1,5 +1,6 @@
 const statePrefix = '../state';
 let artifactFilter = parseFilterFromURL();
+let templateFilter = parseTemplateFilterFromURL();
 let recoverCountdownTimer = null;
 
 function htmlEscape(input) {
@@ -141,6 +142,94 @@ function renderServices(services) {
   target.innerHTML = rows.length ? `<ul>${rows.join('')}</ul>` : '<div class="muted">no services yet</div>';
 }
 
+function renderTemplates(catalog) {
+  const target = document.getElementById('templates');
+  const items = (catalog && Array.isArray(catalog.templates)) ? catalog.templates : [];
+  if (!items.length) {
+    target.innerHTML = '<div class="muted">template catalog not found yet. Run `opskit status` to refresh state/templates.json.</div>';
+    return;
+  }
+  const filtered = filterTemplates(items, templateFilter);
+  if (!filtered.length) {
+    target.innerHTML = '<div class="muted">no templates match current filter</div>';
+    return;
+  }
+  const groups = groupTemplates(filtered);
+  const groupOrder = ['manage|single-service', 'manage|multi-service', 'deploy|single-service', 'deploy|multi-service'];
+  const rows = groupOrder
+    .filter((key) => groups.has(key))
+    .map((key) => {
+      const [mode, scope] = key.split('|');
+      const list = groups.get(key) || [];
+      const title = `${mode} / ${scope}`;
+      const lines = list.map((item) => {
+        const aliases = (item.aliases || []).length ? ` aliases: ${(item.aliases || []).join(',')}` : '';
+        const tags = (item.tags || []).map((x) => `<span class="tag">${htmlEscape(x)}</span>`).join(' ');
+        return `<li><strong>${htmlEscape(item.ref || '-')}</strong> <span class="muted">id=${htmlEscape(item.templateId || '-')} source=${htmlEscape(item.source || '-')}${htmlEscape(aliases)}</span><div class="tag-row">${tags}</div></li>`;
+      });
+      return `<h3>${htmlEscape(title)}</h3><ul>${lines.join('')}</ul>`;
+    });
+  target.innerHTML = rows.join('');
+}
+
+function groupTemplates(items) {
+  const groups = new Map();
+  items.forEach((item) => {
+    const mode = String(item.mode || 'unknown').toLowerCase();
+    const scope = String(item.serviceScope || 'single-service').toLowerCase();
+    const key = `${mode}|${scope}`;
+    if (!groups.has(key)) {
+      groups.set(key, []);
+    }
+    groups.get(key).push(item);
+  });
+  groups.forEach((list) => {
+    list.sort((a, b) => String(a.ref || '').localeCompare(String(b.ref || '')));
+  });
+  return groups;
+}
+
+function filterTemplates(items, filter) {
+  if (filter === 'all') return items;
+  return items.filter((item) => {
+    const mode = String(item.mode || '').toLowerCase();
+    const scope = String(item.serviceScope || '').toLowerCase();
+    const tags = (item.tags || []).map((x) => String(x).toLowerCase());
+    return mode === filter || scope === filter || tags.includes(filter);
+  });
+}
+
+function renderTemplateFilters(catalog) {
+  const target = document.getElementById('template-filters');
+  const items = (catalog && Array.isArray(catalog.templates)) ? catalog.templates : [];
+  if (!items.length) {
+    target.innerHTML = '';
+    return;
+  }
+  const defs = [
+    { id: 'all', label: 'All' },
+    { id: 'manage', label: 'Manage' },
+    { id: 'deploy', label: 'Deploy' },
+    { id: 'single-service', label: 'Single Service' },
+    { id: 'multi-service', label: 'Multi Service' },
+    { id: 'demo', label: 'Demo' },
+    { id: 'builtin', label: 'Builtin' },
+  ];
+  const count = (id) => filterTemplates(items, id).length;
+  target.innerHTML = defs.map((d) => {
+    const active = d.id === templateFilter ? 'active' : '';
+    return `<button class="filter-btn ${active}" data-template-filter="${htmlEscape(d.id)}">${htmlEscape(d.label)} (${count(d.id)})</button>`;
+  }).join('');
+  target.querySelectorAll('.filter-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      templateFilter = btn.dataset.templateFilter || 'all';
+      syncTemplateFilterToURL(templateFilter);
+      renderTemplateFilters(catalog);
+      renderTemplates(catalog);
+    });
+  });
+}
+
 function linkFor(path) {
   if (!path) return '#';
   if (path.startsWith('/') || path.startsWith('http://') || path.startsWith('https://')) {
@@ -238,6 +327,26 @@ function syncFilterToURL(filter) {
   window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
 }
 
+function allowedTemplateFilter(id) {
+  return ['all', 'manage', 'deploy', 'single-service', 'multi-service', 'demo', 'builtin'].includes(id);
+}
+
+function parseTemplateFilterFromURL() {
+  const params = new URLSearchParams(window.location.search || '');
+  const raw = (params.get('templateFilter') || 'all').trim().toLowerCase();
+  return allowedTemplateFilter(raw) ? raw : 'all';
+}
+
+function syncTemplateFilterToURL(filter) {
+  const url = new URL(window.location.href);
+  if (!allowedTemplateFilter(filter) || filter === 'all') {
+    url.searchParams.delete('templateFilter');
+  } else {
+    url.searchParams.set('templateFilter', filter);
+  }
+  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
 function latestBy(predicate, items) {
   for (let i = items.length - 1; i >= 0; i -= 1) {
     if (predicate(items[i])) return items[i];
@@ -330,12 +439,13 @@ function consistencyFromAcceptanceBundle(artifact) {
 async function boot() {
   const headline = document.getElementById('headline');
   try {
-    const [overall, lifecycle, services, artifacts, summary] = await Promise.all([
+    const [overall, lifecycle, services, artifacts, summary, templatesCatalog] = await Promise.all([
       loadJson('overall'),
       loadJson('lifecycle'),
       loadJson('services'),
       loadJson('artifacts'),
       loadOptionalJson('../summary.json'),
+      loadOptionalJson(`${statePrefix}/templates.json`),
     ]);
 
     headline.textContent = `Overall ${overall.overallStatus || 'UNKNOWN'} · refreshed ${overall.lastRefreshTime || '-'}`;
@@ -343,6 +453,8 @@ async function boot() {
     renderOverview(overall);
     renderStages(lifecycle, artifacts);
     renderServices(services);
+    renderTemplateFilters(templatesCatalog);
+    renderTemplates(templatesCatalog);
     renderArtifactHighlights(artifacts, summary);
     renderArtifactFilters(artifacts);
     renderArtifacts(artifacts, summary);

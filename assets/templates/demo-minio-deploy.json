@@ -1,0 +1,456 @@
+{
+  "id": "demo-minio-deploy-v1",
+  "name": "Demo MinIO Deploy v1",
+  "mode": "deploy",
+  "vars": {
+    "STACK_ID": {
+      "type": "string",
+      "group": "service",
+      "required": true,
+      "default": "minio-demo",
+      "example": "minio-demo",
+      "description": "stack identifier used in artifacts and declaration"
+    },
+    "SERVICE_NAME": {
+      "type": "string",
+      "group": "service",
+      "required": true,
+      "default": "minio",
+      "example": "minio",
+      "description": "service logical name"
+    },
+    "SERVICE_UNIT": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "minio.service",
+      "example": "minio.service",
+      "description": "systemd unit name"
+    },
+    "PROCESS_MATCH": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "minio",
+      "example": "minio",
+      "description": "process match keyword for evidence collection"
+    },
+    "SERVICE_PORT": {
+      "type": "int",
+      "group": "network",
+      "required": true,
+      "default": "9000",
+      "example": "9000",
+      "description": "api listen port"
+    },
+    "CONSOLE_PORT": {
+      "type": "int",
+      "group": "network",
+      "required": true,
+      "default": "9001",
+      "example": "9001",
+      "description": "console listen port"
+    },
+    "INSTALL_ROOT": {
+      "type": "string",
+      "group": "paths",
+      "required": true,
+      "example": "/data/opskit-minio",
+      "description": "opskit install root"
+    },
+    "CONF_DIR": {
+      "type": "string",
+      "group": "paths",
+      "required": true,
+      "example": "/etc/opskit",
+      "description": "config root directory"
+    },
+    "EVIDENCE_DIR": {
+      "type": "string",
+      "group": "paths",
+      "required": true,
+      "example": "/data/opskit-minio/evidence",
+      "description": "evidence output directory"
+    },
+    "PACKAGE_FILE": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "/data/packages/minio-linux-amd64.tar.gz",
+      "description": "offline package tar path"
+    },
+    "PACKAGE_SHA256": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "replace-with-real-sha256",
+      "description": "expected sha256 for package file"
+    },
+    "SERVICE_EXEC": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "/data/opskit-minio/minio/release/minio",
+      "description": "absolute executable path for minio binary"
+    },
+    "MINIO_DATA_DIR": {
+      "type": "string",
+      "group": "paths",
+      "required": true,
+      "example": "/data/minio",
+      "description": "minio data directory"
+    },
+    "MINIO_ROOT_USER": {
+      "type": "string",
+      "group": "security",
+      "required": true,
+      "example": "minioadmin",
+      "description": "minio root username"
+    },
+    "MINIO_ROOT_PASSWORD": {
+      "type": "string",
+      "group": "security",
+      "required": true,
+      "example": "replace-with-strong-password",
+      "description": "minio root password"
+    },
+    "MINIO_ADDRESS": {
+      "type": "string",
+      "group": "network",
+      "required": true,
+      "default": ":9000",
+      "example": ":9000",
+      "description": "minio api address argument"
+    },
+    "MINIO_CONSOLE_ADDRESS": {
+      "type": "string",
+      "group": "network",
+      "required": true,
+      "default": ":9001",
+      "example": ":9001",
+      "description": "minio console address argument"
+    },
+    "SYSTEMD_UNIT_DIR": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "/etc/systemd/system",
+      "example": "/etc/systemd/system",
+      "description": "systemd unit directory"
+    },
+    "ROOT_MOUNT": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "/",
+      "example": "/",
+      "description": "required mountpoint for preflight checks"
+    },
+    "MAX_RESTARTS": {
+      "type": "int",
+      "group": "runtime",
+      "required": true,
+      "default": "3",
+      "example": "3",
+      "description": "max allowed restart count"
+    },
+    "RECOVER_TRIGGER": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "minio_monitor",
+      "example": "minio_monitor",
+      "description": "recover trigger source label"
+    }
+  },
+  "stages": {
+    "A": {
+      "checks": [
+        {
+          "id": "a.system_info",
+          "kind": "system_info",
+          "enabled": true
+        },
+        {
+          "id": "a.systemd_available",
+          "kind": "systemd_available",
+          "params": {
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.mount_check",
+          "kind": "mount_check",
+          "params": {
+            "required_mounts": [
+              "${ROOT_MOUNT}"
+            ]
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.port_conflict",
+          "kind": "port_conflict",
+          "params": {
+            "reserved_ports": [
+              "${SERVICE_PORT}",
+              "${CONSOLE_PORT}"
+            ]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "B": {
+      "actions": [
+        {
+          "id": "b.ensure_paths",
+          "kind": "ensure_paths",
+          "params": {
+            "paths": [
+              "${INSTALL_ROOT}/${SERVICE_NAME}",
+              "${INSTALL_ROOT}/${SERVICE_NAME}/release",
+              "${CONF_DIR}/${SERVICE_NAME}",
+              "${MINIO_DATA_DIR}",
+              "${EVIDENCE_DIR}"
+            ],
+            "perm": "755"
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "C": {
+      "actions": [
+        {
+          "id": "c.sha256_verify",
+          "kind": "sha256_verify",
+          "params": {
+            "file": "${PACKAGE_FILE}",
+            "expected_sha256": "${PACKAGE_SHA256}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.untar",
+          "kind": "untar",
+          "params": {
+            "src": "${PACKAGE_FILE}",
+            "dest": "${INSTALL_ROOT}/${SERVICE_NAME}/release"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.render_minio_env",
+          "kind": "render_templates",
+          "params": {
+            "template": "MINIO_ROOT_USER=${MINIO_ROOT_USER}\\nMINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}\\nMINIO_VOLUMES=${MINIO_DATA_DIR}\\nMINIO_OPTS=--address ${MINIO_ADDRESS} --console-address ${MINIO_CONSOLE_ADDRESS}\\n",
+            "output": "${CONF_DIR}/${SERVICE_NAME}/minio.env",
+            "perm": "600"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.systemd_install_unit",
+          "kind": "systemd_install_unit",
+          "params": {
+            "unit_name": "${SERVICE_UNIT}",
+            "unit_content": "[Unit]\\nDescription=${SERVICE_NAME}\\nAfter=network-online.target\\nWants=network-online.target\\n\\n[Service]\\nType=simple\\nWorkingDirectory=${INSTALL_ROOT}/${SERVICE_NAME}\\nEnvironmentFile=${CONF_DIR}/${SERVICE_NAME}/minio.env\\nExecStart=${SERVICE_EXEC} server ${MINIO_DATA_DIR} --address ${MINIO_ADDRESS} --console-address ${MINIO_CONSOLE_ADDRESS}\\nRestart=always\\nRestartSec=5\\nLimitNOFILE=65535\\n\\n[Install]\\nWantedBy=multi-user.target\\n",
+            "unit_dir": "${SYSTEMD_UNIT_DIR}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.systemd_daemon_reload",
+          "kind": "systemd_daemon_reload",
+          "enabled": true
+        },
+        {
+          "id": "c.systemd_enable_start",
+          "kind": "systemd_enable_start",
+          "params": {
+            "unit": "${SERVICE_UNIT}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.capture_inventory",
+          "kind": "capture_inventory",
+          "params": {
+            "units": [
+              "${SERVICE_UNIT}"
+            ],
+            "ports": [
+              "${SERVICE_PORT}",
+              "${CONSOLE_PORT}"
+            ],
+            "paths": [
+              "${INSTALL_ROOT}/${SERVICE_NAME}",
+              "${MINIO_DATA_DIR}",
+              "${CONF_DIR}/${SERVICE_NAME}"
+            ],
+            "output": "${INVENTORY_FILE}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.declare_stack",
+          "kind": "declare_stack",
+          "params": {
+            "output": "${STACK_DECLARATION}",
+            "stack_id": "${STACK_ID}",
+            "mode": "deploy",
+            "components": [
+              "${SERVICE_NAME}",
+              "${SERVICE_UNIT}"
+            ]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "D": {
+      "checks": [
+        {
+          "id": "d.systemd_unit_exists",
+          "kind": "systemd_unit_exists",
+          "params": {
+            "unit": "${SERVICE_UNIT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.systemd_unit_active",
+          "kind": "systemd_unit_active",
+          "params": {
+            "unit": "${SERVICE_UNIT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.port_listening_api",
+          "kind": "port_listening",
+          "params": {
+            "port": "${SERVICE_PORT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.port_listening_console",
+          "kind": "port_listening",
+          "params": {
+            "port": "${CONSOLE_PORT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.systemd_restart_count",
+          "kind": "systemd_restart_count",
+          "params": {
+            "unit": "${SERVICE_UNIT}",
+            "max_restarts": "${MAX_RESTARTS}",
+            "severity": "warn"
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "E": {
+      "actions": [
+        {
+          "id": "e.recover_sequence",
+          "kind": "recover_sequence",
+          "params": {
+            "units": [
+              "${SERVICE_UNIT}"
+            ],
+            "max_attempts": 2,
+            "cooldown_seconds": 600,
+            "readiness_network": true,
+            "readiness_mounts": [
+              "${ROOT_MOUNT}"
+            ],
+            "trigger_source": "${RECOVER_TRIGGER}",
+            "stage": "E",
+            "circuit_file": "${RECOVER_CIRCUIT_FILE}",
+            "collect_file": "${RECOVER_COLLECT_FILE}",
+            "collect_bundle_dir": "${COLLECT_BUNDLE_DIR}",
+            "collect_paths": [
+              "${MINIO_DATA_DIR}",
+              "${CONF_DIR}/${SERVICE_NAME}",
+              "${INSTALL_ROOT}/${SERVICE_NAME}"
+            ],
+            "redact_keys": [
+              "password",
+              "token",
+              "secret"
+            ]
+          },
+          "enabled": false
+        }
+      ]
+    },
+    "F": {
+      "evidence": [
+        {
+          "id": "f.minio_env_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${CONF_DIR}/${SERVICE_NAME}/minio.env",
+            "output": "${EVIDENCE_DIR}/${SERVICE_NAME}-env-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.unit_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${SYSTEMD_UNIT_DIR}/${SERVICE_UNIT}",
+            "output": "${EVIDENCE_DIR}/${SERVICE_NAME}-unit-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.inventory_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${INVENTORY_FILE}",
+            "output": "${EVIDENCE_DIR}/${SERVICE_NAME}-inventory-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.port_snapshot",
+          "kind": "command_output",
+          "params": {
+            "name": "ss",
+            "args": [
+              "-ltn"
+            ],
+            "output": "${EVIDENCE_DIR}/${SERVICE_NAME}-ss-ltn.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.process_args",
+          "kind": "process_args",
+          "params": {
+            "match": "${PROCESS_MATCH}",
+            "output": "${EVIDENCE_DIR}/${SERVICE_NAME}-process-args.json",
+            "redact_keys": [
+              "password",
+              "token",
+              "secret"
+            ]
+          },
+          "enabled": true
+        }
+      ]
+    }
+  }
+}

@@ -13,6 +13,7 @@ import (
 	coreerr "opskit/internal/core/errors"
 	"opskit/internal/core/executil"
 	"opskit/internal/core/exitcode"
+	"opskit/internal/core/fsx"
 	"opskit/internal/core/lock"
 	"opskit/internal/core/timeutil"
 	"opskit/internal/engine"
@@ -33,6 +34,7 @@ const (
 	statusJSONCommand       = "opskit status"
 	templateJSONSchemaVer   = "v1"
 	templateJSONCommand     = "opskit template validate"
+	templateListJSONCommand = "opskit template list"
 )
 
 type statusJSONPayload struct {
@@ -61,6 +63,24 @@ type templateValidateJSONPayload struct {
 	Valid         bool                    `json:"valid"`
 	ErrorCount    int                     `json:"errorCount"`
 	Issues        []templateValidateIssue `json:"issues"`
+}
+
+type templateListItem struct {
+	Ref          string   `json:"ref"`
+	Aliases      []string `json:"aliases,omitempty"`
+	Source       string   `json:"source"`
+	TemplateID   string   `json:"templateId"`
+	Name         string   `json:"name"`
+	Mode         string   `json:"mode"`
+	ServiceScope string   `json:"serviceScope,omitempty"`
+	Tags         []string `json:"tags,omitempty"`
+}
+
+type templateListJSONPayload struct {
+	Command       string             `json:"command"`
+	SchemaVersion string             `json:"schemaVersion"`
+	Count         int                `json:"count"`
+	Templates     []templateListItem `json:"templates"`
 }
 
 func main() {
@@ -96,21 +116,34 @@ func runCLI(args []string) int {
 }
 
 func cmdTemplate(args []string) int {
-	if len(args) < 1 || args[0] != "validate" {
-		fmt.Fprintln(os.Stderr, "usage: opskit template validate <file> [--vars k=v] [--vars-file file] [--output dir] [--json]")
+	if len(args) < 1 {
+		fmt.Fprintln(os.Stderr, "usage: opskit template <validate|list> ...")
 		return exitcode.Precondition
 	}
+
+	switch args[0] {
+	case "validate":
+		return cmdTemplateValidate(args[1:])
+	case "list":
+		return cmdTemplateList(args[1:])
+	default:
+		fmt.Fprintln(os.Stderr, "usage: opskit template <validate|list> ...")
+		return exitcode.Precondition
+	}
+}
+
+func cmdTemplateValidate(args []string) int {
 	fs := flag.NewFlagSet("template validate", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	varsRaw := fs.String("vars", "", "vars key=value[,key=value]")
 	varsFile := fs.String("vars-file", "", "vars file (json or key=value lines)")
 	output := fs.String("output", defaultOutputRoot(), "output root")
 	jsonOutput := fs.Bool("json", false, "json output")
-	if err := fs.Parse(normalizeTemplateValidateArgs(args[1:])); err != nil {
+	if err := fs.Parse(normalizeTemplateValidateArgs(args)); err != nil {
 		return exitcode.Precondition
 	}
 	if fs.NArg() < 1 {
-		fmt.Fprintln(os.Stderr, "missing template file")
+		fmt.Fprintln(os.Stderr, "missing template file or id")
 		return exitcode.Precondition
 	}
 	ref := fs.Arg(0)
@@ -134,6 +167,61 @@ func cmdTemplate(args []string) int {
 	}
 	fmt.Printf("template valid: %s\n", ref)
 	return exitcode.Success
+}
+
+func cmdTemplateList(args []string) int {
+	fs := flag.NewFlagSet("template list", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	jsonOutput := fs.Bool("json", false, "json output")
+	if err := fs.Parse(args); err != nil {
+		return exitcode.Precondition
+	}
+	if fs.NArg() != 0 {
+		fmt.Fprintln(os.Stderr, "usage: opskit template list [--json]")
+		return exitcode.Precondition
+	}
+	items, err := buildTemplateListItems(true)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "template list failed: %v\n", err)
+		return exitcode.Failure
+	}
+	if *jsonOutput {
+		printTemplateListJSON(items)
+		return exitcode.Success
+	}
+	fmt.Println("builtin templates:")
+	for _, item := range items {
+		fmt.Printf("- ref=%s id=%s mode=%s scope=%s source=%s\n", item.Ref, item.TemplateID, item.Mode, item.ServiceScope, item.Source)
+		if len(item.Aliases) > 0 {
+			fmt.Printf("  aliases=%s\n", strings.Join(item.Aliases, ","))
+		}
+		if len(item.Tags) > 0 {
+			fmt.Printf("  tags=%s\n", strings.Join(item.Tags, ","))
+		}
+	}
+	return exitcode.Success
+}
+
+func buildTemplateListItems(includeDemo bool) ([]templateListItem, error) {
+	catalog, err := templates.Catalog(templates.CatalogOptions{IncludeDemo: includeDemo})
+	if err != nil {
+		return nil, err
+	}
+	items := make([]templateListItem, 0, len(catalog))
+	for _, entry := range catalog {
+		item := templateListItem{
+			Ref:          entry.Ref,
+			Aliases:      append([]string{}, entry.Aliases...),
+			Source:       entry.Source,
+			TemplateID:   entry.TemplateID,
+			Name:         entry.Name,
+			Mode:         entry.Mode,
+			ServiceScope: entry.ServiceScope,
+			Tags:         append([]string{}, entry.Tags...),
+		}
+		items = append(items, item)
+	}
+	return items, nil
 }
 
 func normalizeTemplateValidateArgs(raw []string) []string {
@@ -190,6 +278,21 @@ func printTemplateValidateJSON(ref string, valid bool, issues []templateValidate
 	fmt.Println(string(body))
 }
 
+func printTemplateListJSON(items []templateListItem) {
+	payload := templateListJSONPayload{
+		Command:       templateListJSONCommand,
+		SchemaVersion: templateJSONSchemaVer,
+		Count:         len(items),
+		Templates:     items,
+	}
+	body, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "template list json marshal failed: %v\n", err)
+		return
+	}
+	fmt.Println(string(body))
+}
+
 func diagnoseTemplateValidateError(err error) templateValidateIssue {
 	msg := strings.TrimSpace(err.Error())
 	issue := templateValidateIssue{
@@ -203,7 +306,7 @@ func diagnoseTemplateValidateError(err error) templateValidateIssue {
 	case strings.Contains(msg, "unknown template id:"):
 		issue.Path = "template.ref"
 		issue.Code = "template_unknown_id"
-		issue.Advice = "use builtin id `generic-manage-v1` or pass a valid .json file path"
+		issue.Advice = "run `opskit template list` for builtin/demo refs, or pass a valid .json file path"
 		return issue
 	case strings.HasPrefix(msg, "vars-file "):
 		issue.Path = "vars-file"
@@ -635,6 +738,9 @@ func cmdStatus(args []string) int {
 		fmt.Fprintf(os.Stderr, "status write failed: %v\n", err)
 		return exitcode.Failure
 	}
+	if err := writeTemplateCatalogState(store.Paths()); err != nil {
+		fmt.Fprintf(os.Stderr, "status template catalog warning: %v\n", err)
+	}
 	finalCode := exitForLifecycle(lifecycle)
 
 	if *jsonOutput {
@@ -658,6 +764,20 @@ func cmdStatus(args []string) int {
 		fmt.Printf("- %s %-16s %s\n", s.StageID, s.Name, s.Status)
 	}
 	return finalCode
+}
+
+func writeTemplateCatalogState(paths state.Paths) error {
+	items, err := buildTemplateListItems(true)
+	if err != nil {
+		return err
+	}
+	payload := templateListJSONPayload{
+		Command:       templateListJSONCommand,
+		SchemaVersion: templateJSONSchemaVer,
+		Count:         len(items),
+		Templates:     items,
+	}
+	return fsx.AtomicWriteJSON(filepath.Join(paths.StateDir, "templates.json"), payload)
 }
 
 func buildStatusJSONPayload(overall schema.OverallState, lifecycle schema.LifecycleState, services schema.ServicesState, artifacts schema.ArtifactsState, exitCode int) statusJSONPayload {
@@ -843,5 +963,6 @@ func printUsage() {
 	fmt.Println("  opskit accept [--template id|path] [--vars k=v] [--vars-file file] [--dry-run] [--fix] [--output dir]")
 	fmt.Println("  opskit handover [--output dir]")
 	fmt.Println("  opskit web [--output dir] [--listen :18080]")
-	fmt.Println("  opskit template validate <file> [--vars k=v] [--vars-file file] [--output dir] [--json]")
+	fmt.Println("  opskit template validate <file|id> [--vars k=v] [--vars-file file] [--output dir] [--json]")
+	fmt.Println("  opskit template list [--json]")
 }

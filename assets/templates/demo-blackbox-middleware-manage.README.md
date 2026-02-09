@@ -31,6 +31,49 @@ examples/vars/demo-blackbox-middleware-manage-fcs.json          # FCS 预设
 examples/vars/demo-blackbox-middleware-manage-kingdee.json      # 金蝶预设
 ```
 
+## 预设对照矩阵（default / FCS / Kingdee）
+
+| 变量 | default | FCS | Kingdee |
+| --- | --- | --- | --- |
+| `STACK_ID` | `blackbox-middleware` | `fcs-blackbox` | `kingdee-blackbox` |
+| `SERVICE_NAME` | `blackbox-service` | `fcs-server` | `kingdee-middleware` |
+| `SERVICE_UNIT` | `blackbox.service` | `fcs.service` | `kingdee.service` |
+| `PROCESS_MATCH` | `blackbox-service` | `fcs` | `kingdee` |
+| `SERVICE_PORT` | `18080` | `18080` | `18081` |
+| `APP_DIR` | `/opt/blackbox` | `/opt/fcs` | `/opt/kingdee` |
+| `DATA_DIR` | `/data/blackbox` | `/data/fcs` | `/data/kingdee` |
+| `LOG_DIR` | `/logs/blackbox` | `/logs/fcs` | `/logs/kingdee` |
+| `INSTALL_ROOT` | `/data/opskit-blackbox` | `/data/opskit-fcs` | `/data/opskit-kingdee` |
+| `EVIDENCE_DIR` | `/data/opskit-blackbox/evidence` | `/data/opskit-fcs/evidence` | `/data/opskit-kingdee/evidence` |
+| `RECOVER_TRIGGER` | `blackbox_monitor` | `fcs_blackbox_monitor` | `kingdee_blackbox_monitor` |
+
+说明：
+
+- 三套预设都使用同一模板：`assets/templates/demo-blackbox-middleware-manage.json`
+- 若迁移到新黑箱服务，优先复制 `default` 预设再调整路径/端口/unit
+
+## 最小变量集（手工接入）
+
+至少提供以下变量即可跑通基础链路（A/D/F）：
+
+- `STACK_ID`
+- `SERVICE_NAME`
+- `SERVICE_UNIT`
+- `PROCESS_MATCH`
+- `SERVICE_PORT`
+- `APP_DIR`
+- `DATA_DIR`
+- `LOG_DIR`
+- `INSTALL_ROOT`
+- `EVIDENCE_DIR`
+
+可选但建议保留：
+
+- `HEALTH_HOST`（默认 `localhost`）
+- `MAX_RESTARTS`（默认 `3`）
+- `ROOT_MOUNT`（默认 `/`）
+- `RECOVER_TRIGGER`（默认 `blackbox_monitor`）
+
 ## 模板校验
 
 文本模式：

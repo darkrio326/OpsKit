@@ -17,11 +17,11 @@ import (
 var builtinFS embed.FS
 
 func Load(ref string) (schema.Template, error) {
-	if ref == "" || ref == "generic-manage-v1" {
-		return loadBuiltin("default-manage.json")
+	if t, ok, err := resolveBuiltinRef(ref); ok {
+		return t, err
 	}
-	if ref == "single-service-deploy" || ref == "single-service-deploy-v1" {
-		return loadBuiltin("single-service-deploy.json")
+	if t, ok, err := resolveDemoRef(ref); ok {
+		return t, err
 	}
 	if strings.HasSuffix(ref, ".json") || strings.HasPrefix(ref, "/") || strings.Contains(ref, string(os.PathSeparator)) {
 		return loadFile(ref)

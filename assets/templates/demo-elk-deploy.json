@@ -1,0 +1,824 @@
+{
+  "id": "demo-elk-deploy-v1",
+  "name": "Demo ELK Deploy v1",
+  "mode": "deploy",
+  "vars": {
+    "STACK_ID": {
+      "type": "string",
+      "group": "service",
+      "required": true,
+      "default": "elk-demo",
+      "example": "elk-demo",
+      "description": "stack identifier for state and evidence naming"
+    },
+    "INSTALL_ROOT": {
+      "type": "string",
+      "group": "paths",
+      "required": true,
+      "example": "/data/opskit-elk",
+      "description": "opskit install root"
+    },
+    "CONF_DIR": {
+      "type": "string",
+      "group": "paths",
+      "required": true,
+      "example": "/etc/opskit",
+      "description": "config root directory"
+    },
+    "EVIDENCE_DIR": {
+      "type": "string",
+      "group": "paths",
+      "required": true,
+      "example": "/data/opskit-elk/evidence",
+      "description": "evidence output directory"
+    },
+    "SYSTEMD_UNIT_DIR": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "/etc/systemd/system",
+      "example": "/etc/systemd/system",
+      "description": "systemd unit directory"
+    },
+    "ROOT_MOUNT": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "/",
+      "example": "/",
+      "description": "required mount for preflight checks"
+    },
+    "MAX_RESTARTS": {
+      "type": "int",
+      "group": "runtime",
+      "required": true,
+      "default": "3",
+      "example": "3",
+      "description": "max allowed restart count"
+    },
+    "RECOVER_TRIGGER": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "elk_monitor",
+      "example": "elk_monitor",
+      "description": "recover trigger source label"
+    },
+    "ES_SERVICE_NAME": {
+      "type": "string",
+      "group": "service",
+      "required": true,
+      "default": "elasticsearch",
+      "example": "elasticsearch",
+      "description": "elasticsearch logical service name"
+    },
+    "ES_UNIT": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "elasticsearch.service",
+      "example": "elasticsearch.service",
+      "description": "elasticsearch systemd unit"
+    },
+    "ES_PROCESS_MATCH": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "elasticsearch",
+      "example": "elasticsearch",
+      "description": "elasticsearch process match keyword"
+    },
+    "ES_PORT": {
+      "type": "int",
+      "group": "network",
+      "required": true,
+      "default": "9200",
+      "example": "9200",
+      "description": "elasticsearch api port"
+    },
+    "ES_PACKAGE_FILE": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "/data/packages/elasticsearch.tar.gz",
+      "description": "elasticsearch package tar path"
+    },
+    "ES_PACKAGE_SHA256": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "replace-with-real-sha256",
+      "description": "elasticsearch package sha256"
+    },
+    "ES_EXEC": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "/data/opskit-elk/elasticsearch/release/bin/elasticsearch",
+      "description": "elasticsearch executable path"
+    },
+    "ES_DATA_DIR": {
+      "type": "string",
+      "group": "paths",
+      "required": true,
+      "example": "/data/elasticsearch",
+      "description": "elasticsearch data path"
+    },
+    "ES_CLUSTER_NAME": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "opskit-elk",
+      "example": "opskit-elk",
+      "description": "elasticsearch cluster name"
+    },
+    "ES_NODE_NAME": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "node-1",
+      "example": "node-1",
+      "description": "elasticsearch node name"
+    },
+    "ES_JAVA_OPTS": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "-Xms1g -Xmx1g",
+      "example": "-Xms1g -Xmx1g",
+      "description": "elasticsearch java opts"
+    },
+    "LOG_SERVICE_NAME": {
+      "type": "string",
+      "group": "service",
+      "required": true,
+      "default": "logstash",
+      "example": "logstash",
+      "description": "logstash logical service name"
+    },
+    "LOG_UNIT": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "logstash.service",
+      "example": "logstash.service",
+      "description": "logstash systemd unit"
+    },
+    "LOG_PROCESS_MATCH": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "logstash",
+      "example": "logstash",
+      "description": "logstash process match keyword"
+    },
+    "LOG_PORT": {
+      "type": "int",
+      "group": "network",
+      "required": true,
+      "default": "5044",
+      "example": "5044",
+      "description": "logstash input port"
+    },
+    "LOG_PACKAGE_FILE": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "/data/packages/logstash.tar.gz",
+      "description": "logstash package tar path"
+    },
+    "LOG_PACKAGE_SHA256": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "replace-with-real-sha256",
+      "description": "logstash package sha256"
+    },
+    "LOG_EXEC": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "/data/opskit-elk/logstash/release/bin/logstash",
+      "description": "logstash executable path"
+    },
+    "LOG_JAVA_OPTS": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "-Xms512m -Xmx512m",
+      "example": "-Xms512m -Xmx512m",
+      "description": "logstash java opts"
+    },
+    "LOG_PIPELINE_CONFIG": {
+      "type": "string",
+      "group": "paths",
+      "required": true,
+      "default": "${CONF_DIR}/${LOG_SERVICE_NAME}/pipeline.conf",
+      "example": "/etc/opskit/logstash/pipeline.conf",
+      "description": "logstash pipeline config path"
+    },
+    "KB_SERVICE_NAME": {
+      "type": "string",
+      "group": "service",
+      "required": true,
+      "default": "kibana",
+      "example": "kibana",
+      "description": "kibana logical service name"
+    },
+    "KB_UNIT": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "kibana.service",
+      "example": "kibana.service",
+      "description": "kibana systemd unit"
+    },
+    "KB_PROCESS_MATCH": {
+      "type": "string",
+      "group": "runtime",
+      "required": true,
+      "default": "kibana",
+      "example": "kibana",
+      "description": "kibana process match keyword"
+    },
+    "KB_PORT": {
+      "type": "int",
+      "group": "network",
+      "required": true,
+      "default": "5601",
+      "example": "5601",
+      "description": "kibana web port"
+    },
+    "KB_PACKAGE_FILE": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "/data/packages/kibana.tar.gz",
+      "description": "kibana package tar path"
+    },
+    "KB_PACKAGE_SHA256": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "replace-with-real-sha256",
+      "description": "kibana package sha256"
+    },
+    "KB_EXEC": {
+      "type": "string",
+      "group": "deploy",
+      "required": true,
+      "example": "/data/opskit-elk/kibana/release/bin/kibana",
+      "description": "kibana executable path"
+    },
+    "KB_ES_HOSTS": {
+      "type": "string",
+      "group": "network",
+      "required": true,
+      "default": "http://127.0.0.1:9200",
+      "example": "http://127.0.0.1:9200",
+      "description": "kibana elasticsearch hosts value"
+    },
+    "KB_HOST": {
+      "type": "string",
+      "group": "network",
+      "required": true,
+      "default": "0.0.0.0",
+      "example": "0.0.0.0",
+      "description": "kibana server host"
+    },
+    "KB_TLS_ENABLED": {
+      "type": "bool",
+      "group": "security",
+      "required": true,
+      "default": "false",
+      "example": "false",
+      "description": "kibana tls enabled flag"
+    },
+    "KB_TLS_CERT_FILE": {
+      "type": "string",
+      "group": "security",
+      "required": false,
+      "default": "",
+      "example": "/etc/opskit/kibana/server.crt",
+      "description": "kibana tls certificate path"
+    },
+    "KB_TLS_KEY_FILE": {
+      "type": "string",
+      "group": "security",
+      "required": false,
+      "default": "",
+      "example": "/etc/opskit/kibana/server.key",
+      "description": "kibana tls key path"
+    },
+    "KB_EXTRA_ARGS": {
+      "type": "string",
+      "group": "runtime",
+      "required": false,
+      "default": "",
+      "example": "--logging.root.level=info",
+      "description": "extra kibana startup args"
+    }
+  },
+  "stages": {
+    "A": {
+      "checks": [
+        {
+          "id": "a.system_info",
+          "kind": "system_info",
+          "enabled": true
+        },
+        {
+          "id": "a.systemd_available",
+          "kind": "systemd_available",
+          "params": {
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.mount_check",
+          "kind": "mount_check",
+          "params": {
+            "required_mounts": [
+              "${ROOT_MOUNT}"
+            ]
+          },
+          "enabled": true
+        },
+        {
+          "id": "a.port_conflict",
+          "kind": "port_conflict",
+          "params": {
+            "reserved_ports": [
+              "${ES_PORT}",
+              "${LOG_PORT}",
+              "${KB_PORT}"
+            ]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "B": {
+      "actions": [
+        {
+          "id": "b.ensure_paths",
+          "kind": "ensure_paths",
+          "params": {
+            "paths": [
+              "${INSTALL_ROOT}/${ES_SERVICE_NAME}/release",
+              "${INSTALL_ROOT}/${LOG_SERVICE_NAME}/release",
+              "${INSTALL_ROOT}/${KB_SERVICE_NAME}/release",
+              "${CONF_DIR}/${ES_SERVICE_NAME}",
+              "${CONF_DIR}/${LOG_SERVICE_NAME}",
+              "${CONF_DIR}/${KB_SERVICE_NAME}",
+              "${ES_DATA_DIR}",
+              "${EVIDENCE_DIR}"
+            ],
+            "perm": "755"
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "C": {
+      "actions": [
+        {
+          "id": "c.es_sha256_verify",
+          "kind": "sha256_verify",
+          "params": {
+            "file": "${ES_PACKAGE_FILE}",
+            "expected_sha256": "${ES_PACKAGE_SHA256}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.log_sha256_verify",
+          "kind": "sha256_verify",
+          "params": {
+            "file": "${LOG_PACKAGE_FILE}",
+            "expected_sha256": "${LOG_PACKAGE_SHA256}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.kb_sha256_verify",
+          "kind": "sha256_verify",
+          "params": {
+            "file": "${KB_PACKAGE_FILE}",
+            "expected_sha256": "${KB_PACKAGE_SHA256}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.es_untar",
+          "kind": "untar",
+          "params": {
+            "src": "${ES_PACKAGE_FILE}",
+            "dest": "${INSTALL_ROOT}/${ES_SERVICE_NAME}/release"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.log_untar",
+          "kind": "untar",
+          "params": {
+            "src": "${LOG_PACKAGE_FILE}",
+            "dest": "${INSTALL_ROOT}/${LOG_SERVICE_NAME}/release"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.kb_untar",
+          "kind": "untar",
+          "params": {
+            "src": "${KB_PACKAGE_FILE}",
+            "dest": "${INSTALL_ROOT}/${KB_SERVICE_NAME}/release"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.render_es_env",
+          "kind": "render_templates",
+          "params": {
+            "template": "ES_PORT=${ES_PORT}\\nES_DATA_DIR=${ES_DATA_DIR}\\nES_CLUSTER_NAME=${ES_CLUSTER_NAME}\\nES_NODE_NAME=${ES_NODE_NAME}\\nES_JAVA_OPTS=${ES_JAVA_OPTS}\\n",
+            "output": "${CONF_DIR}/${ES_SERVICE_NAME}/runtime.env",
+            "perm": "600"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.render_log_env",
+          "kind": "render_templates",
+          "params": {
+            "template": "LOG_PORT=${LOG_PORT}\\nLOG_JAVA_OPTS=${LOG_JAVA_OPTS}\\nLOG_PIPELINE_CONFIG=${LOG_PIPELINE_CONFIG}\\n",
+            "output": "${CONF_DIR}/${LOG_SERVICE_NAME}/runtime.env",
+            "perm": "600"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.render_log_pipeline",
+          "kind": "render_templates",
+          "params": {
+            "template": "input {\\n  beats { port => ${LOG_PORT} }\\n}\\n\\noutput {\\n  elasticsearch { hosts => [\"http://127.0.0.1:${ES_PORT}\"] }\\n}\\n",
+            "output": "${LOG_PIPELINE_CONFIG}",
+            "perm": "640"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.render_kb_env",
+          "kind": "render_templates",
+          "params": {
+            "template": "KB_PORT=${KB_PORT}\\nKB_HOST=${KB_HOST}\\nKB_ES_HOSTS=${KB_ES_HOSTS}\\nKB_TLS_ENABLED=${KB_TLS_ENABLED}\\nKB_TLS_CERT_FILE=${KB_TLS_CERT_FILE}\\nKB_TLS_KEY_FILE=${KB_TLS_KEY_FILE}\\nKB_EXTRA_ARGS=${KB_EXTRA_ARGS}\\n",
+            "output": "${CONF_DIR}/${KB_SERVICE_NAME}/runtime.env",
+            "perm": "600"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.render_kb_config",
+          "kind": "render_templates",
+          "params": {
+            "template": "server.port: ${KB_PORT}\\nserver.host: \"${KB_HOST}\"\\nelasticsearch.hosts: [\"${KB_ES_HOSTS}\"]\\nserver.ssl.enabled: ${KB_TLS_ENABLED}\\nserver.ssl.certificate: \"${KB_TLS_CERT_FILE}\"\\nserver.ssl.key: \"${KB_TLS_KEY_FILE}\"\\n",
+            "output": "${CONF_DIR}/${KB_SERVICE_NAME}/kibana.yml",
+            "perm": "640"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.install_es_unit",
+          "kind": "systemd_install_unit",
+          "params": {
+            "unit_name": "${ES_UNIT}",
+            "unit_content": "[Unit]\\nDescription=${ES_SERVICE_NAME}\\nAfter=network.target\\n\\n[Service]\\nType=simple\\nEnvironmentFile=${CONF_DIR}/${ES_SERVICE_NAME}/runtime.env\\nEnvironment=ES_JAVA_OPTS=${ES_JAVA_OPTS}\\nExecStart=${ES_EXEC} -Epath.data=${ES_DATA_DIR} -Ehttp.port=${ES_PORT} -Ecluster.name=${ES_CLUSTER_NAME} -Enode.name=${ES_NODE_NAME} -Ediscovery.type=single-node\\nRestart=always\\nRestartSec=5\\n\\n[Install]\\nWantedBy=multi-user.target\\n",
+            "unit_dir": "${SYSTEMD_UNIT_DIR}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.install_log_unit",
+          "kind": "systemd_install_unit",
+          "params": {
+            "unit_name": "${LOG_UNIT}",
+            "unit_content": "[Unit]\\nDescription=${LOG_SERVICE_NAME}\\nAfter=network.target\\n\\n[Service]\\nType=simple\\nEnvironmentFile=${CONF_DIR}/${LOG_SERVICE_NAME}/runtime.env\\nEnvironment=LS_JAVA_OPTS=${LOG_JAVA_OPTS}\\nExecStart=${LOG_EXEC} --path.settings ${CONF_DIR}/${LOG_SERVICE_NAME} --path.config ${LOG_PIPELINE_CONFIG}\\nRestart=always\\nRestartSec=5\\n\\n[Install]\\nWantedBy=multi-user.target\\n",
+            "unit_dir": "${SYSTEMD_UNIT_DIR}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.install_kb_unit",
+          "kind": "systemd_install_unit",
+          "params": {
+            "unit_name": "${KB_UNIT}",
+            "unit_content": "[Unit]\\nDescription=${KB_SERVICE_NAME}\\nAfter=network.target\\n\\n[Service]\\nType=simple\\nEnvironmentFile=${CONF_DIR}/${KB_SERVICE_NAME}/runtime.env\\nExecStart=${KB_EXEC} --config ${CONF_DIR}/${KB_SERVICE_NAME}/kibana.yml ${KB_EXTRA_ARGS}\\nRestart=always\\nRestartSec=5\\n\\n[Install]\\nWantedBy=multi-user.target\\n",
+            "unit_dir": "${SYSTEMD_UNIT_DIR}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.systemd_daemon_reload",
+          "kind": "systemd_daemon_reload",
+          "enabled": true
+        },
+        {
+          "id": "c.systemd_enable_start_es",
+          "kind": "systemd_enable_start",
+          "params": {
+            "unit": "${ES_UNIT}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.systemd_enable_start_log",
+          "kind": "systemd_enable_start",
+          "params": {
+            "unit": "${LOG_UNIT}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.systemd_enable_start_kb",
+          "kind": "systemd_enable_start",
+          "params": {
+            "unit": "${KB_UNIT}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.capture_inventory",
+          "kind": "capture_inventory",
+          "params": {
+            "units": [
+              "${ES_UNIT}",
+              "${LOG_UNIT}",
+              "${KB_UNIT}"
+            ],
+            "ports": [
+              "${ES_PORT}",
+              "${LOG_PORT}",
+              "${KB_PORT}"
+            ],
+            "paths": [
+              "${INSTALL_ROOT}/${ES_SERVICE_NAME}",
+              "${INSTALL_ROOT}/${LOG_SERVICE_NAME}",
+              "${INSTALL_ROOT}/${KB_SERVICE_NAME}",
+              "${CONF_DIR}/${ES_SERVICE_NAME}",
+              "${CONF_DIR}/${LOG_SERVICE_NAME}",
+              "${CONF_DIR}/${KB_SERVICE_NAME}"
+            ],
+            "output": "${INVENTORY_FILE}"
+          },
+          "enabled": true
+        },
+        {
+          "id": "c.declare_stack",
+          "kind": "declare_stack",
+          "params": {
+            "output": "${STACK_DECLARATION}",
+            "stack_id": "${STACK_ID}",
+            "mode": "deploy",
+            "components": [
+              "${ES_SERVICE_NAME}",
+              "${LOG_SERVICE_NAME}",
+              "${KB_SERVICE_NAME}"
+            ]
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "D": {
+      "checks": [
+        {
+          "id": "d.es_unit_active",
+          "kind": "systemd_unit_active",
+          "params": {
+            "unit": "${ES_UNIT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.log_unit_active",
+          "kind": "systemd_unit_active",
+          "params": {
+            "unit": "${LOG_UNIT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.kb_unit_active",
+          "kind": "systemd_unit_active",
+          "params": {
+            "unit": "${KB_UNIT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.es_port_listening",
+          "kind": "port_listening",
+          "params": {
+            "port": "${ES_PORT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.log_port_listening",
+          "kind": "port_listening",
+          "params": {
+            "port": "${LOG_PORT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.kb_port_listening",
+          "kind": "port_listening",
+          "params": {
+            "port": "${KB_PORT}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.es_restart_count",
+          "kind": "systemd_restart_count",
+          "params": {
+            "unit": "${ES_UNIT}",
+            "max_restarts": "${MAX_RESTARTS}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.log_restart_count",
+          "kind": "systemd_restart_count",
+          "params": {
+            "unit": "${LOG_UNIT}",
+            "max_restarts": "${MAX_RESTARTS}",
+            "severity": "warn"
+          },
+          "enabled": true
+        },
+        {
+          "id": "d.kb_restart_count",
+          "kind": "systemd_restart_count",
+          "params": {
+            "unit": "${KB_UNIT}",
+            "max_restarts": "${MAX_RESTARTS}",
+            "severity": "warn"
+          },
+          "enabled": true
+        }
+      ]
+    },
+    "E": {
+      "actions": [
+        {
+          "id": "e.recover_sequence",
+          "kind": "recover_sequence",
+          "params": {
+            "units": [
+              "${ES_UNIT}",
+              "${LOG_UNIT}",
+              "${KB_UNIT}"
+            ],
+            "max_attempts": 2,
+            "cooldown_seconds": 600,
+            "readiness_network": true,
+            "readiness_mounts": [
+              "${ROOT_MOUNT}"
+            ],
+            "trigger_source": "${RECOVER_TRIGGER}",
+            "stage": "E",
+            "circuit_file": "${RECOVER_CIRCUIT_FILE}",
+            "collect_file": "${RECOVER_COLLECT_FILE}",
+            "collect_bundle_dir": "${COLLECT_BUNDLE_DIR}",
+            "collect_paths": [
+              "${INSTALL_ROOT}/${ES_SERVICE_NAME}",
+              "${INSTALL_ROOT}/${LOG_SERVICE_NAME}",
+              "${INSTALL_ROOT}/${KB_SERVICE_NAME}",
+              "${CONF_DIR}/${ES_SERVICE_NAME}",
+              "${CONF_DIR}/${LOG_SERVICE_NAME}",
+              "${CONF_DIR}/${KB_SERVICE_NAME}"
+            ],
+            "redact_keys": [
+              "password",
+              "token",
+              "secret"
+            ]
+          },
+          "enabled": false
+        }
+      ]
+    },
+    "F": {
+      "evidence": [
+        {
+          "id": "f.es_env_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${CONF_DIR}/${ES_SERVICE_NAME}/runtime.env",
+            "output": "${EVIDENCE_DIR}/es-env-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.log_env_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${CONF_DIR}/${LOG_SERVICE_NAME}/runtime.env",
+            "output": "${EVIDENCE_DIR}/log-env-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.log_pipeline_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${LOG_PIPELINE_CONFIG}",
+            "output": "${EVIDENCE_DIR}/log-pipeline-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.kb_env_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${CONF_DIR}/${KB_SERVICE_NAME}/runtime.env",
+            "output": "${EVIDENCE_DIR}/kb-env-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.kb_config_hash",
+          "kind": "file_hash",
+          "params": {
+            "file": "${CONF_DIR}/${KB_SERVICE_NAME}/kibana.yml",
+            "output": "${EVIDENCE_DIR}/kb-config-hash.json"
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.es_process_args",
+          "kind": "process_args",
+          "params": {
+            "match": "${ES_PROCESS_MATCH}",
+            "output": "${EVIDENCE_DIR}/es-process-args.json",
+            "redact_keys": [
+              "password",
+              "token",
+              "secret"
+            ]
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.log_process_args",
+          "kind": "process_args",
+          "params": {
+            "match": "${LOG_PROCESS_MATCH}",
+            "output": "${EVIDENCE_DIR}/log-process-args.json",
+            "redact_keys": [
+              "password",
+              "token",
+              "secret"
+            ]
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.kb_process_args",
+          "kind": "process_args",
+          "params": {
+            "match": "${KB_PROCESS_MATCH}",
+            "output": "${EVIDENCE_DIR}/kb-process-args.json",
+            "redact_keys": [
+              "password",
+              "token",
+              "secret"
+            ]
+          },
+          "enabled": true
+        },
+        {
+          "id": "f.port_snapshot",
+          "kind": "command_output",
+          "params": {
+            "name": "ss",
+            "args": [
+              "-ltn"
+            ],
+            "output": "${EVIDENCE_DIR}/elk-ss-ltn.json"
+          },
+          "enabled": true
+        }
+      ]
+    }
+  }
+}

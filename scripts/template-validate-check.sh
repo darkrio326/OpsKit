@@ -178,9 +178,13 @@ run_json_validate_fail_with_vars() {
 AUDIT_JSON="${OUTPUT_DIR}/demo-server-audit.json.out"
 HELLO_JSON="${OUTPUT_DIR}/demo-hello-service.json.out"
 RUNTIME_JSON="${OUTPUT_DIR}/demo-runtime-baseline.json.out"
+GENERIC_DEPLOY_JSON="${OUTPUT_DIR}/demo-generic-selfhost-deploy.json.out"
 BLACKBOX_DEFAULT_JSON="${OUTPUT_DIR}/demo-blackbox-middleware-manage.json.out"
 BLACKBOX_FCS_JSON="${OUTPUT_DIR}/demo-blackbox-middleware-manage-fcs.json.out"
 BLACKBOX_KINGDEE_JSON="${OUTPUT_DIR}/demo-blackbox-middleware-manage-kingdee.json.out"
+MINIO_DEPLOY_JSON="${OUTPUT_DIR}/demo-minio-deploy.json.out"
+ELK_DEPLOY_JSON="${OUTPUT_DIR}/demo-elk-deploy.json.out"
+POWERJOB_DEPLOY_JSON="${OUTPUT_DIR}/demo-powerjob-deploy.json.out"
 MANAGE_JSON="${OUTPUT_DIR}/generic-manage-v1.json.out"
 NEG_JSON="${OUTPUT_DIR}/missing-template.json.out"
 NEG_VARS_JSON="${OUTPUT_DIR}/invalid-vars.json.out"
@@ -205,6 +209,12 @@ run_json_validate_ok \
   "${RUNTIME_JSON}"
 
 run_json_validate_ok \
+  "demo-generic-selfhost-deploy" \
+  "${ROOT_DIR}/assets/templates/demo-generic-selfhost-deploy.json" \
+  "${ROOT_DIR}/examples/vars/demo-generic-selfhost-deploy.json" \
+  "${GENERIC_DEPLOY_JSON}"
+
+run_json_validate_ok \
   "demo-blackbox-middleware-manage-default" \
   "${ROOT_DIR}/assets/templates/demo-blackbox-middleware-manage.json" \
   "${ROOT_DIR}/examples/vars/demo-blackbox-middleware-manage.json" \
@@ -221,6 +231,24 @@ run_json_validate_ok \
   "${ROOT_DIR}/assets/templates/demo-blackbox-middleware-manage.json" \
   "${ROOT_DIR}/examples/vars/demo-blackbox-middleware-manage-kingdee.json" \
   "${BLACKBOX_KINGDEE_JSON}"
+
+run_json_validate_ok \
+  "demo-minio-deploy" \
+  "${ROOT_DIR}/assets/templates/demo-minio-deploy.json" \
+  "${ROOT_DIR}/examples/vars/demo-minio-deploy.json" \
+  "${MINIO_DEPLOY_JSON}"
+
+run_json_validate_ok \
+  "demo-elk-deploy" \
+  "${ROOT_DIR}/assets/templates/demo-elk-deploy.json" \
+  "${ROOT_DIR}/examples/vars/demo-elk-deploy.json" \
+  "${ELK_DEPLOY_JSON}"
+
+run_json_validate_ok \
+  "demo-powerjob-deploy" \
+  "${ROOT_DIR}/assets/templates/demo-powerjob-deploy.json" \
+  "${ROOT_DIR}/examples/vars/demo-powerjob-deploy.json" \
+  "${POWERJOB_DEPLOY_JSON}"
 
 run_json_validate_ok_no_vars \
   "generic-manage-v1" \
@@ -269,9 +297,13 @@ fi
   echo "    \"${AUDIT_JSON}\","
   echo "    \"${HELLO_JSON}\","
   echo "    \"${RUNTIME_JSON}\","
+  echo "    \"${GENERIC_DEPLOY_JSON}\","
   echo "    \"${BLACKBOX_DEFAULT_JSON}\","
   echo "    \"${BLACKBOX_FCS_JSON}\","
   echo "    \"${BLACKBOX_KINGDEE_JSON}\","
+  echo "    \"${MINIO_DEPLOY_JSON}\","
+  echo "    \"${ELK_DEPLOY_JSON}\","
+  echo "    \"${POWERJOB_DEPLOY_JSON}\","
   echo "    \"${MANAGE_JSON}\","
   echo "    \"${NEG_JSON}\","
   echo "    \"${NEG_VARS_JSON}\""

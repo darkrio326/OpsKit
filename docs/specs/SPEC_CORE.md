@@ -18,7 +18,8 @@
 - `opskit status`
 - `opskit accept`
 - `opskit handover`
-- `opskit template validate <file> [--json]`
+- `opskit template validate <file|id> [--json]`
+- `opskit template list [--json]`
 - `opskit web`
 
 ### 2.2 通用参数
@@ -48,6 +49,7 @@
 - `stdout`：人类可读摘要
 - `opskit status --json`：机器可读 JSON（稳定顶层字段）
 - `opskit template validate --json`：模板校验机器可读 JSON（错误路径与建议）
+- `opskit template list --json`：模板目录机器可读 JSON（内置模板元数据）
 - `scripts/release-check.sh --summary-json-file`：发布门禁机器可读 summary JSON
 - 状态 JSON：写入 `<output>/state`
 - 日志：按运行环境输出到文件或控制台
@@ -63,6 +65,7 @@
 
 详细契约见：`docs/specs/SPEC_STATUS_JSON.md`
 模板校验 JSON 契约见：`docs/specs/SPEC_TEMPLATE_VALIDATE_JSON.md`
+模板目录 JSON 契约见：`docs/specs/SPEC_TEMPLATE_LIST_JSON.md`
 发布门禁 summary 契约见：`docs/specs/SPEC_RELEASE_CHECK_JSON.md`
 
 ### 2.5 模板变量约定（v1 追加）
