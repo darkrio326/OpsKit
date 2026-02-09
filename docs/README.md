@@ -15,6 +15,7 @@ Repository-level release history: `CHANGELOG.md`
 - `docs/product-design/06-执行链路与控制策略.md`
 - `docs/product-design/07-状态模型与可视化约定.md`
 - `docs/product-design/08-CLI安装与容器验证.md`
+- `docs/product-design/09-模板设计指南.md`
 
 ## Getting Started
 
