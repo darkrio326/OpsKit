@@ -62,6 +62,10 @@ go build -o opskit ./cmd/opskit
 
 浏览器访问：`http://127.0.0.1:18080`
 
+UI 首页示例（最新截图）：
+
+![OpsKit UI 首页（模板与阶段总览）](docs/assets/screenshots/latest/ui-template-stage.png)
+
 参考文档：
 
 - `docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`

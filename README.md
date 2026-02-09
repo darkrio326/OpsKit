@@ -64,6 +64,10 @@ Machine-readable template validation (recommended before template integration):
 
 Open in browser: `http://127.0.0.1:18080`
 
+UI home snapshot (latest):
+
+![OpsKit UI Home (template and stage overview)](docs/assets/screenshots/latest/ui-template-stage.png)
+
 See also:
 
 - `docs/deployment/DOCKER_KYLIN_V10_DEPLOY.md`
